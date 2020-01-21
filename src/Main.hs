@@ -9,6 +9,7 @@ import Text.Blaze.Html               (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Heredoc                  (there)
 
+import Network.HTTP.Types.Status (status404)
 import Web.Scotty
 
 import qualified SandCal.ApiTypes as ApiTypes
@@ -21,7 +22,7 @@ import qualified SandCal.View     as View
 blaze :: Html -> ActionM ()
 blaze = html . renderHtml
 
-indexHtml = [there|ui/index.html|]
+elmHtml = [there|ui/index.html|]
 
 main :: IO ()
 main = do
@@ -30,12 +31,16 @@ main = do
     db <- DB.connect dbPath
     when (args == ["--init"]) $ do
         DB.with db DB.initSchema
-    scotty 3000 $ traverse_ (handle db)
-        [ Root
-        , AllEvents
-        , NewEvent GET
-        , NewEvent POST
-        ]
+    scotty 3000 $ do
+        traverse_ (handle db)
+            [ Root
+            , AllEvents
+            , NewEvent GET
+            , NewEvent POST
+            ]
+        notFound $ do
+            status status404
+            html elmHtml
 
 handle db rt = do
     let method = case Route.method rt of
@@ -45,7 +50,7 @@ handle db rt = do
 
 handleRt :: DB.DB -> Route -> ActionM ()
 handleRt _db Root = do
-    html indexHtml
+    html elmHtml
 handleRt db AllEvents = do
     events <- liftIO $ DB.with db DB.allEvents
     json $

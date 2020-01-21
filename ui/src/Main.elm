@@ -8,6 +8,7 @@ import SandCal.Api as Api
 import SandCal.Types as Types
 import Time
 import Url
+import Url.Parser
 
 
 type Model
@@ -23,6 +24,7 @@ type alias EventsResult =
 
 type Page
     = EventsPage { events : Maybe EventsResult }
+    | NotFoundPage
 
 
 type Msg
@@ -40,13 +42,31 @@ type EventsPageMsg
 
 
 init : {} -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ _ navKey =
+init _ url navKey =
+    let
+        ( page, cmd ) =
+            initPage url
+    in
     ( Model
         { navKey = navKey
-        , page = EventsPage { events = Nothing }
+        , page = page
         }
-    , Api.allEvents (AllEventsResult >> EventsPageMsg >> PageMsg)
+    , Cmd.map PageMsg cmd
     )
+
+
+initPage : Url.Url -> ( Page, Cmd PageMsg )
+initPage url =
+    case Url.Parser.parse urlParser url of
+        Nothing ->
+            ( NotFoundPage
+            , Cmd.none
+            )
+
+        Just Root ->
+            ( EventsPage { events = Nothing }
+            , Api.allEvents (AllEventsResult >> EventsPageMsg)
+            )
 
 
 view : Model -> Browser.Document msg
@@ -55,6 +75,11 @@ view (Model { page }) =
         EventsPage { events } ->
             { title = "SandCal"
             , body = [ viewEvents events ]
+            }
+
+        NotFoundPage ->
+            { title = "SandCal - Not Found"
+            , body = [ text "404 - not found" ]
             }
 
 
@@ -117,10 +142,15 @@ update msg (Model m) =
 
 
 updatePage : PageMsg -> Page -> ( Page, Cmd PageMsg )
-updatePage (EventsPageMsg msg) (EventsPage p) =
-    case msg of
-        AllEventsResult res ->
+updatePage msg page =
+    case ( page, msg ) of
+        ( EventsPage p, EventsPageMsg (AllEventsResult res) ) ->
             ( EventsPage { p | events = Just res }
+            , Cmd.none
+            )
+
+        ( NotFoundPage, _ ) ->
+            ( page
             , Cmd.none
             )
 
@@ -139,3 +169,12 @@ main =
         , update = update
         , subscriptions = subscriptions
         }
+
+
+type Route
+    = Root
+
+
+urlParser : Url.Parser.Parser (Route -> a) a
+urlParser =
+    Url.Parser.map Root Url.Parser.top
