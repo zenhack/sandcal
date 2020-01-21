@@ -60,7 +60,6 @@ common shared-opts
   build-depends:
       base ^>=4.12
     , zenhack-prelude ^>=0.1
-    , blaze-html ^>=0.9.1
     , scotty ^>=0.11.5
     , selda ^>=0.5.0
     , selda-sqlite ^>=0.1.7
@@ -83,9 +82,7 @@ executable sandcal
   other-modules:
       SandCal.DB
     , SandCal.Config
-    , SandCal.View
     , SandCal.Route
-    , SandCal.Forms
     , SandCal.ApiTypes
   hs-source-dirs:      src
 test-suite tests

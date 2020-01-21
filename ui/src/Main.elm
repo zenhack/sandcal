@@ -3,12 +3,13 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Html exposing (..)
+import Html.Attributes exposing (for, name, type_, value)
 import Http
 import SandCal.Api as Api
 import SandCal.Types as Types
 import Time
 import Url
-import Url.Parser
+import Url.Parser exposing ((</>))
 
 
 type Model
@@ -24,7 +25,16 @@ type alias EventsResult =
 
 type Page
     = EventsPage { events : Maybe EventsResult }
+    | NewEventPage NewEventForm
     | NotFoundPage
+
+
+type alias NewEventForm =
+    { summary : String
+    , startDate : Maybe String
+    , startTime : Maybe String
+    , endTime : Maybe String
+    }
 
 
 type Msg
@@ -68,6 +78,16 @@ initPage url =
             , Api.allEvents (AllEventsResult >> EventsPageMsg)
             )
 
+        Just NewEvent ->
+            ( NewEventPage
+                { summary = ""
+                , startDate = Nothing
+                , startTime = Nothing
+                , endTime = Nothing
+                }
+            , Cmd.none
+            )
+
 
 view : Model -> Browser.Document msg
 view (Model { page }) =
@@ -77,10 +97,35 @@ view (Model { page }) =
             , body = [ viewEvents events ]
             }
 
+        NewEventPage form ->
+            { title = "SandCal - New Event"
+            , body = viewNewEventForm form
+            }
+
         NotFoundPage ->
             { title = "SandCal - Not Found"
             , body = [ text "404 - not found" ]
             }
+
+
+viewNewEventForm : NewEventForm -> List (Html msg)
+viewNewEventForm form =
+    let
+        maybeValue viewVal =
+            Maybe.map (List.singleton << viewVal)
+                >> Maybe.withDefault []
+
+        inputField nam ty val =
+            div []
+                [ label [ for nam ] [ text nam ]
+                , input (type_ ty :: name nam :: maybeValue value val) []
+                ]
+    in
+    [ inputField "Summary" "text" (Just form.summary)
+    , inputField "Date" "date" form.startDate
+    , inputField "Start Time" "time" form.startTime
+    , inputField "End Time" "time" form.endTime
+    ]
 
 
 viewEvents : Maybe EventsResult -> Html msg
@@ -149,6 +194,11 @@ updatePage msg page =
             , Cmd.none
             )
 
+        ( NewEventPage _, _ ) ->
+            ( page
+            , Cmd.none
+            )
+
         ( NotFoundPage, _ ) ->
             ( page
             , Cmd.none
@@ -173,8 +223,12 @@ main =
 
 type Route
     = Root
+    | NewEvent
 
 
 urlParser : Url.Parser.Parser (Route -> a) a
 urlParser =
-    Url.Parser.map Root Url.Parser.top
+    Url.Parser.oneOf
+        [ Url.Parser.map Root Url.Parser.top
+        , Url.Parser.map NewEvent (Url.Parser.s "event" </> Url.Parser.s "new")
+        ]
