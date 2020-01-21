@@ -4,8 +4,6 @@ module Main (main) where
 
 import Zhp
 
-import qualified Data.Text.Lazy as LT
-
 import Database.Selda                (def)
 import Text.Blaze.Html               (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -16,7 +14,6 @@ import Web.Scotty
 import qualified SandCal.ApiTypes as ApiTypes
 import           SandCal.Config   (cfgDBPath, getConfig)
 import qualified SandCal.DB       as DB
-import qualified SandCal.Forms    as Forms
 import           SandCal.Route    (Method(..), Route(..))
 import qualified SandCal.Route    as Route
 import qualified SandCal.View     as View
@@ -62,10 +59,10 @@ handleRt db AllEvents = do
 handleRt _db (NewEvent GET) =
     blaze $ View.page "Sandcal - New Event" (pure ()) View.newEventForm
 handleRt db (NewEvent POST) = do
-    f <- Forms.parseForm
+    ev <- jsonData
     eid <- liftIO $ DB.with db $ DB.addEvent DB.Event
         { DB.evId = def
-        , DB.evSummary = LT.toStrict $ Forms.neSummary f
-        , DB.evDTStart = Forms.neStart f
+        , DB.evSummary = ApiTypes.summary ev
+        , DB.evDTStart = ApiTypes.start ev
         }
-    text (fromString $ show eid)
+    json (show eid)

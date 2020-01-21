@@ -13,10 +13,10 @@ allEvents mkMsg =
         }
 
 
-addEvent : (Result Http.Error Int -> msg) -> Types.Event -> Cmd msg
+addEvent : (Result Http.Error String -> msg) -> Types.Event -> Cmd msg
 addEvent mkMsg event =
     Http.post
         { url = "/api/event/new"
         , body = Http.jsonBody (Types.encodeEvent event)
-        , expect = Http.expectJson mkMsg D.int
+        , expect = Http.expectJson mkMsg D.string
         }
