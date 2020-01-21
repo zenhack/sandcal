@@ -1,11 +1,11 @@
 module Main exposing (main)
 
-import Api
 import Browser
 import Html exposing (..)
 import Http
+import SandCal.Api as Api
+import SandCal.Types as Types
 import Time
-import Types
 
 
 type Model

@@ -1,4 +1,4 @@
-module Route
+module SandCal.Route
     ( Route(..)
     , Method(..)
     , path

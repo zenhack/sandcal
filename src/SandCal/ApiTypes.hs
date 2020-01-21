@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
-module ApiTypes
+module SandCal.ApiTypes
     ( Event(..)
     ) where
 

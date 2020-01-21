@@ -80,12 +80,12 @@ executable sandcal
   import: shared-opts
   main-is: Main.hs
   other-modules:
-      DB
-    , Config
-    , View
-    , Route
-    , Forms
-    , ApiTypes
+      SandCal.DB
+    , SandCal.Config
+    , SandCal.View
+    , SandCal.Route
+    , SandCal.Forms
+    , SandCal.ApiTypes
   hs-source-dirs:      src
 test-suite tests
   import: shared-opts

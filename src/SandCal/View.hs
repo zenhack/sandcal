@@ -1,4 +1,4 @@
-module View
+module SandCal.View
     ( page
     , events
     , newEventForm
@@ -10,9 +10,9 @@ import qualified Data.Text.Lazy              as LT
 import           Text.Blaze.Html5
 import qualified Text.Blaze.Html5.Attributes as A
 
-import DB (Event(..))
+import SandCal.DB (Event(..))
 
-import qualified Route
+import qualified SandCal.Route as Route
 
 page :: LT.Text -> Html -> Html -> Html
 page titleText headExtra bodyContent =

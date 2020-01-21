@@ -13,14 +13,13 @@ import Text.Heredoc                  (there)
 
 import Web.Scotty
 
-import Config (cfgDBPath, getConfig)
-
-import qualified ApiTypes
-import qualified DB
-import qualified Forms
-import           Route    (Method(..), Route(..))
-import qualified Route
-import qualified View
+import qualified SandCal.ApiTypes as ApiTypes
+import           SandCal.Config   (cfgDBPath, getConfig)
+import qualified SandCal.DB       as DB
+import qualified SandCal.Forms    as Forms
+import           SandCal.Route    (Method(..), Route(..))
+import qualified SandCal.Route    as Route
+import qualified SandCal.View     as View
 
 blaze :: Html -> ActionM ()
 blaze = html . renderHtml

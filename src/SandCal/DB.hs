@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE OverloadedLabels #-}
-module DB
+module SandCal.DB
     ( DB
     , DBT
     , connect
@@ -15,8 +15,6 @@ import Database.Selda         hiding (with)
 import Database.Selda.Backend (SeldaConnection, runSeldaT)
 import Database.Selda.SQLite
 import Zhp
-
-import Config
 
 type DB = SeldaConnection SQLite
 

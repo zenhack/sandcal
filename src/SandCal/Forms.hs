@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Forms
+module SandCal.Forms
     ( IsForm(..)
     , HtmlDate(..)
     , NewEvent(..)
@@ -38,16 +38,16 @@ nDigits n =
 instance Parsable HtmlDate where
     parseParam = parsecParsable $ do
         year <- nDigits 4
-        P.char '-'
+        void $ P.char '-'
         month <- nDigits 2
-        P.char '-'
+        void $ P.char '-'
         day <- nDigits 2
         pure $ HtmlDate year month day
 
 instance Parsable HtmlTime where
     parseParam = parsecParsable $ do
         hour <- nDigits 2
-        P.char ':'
+        void $ P.char ':'
         minute <- nDigits 2
         pure $ HtmlTime hour minute
 

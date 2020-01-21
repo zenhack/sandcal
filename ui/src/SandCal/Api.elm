@@ -1,8 +1,8 @@
-module Api exposing (allEvents)
+module SandCal.Api exposing (allEvents)
 
 import Http
 import Json.Decode as D
-import Types
+import SandCal.Types as Types
 
 
 allEvents : (Result Http.Error (List Types.Event) -> msg) -> Cmd msg
