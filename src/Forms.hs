@@ -7,9 +7,11 @@ module Forms
 
 import Zhp
 
-import qualified Data.Text.Lazy as LT
+import qualified Data.Text.Lazy         as LT
+import qualified Data.Time              as Time
+import qualified Data.Time.Clock.System as Time
 import qualified Prelude
-import qualified Text.Parsec    as P
+import qualified Text.Parsec            as P
 import           Web.Scotty
 
 class IsForm a where
@@ -50,17 +52,38 @@ instance Parsable HtmlTime where
         pure $ HtmlTime hour minute
 
 data NewEvent = NewEvent
-    { neStartDate :: HtmlDate
-    , neStartTime :: HtmlTime
-    , neEndTime   :: HtmlTime
-    , neSummary   :: LT.Text
+    { neStart   :: Int
+    , neEnd     :: Int
+    , neSummary :: LT.Text
     }
     deriving(Show, Read, Eq)
 
+htmlTimeToTOD :: HtmlTime -> Time.TimeOfDay
+htmlTimeToTOD (HtmlTime h m) = Time.TimeOfDay h m 0
+
+htmlDateToDay :: HtmlDate -> Time.Day
+htmlDateToDay (HtmlDate y m d) =
+    Time.fromGregorian (fromIntegral y) m d
+
+makeUnixTime :: HtmlDate -> HtmlTime -> Time.TimeZone -> Int
+makeUnixTime date time zone =
+    let day = htmlDateToDay date
+        tod = htmlTimeToTOD time
+        local = Time.LocalTime day tod
+        zoned = Time.ZonedTime local zone
+    in
+    Time.zonedTimeToUTC zoned
+    & Time.utcToSystemTime
+    & Time.systemSeconds
+    & fromIntegral
+
 instance IsForm NewEvent where
     parseForm = do
-        neStartDate <- param "startDate"
-        neStartTime <- param "startTime"
-        neEndTime <- param "endTime"
         neSummary <- param "summary"
+        date <- param "startDate"
+        startTime <- param "startTime"
+        endTime <- param "endTime"
+        -- FIXME: Don't assume the time is utc.
+        let neStart = makeUnixTime date startTime Time.utc
+            neEnd = makeUnixTime date endTime Time.utc
         pure NewEvent{..}
