@@ -1,0 +1,4 @@
+packages: *.cabal
+-- I(zenhack) don't understand why this is necessary (-haste should be the
+-- default for this package), but without it the build fails:
+constraints: selda-sqlite -haste

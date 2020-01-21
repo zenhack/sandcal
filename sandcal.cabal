@@ -1,0 +1,81 @@
+cabal-version:       2.2
+name:                sandcal
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://git.zenhack.net/zenhack/sandcal
+-- license:
+  -- GPL-2
+  -- GPL-3
+  -- LGPL-2.1
+  -- LGPL-3
+  -- AGPL-3
+  -- BSD2
+  -- BSD3
+  -- MIT
+  -- ISC
+  -- MPL-2.0
+  -- Apache-2.0
+  -- PublicDomain
+  -- AllRightsReserved
+
+license-file:        LICENSE
+author:              Ian Denhardt
+maintainer:          ian@zenhack.net
+copyright:           2020 Ian Denhardt
+-- category:
+  -- Codec
+  -- Concurrency
+  -- Control
+  -- Data
+  -- Database
+  -- Development
+  -- Distribution
+  -- Game
+  -- Graphics
+  -- Language
+  -- Math
+  -- Network
+  -- Sound
+  -- System
+  -- Testing
+  -- Text
+  -- Web
+
+build-type:          Simple
+extra-source-files:
+    CHANGELOG.md
+  , README.md
+  , .gitignore
+
+source-repository head
+  type:     git
+  branch:   master
+  location: https://git.zenhack.net/zenhack/sandcal
+
+common shared-opts
+  default-extensions:
+      NoImplicitPrelude
+    , OverloadedStrings
+  build-depends:
+      base ^>=4.12
+    , zenhack-prelude ^>=0.1
+    , blaze-html ^>=0.9.1
+    , scotty ^>=0.11.5
+    , selda ^>=0.5.0
+    , selda-sqlite ^>=0.1.7
+    , safe-exceptions ^>=0.1.7
+    , text ^>=1.2.4
+  default-language:    Haskell2010
+
+executable sandcal
+  import: shared-opts
+  main-is: Main.hs
+  other-modules:
+    DBModel
+  hs-source-dirs:      src
+test-suite tests
+  import: shared-opts
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  main-is: Main.hs
