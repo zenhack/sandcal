@@ -1,4 +1,4 @@
-module SandCal.Types exposing (Event, decodeEvent)
+module SandCal.Types exposing (Event, decodeEvent, encodeEvent)
 
 import Json.Decode as D
 import Json.Encode as E
