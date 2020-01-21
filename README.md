@@ -1,1 +1,1 @@
-TODO: write README
+WIP sandstorm calendar app.
