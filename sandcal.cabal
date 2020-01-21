@@ -74,6 +74,7 @@ executable sandcal
   other-modules:
       DB
     , Config
+    , View
   hs-source-dirs:      src
 test-suite tests
   import: shared-opts

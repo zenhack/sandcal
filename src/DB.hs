@@ -1,25 +1,31 @@
 {-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE OverloadedLabels #-}
 module DB
-    ( connect
+    ( DB
+    , DBT
+    , connect
     , initSchema
-    , withDB
+    , with
     , Event(..)
     , allEvents
     ) where
 
-import Database.Selda
+import Database.Selda         hiding (with)
 import Database.Selda.Backend (SeldaConnection, runSeldaT)
 import Database.Selda.SQLite
 import Zhp
 
 import Config
 
-connect :: FilePath -> IO (SeldaConnection SQLite)
+type DB = SeldaConnection SQLite
+
+type DBT m a = SeldaT SQLite m a
+
+connect :: FilePath -> IO DB
 connect = sqliteOpen
 
-withDB :: (MonadIO m, MonadMask m) => SeldaConnection SQLite -> SeldaT SQLite m a -> m a
-withDB db m = runSeldaT m db
+with :: (MonadIO m, MonadMask m) => DB -> DBT m a -> m a
+with db m = runSeldaT m db
 
 -- | Initialize the database.
 initSchema :: MonadSelda m => m ()
