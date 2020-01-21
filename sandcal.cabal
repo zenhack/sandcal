@@ -72,7 +72,8 @@ executable sandcal
   import: shared-opts
   main-is: Main.hs
   other-modules:
-    DBModel
+      DBModel
+    , Config
   hs-source-dirs:      src
 test-suite tests
   import: shared-opts

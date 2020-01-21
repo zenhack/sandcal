@@ -1,15 +1,29 @@
 {-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE OverloadedLabels #-}
 module DBModel
-    ( initDB
+    ( connect
+    , initSchema
+    , withDB
+    , Event(..)
+    , allEvents
     ) where
 
 import Database.Selda
+import Database.Selda.Backend (SeldaConnection, runSeldaT)
+import Database.Selda.SQLite
 import Zhp
 
+import Config
+
+connect :: FilePath -> IO (SeldaConnection SQLite)
+connect = sqliteOpen
+
+withDB :: (MonadIO m, MonadMask m) => SeldaConnection SQLite -> SeldaT SQLite m a -> m a
+withDB db m = runSeldaT m db
+
 -- | Initialize the database.
-initDB :: MonadSelda m => m ()
-initDB = do
+initSchema :: MonadSelda m => m ()
+initSchema = do
     createTable events
 
 -------------------- Schema -----------------------

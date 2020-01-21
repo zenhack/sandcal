@@ -11,6 +11,8 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 
 import Web.Scotty
 
+import Config (cfgDBPath, getConfig)
+
 import qualified DBModel
 
 blaze :: Html -> ActionM ()
@@ -30,8 +32,11 @@ formatRoute (NewEvent _) = "/event/new"
 
 main :: IO ()
 main = do
-    dbPath <- maybe "./sandcal.db" id <$> lookupEnv "DB_PATH"
-    withSQLite dbPath $ DBModel.initDB
+    args <- getArgs
+    dbPath <- cfgDBPath <$> getConfig
+    db <- DBModel.connect dbPath
+    when (args == ["--init"]) $ do
+        DBModel.withDB db DBModel.initSchema
     scotty 3000 $ do
         get "/" $ handleRt Root
         get "/event/new" $ handleRt (NewEvent GET)
