@@ -68,6 +68,12 @@ common shared-opts
     , text ^>=1.2.4
     , time ^>=1.9.3
     , parsec ^>=3.1.13
+    , aeson ^>=1.4.6
+    , heredoc ^>=0.2.0
+  ghc-options:
+    -Wall
+    -Wno-missing-signatures
+    -Werror
   default-language:    Haskell2010
 
 executable sandcal
@@ -79,6 +85,7 @@ executable sandcal
     , View
     , Route
     , Forms
+    , ApiTypes
   hs-source-dirs:      src
 test-suite tests
   import: shared-opts
