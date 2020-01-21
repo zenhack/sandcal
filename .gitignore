@@ -15,3 +15,5 @@ cabal.project.local
 # Code coverage:
 .hpc
 *.tix
+
+*.db
