@@ -15,9 +15,10 @@ data Route
 data Method = GET | POST
 
 path :: IsString a => Route -> a
-path Root         = "/"
-path AllEvents    = "/api/all-events.json"
-path (NewEvent _) = "/event/new"
+path Root            = "/"
+path AllEvents       = "/api/all-events.json"
+path (NewEvent GET)  = "/event/new"
+path (NewEvent POST) = "/api/event/new"
 
 method :: Route -> Method
 method Root         = GET
