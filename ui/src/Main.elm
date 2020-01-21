@@ -6,6 +6,7 @@ import Html exposing (..)
 import Html.Attributes exposing (for, name, type_, value)
 import Http
 import SandCal.Api as Api
+import SandCal.Forms as Forms
 import SandCal.Types as Types
 import Time
 import Url
@@ -25,16 +26,8 @@ type alias EventsResult =
 
 type Page
     = EventsPage { events : Maybe EventsResult }
-    | NewEventPage NewEventForm
+    | NewEventPage Forms.NewEvent
     | NotFoundPage
-
-
-type alias NewEventForm =
-    { summary : String
-    , startDate : Maybe String
-    , startTime : Maybe String
-    , endTime : Maybe String
-    }
 
 
 type Msg
@@ -45,6 +38,7 @@ type Msg
 
 type PageMsg
     = EventsPageMsg EventsPageMsg
+    | NewEventPageMsg Forms.NewEventMsg
 
 
 type EventsPageMsg
@@ -79,17 +73,12 @@ initPage url =
             )
 
         Just NewEvent ->
-            ( NewEventPage
-                { summary = ""
-                , startDate = Nothing
-                , startTime = Nothing
-                , endTime = Nothing
-                }
+            ( NewEventPage Forms.initNewEvent
             , Cmd.none
             )
 
 
-view : Model -> Browser.Document msg
+view : Model -> Browser.Document Msg
 view (Model { page }) =
     case page of
         EventsPage { events } ->
@@ -99,33 +88,16 @@ view (Model { page }) =
 
         NewEventPage form ->
             { title = "SandCal - New Event"
-            , body = viewNewEventForm form
+            , body =
+                [ Forms.viewNewEvent form
+                    |> Html.map (NewEventPageMsg >> PageMsg)
+                ]
             }
 
         NotFoundPage ->
             { title = "SandCal - Not Found"
             , body = [ text "404 - not found" ]
             }
-
-
-viewNewEventForm : NewEventForm -> List (Html msg)
-viewNewEventForm form =
-    let
-        maybeValue viewVal =
-            Maybe.map (List.singleton << viewVal)
-                >> Maybe.withDefault []
-
-        inputField nam ty val =
-            div []
-                [ label [ for nam ] [ text nam ]
-                , input (type_ ty :: name nam :: maybeValue value val) []
-                ]
-    in
-    [ inputField "Summary" "text" (Just form.summary)
-    , inputField "Date" "date" form.startDate
-    , inputField "Start Time" "time" form.startTime
-    , inputField "End Time" "time" form.endTime
-    ]
 
 
 viewEvents : Maybe EventsResult -> Html msg
@@ -187,19 +159,23 @@ update msg (Model m) =
 
 
 updatePage : PageMsg -> Page -> ( Page, Cmd PageMsg )
-updatePage msg page =
-    case ( page, msg ) of
+updatePage pageMsg page =
+    case ( page, pageMsg ) of
         ( EventsPage p, EventsPageMsg (AllEventsResult res) ) ->
             ( EventsPage { p | events = Just res }
             , Cmd.none
             )
 
-        ( NewEventPage _, _ ) ->
-            ( page
-            , Cmd.none
+        ( NewEventPage form, NewEventPageMsg msg ) ->
+            let
+                ( newForm, cmd ) =
+                    Forms.updateNewEvent msg form
+            in
+            ( NewEventPage newForm
+            , Cmd.map NewEventPageMsg cmd
             )
 
-        ( NotFoundPage, _ ) ->
+        _ ->
             ( page
             , Cmd.none
             )

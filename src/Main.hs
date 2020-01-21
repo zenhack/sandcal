@@ -58,6 +58,7 @@ handleRt db AllEvents = do
         ]
 handleRt db (NewEvent POST) = do
     ev <- jsonData
+    liftIO $ print ev
     eid <- liftIO $ DB.with db $ DB.addEvent DB.Event
         { DB.evId = def
         , DB.evSummary = ApiTypes.summary ev
