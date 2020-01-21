@@ -8,6 +8,7 @@ module DB
     , with
     , Event(..)
     , allEvents
+    , addEvent
     ) where
 
 import Database.Selda         hiding (with)
@@ -48,3 +49,6 @@ events = table "events" [#evId :- autoPrimary]
 
 allEvents :: MonadSelda m => m [Event]
 allEvents = query $ select events
+
+addEvent :: MonadSelda m => Event -> m (ID Event)
+addEvent ev = insertWithPK events [ev]

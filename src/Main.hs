@@ -6,6 +6,7 @@ import Zhp
 import qualified Data.Text.Lazy as LT
 
 import Control.Exception.Safe        (bracket)
+import Database.Selda                (def)
 import Database.Selda.SQLite         (withSQLite)
 import Text.Blaze.Html               (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -50,5 +51,9 @@ handleRt db (NewEvent GET) =
     blaze $ View.page "Sandcal - New Event" (pure ()) View.newEventForm
 handleRt db (NewEvent POST) = do
     f <- Forms.parseForm
-    liftIO $ print (f :: Forms.NewEvent)
-    text "TODO"
+    eid <- liftIO $ DB.with db $ DB.addEvent DB.Event
+        { DB.evId = def
+        , DB.evSummary = LT.toStrict $ Forms.neSummary f
+        , DB.evDTStart = Forms.neStart f
+        }
+    text (fromString $ show eid)
