@@ -13,7 +13,7 @@ import Web.Scotty
 
 import Config (cfgDBPath, getConfig)
 
-import qualified DBModel
+import qualified DB
 
 blaze :: Html -> ActionM ()
 blaze = html . renderHtml
@@ -34,9 +34,9 @@ main :: IO ()
 main = do
     args <- getArgs
     dbPath <- cfgDBPath <$> getConfig
-    db <- DBModel.connect dbPath
+    db <- DB.connect dbPath
     when (args == ["--init"]) $ do
-        DBModel.withDB db DBModel.initSchema
+        DB.withDB db DB.initSchema
     scotty 3000 $ do
         get "/" $ handleRt Root
         get "/event/new" $ handleRt (NewEvent GET)

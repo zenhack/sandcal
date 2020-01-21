@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE OverloadedLabels #-}
-module DBModel
+module DB
     ( connect
     , initSchema
     , withDB
