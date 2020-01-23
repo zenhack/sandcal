@@ -6,12 +6,15 @@ module SandCal.Forms exposing
     , viewNewEvent
     )
 
+import DTUtil
 import Html exposing (..)
 import Html.Attributes exposing (for, name, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Http
-import Json.Decode as D
-import Json.Encode as E
+import Parser exposing (Parser)
+import SandCal.Api as Api
+import SandCal.Types as Types
+import Time
 
 
 type NewEventMsg
@@ -25,18 +28,45 @@ type alias NewEvent =
     , startDate : Maybe String
     , startTime : Maybe String
     , endTime : Maybe String
-    , error : Maybe Http.Error
+    , error : Maybe Error
     }
 
 
-encodeNewEvent : NewEvent -> E.Value
-encodeNewEvent ev =
-    E.object
-        [ ( "summary", E.string ev.summary )
-        , ( "startDate", ev.startDate |> Maybe.withDefault "" |> E.string )
-        , ( "startTime", ev.startTime |> Maybe.withDefault "" |> E.string )
-        , ( "endTime", ev.endTime |> Maybe.withDefault "" |> E.string )
-        ]
+type Error
+    = HttpError Http.Error
+    | ParseError FieldId -- TODO: record the parse error itself?
+    | MissingPart FieldId
+
+
+type FieldId
+    = StartDate
+    | StartTime
+    | EndTime
+
+
+convertEvent : NewEvent -> Result Error Types.Event
+convertEvent ev =
+    Result.map3
+        (\startDate startTime endTime ->
+            { summary = ev.summary
+            , start = DTUtil.partsToPosix Time.utc startDate startTime
+            , end = DTUtil.partsToPosix Time.utc startDate endTime
+            }
+        )
+        (parseField DTUtil.dateParser StartDate ev.startDate)
+        (parseField DTUtil.timeOfDayParser StartTime ev.startTime)
+        (parseField DTUtil.timeOfDayParser EndTime ev.endTime)
+
+
+parseField : Parser a -> FieldId -> Maybe String -> Result Error a
+parseField p fieldId field =
+    case field of
+        Nothing ->
+            Err (MissingPart fieldId)
+
+        Just input ->
+            Parser.run p input
+                |> Result.mapError (\_ -> ParseError fieldId)
 
 
 initNewEvent : NewEvent
@@ -56,16 +86,19 @@ updateNewEvent msg ev =
             ( f ev, Cmd.none )
 
         SubmitEvent ->
-            ( ev
-            , Http.post
-                { url = "/api/event/new"
-                , body = Http.jsonBody (encodeNewEvent ev)
-                , expect = Http.expectJson EventSubmitResult D.string
-                }
-            )
+            case convertEvent ev of
+                Err err ->
+                    ( { ev | error = Just err }
+                    , Cmd.none
+                    )
+
+                Ok apiEv ->
+                    ( ev
+                    , Api.addEvent EventSubmitResult apiEv
+                    )
 
         EventSubmitResult (Err e) ->
-            ( { ev | error = Just e }
+            ( { ev | error = Just (HttpError e) }
             , Cmd.none
             )
 
