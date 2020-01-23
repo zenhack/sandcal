@@ -17,3 +17,6 @@ cabal.project.local
 *.tix
 
 *.db
+
+# Used by the Makefile; see comments there.
+.build-hs
