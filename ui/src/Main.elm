@@ -3,8 +3,9 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Html exposing (..)
-import Html.Attributes exposing (for, name, type_, value)
+import Html.Attributes exposing (for, href, name, type_, value)
 import Http
+import Ports
 import SandCal.Api as Api
 import SandCal.Forms as Forms
 import SandCal.Types as Types
@@ -83,7 +84,10 @@ view (Model { page }) =
     case page of
         EventsPage { events } ->
             { title = "SandCal"
-            , body = [ viewEvents events ]
+            , body =
+                [ viewEvents events
+                , a [ href "/event/new" ] [ text "New Event" ]
+                ]
             }
 
         NewEventPage form ->
@@ -154,7 +158,7 @@ update msg (Model m) =
 
         UrlChange _ ->
             ( Model m
-            , Cmd.none
+            , Ports.syncFrame ()
             )
 
 

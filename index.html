@@ -5,10 +5,16 @@
 		<meta name="viewport" content="width=device-width" />
 		<script src="/ui.js"></script>
 		<script>
-			document.addEventListener('DOMContentLoaded', function(event) {
-				Elm.Main.init({
-					flags: {},
-				})
+			document.addEventListener('DOMContentLoaded', function() {
+				const app = Elm.Main.init()
+				app.ports.syncFrame.subscribe(function() {
+					window.parent.postMessage({
+						setPath: location.path + location.hash,
+					}, '*');
+					window.parent.postMessage({
+						setTitle: document.title,
+					}, '*');
+				});
 			});
 		</script>
 	</head>
