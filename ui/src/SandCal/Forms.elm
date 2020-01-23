@@ -58,7 +58,7 @@ updateNewEvent msg ev =
         SubmitEvent ->
             ( ev
             , Http.post
-                { url = "/event/new"
+                { url = "/api/event/new"
                 , body = Http.jsonBody (encodeNewEvent ev)
                 , expect = Http.expectJson EventSubmitResult D.string
                 }

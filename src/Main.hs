@@ -6,12 +6,14 @@ import Zhp
 
 import Database.Selda (def)
 
-import Network.HTTP.Types.Status (status404)
-import Web.Scotty
+import qualified Data.Text.Lazy            as LT
+import           Network.HTTP.Types.Status (status404)
+import           Web.Scotty
 
 import qualified SandCal.ApiTypes as ApiTypes
 import           SandCal.Config   (cfgDBPath, getConfig)
 import qualified SandCal.DB       as DB
+import qualified SandCal.Forms    as Forms
 import           SandCal.Route    (Method(..), Route(..))
 import qualified SandCal.Route    as Route
 
@@ -53,10 +55,9 @@ handleRt db AllEvents = do
         ]
 handleRt db (NewEvent POST) = do
     ev <- jsonData
-    liftIO $ print ev
     eid <- liftIO $ DB.with db $ DB.addEvent DB.Event
         { DB.evId = def
-        , DB.evSummary = ApiTypes.summary ev
-        , DB.evDTStart = ApiTypes.start ev
+        , DB.evSummary = LT.toStrict $ Forms.neSummary ev
+        , DB.evDTStart = Forms.neStart ev
         }
     json (show eid)
