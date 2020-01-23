@@ -18,5 +18,6 @@ cabal.project.local
 
 *.db
 
+/sandcal
 # Used by the Makefile; see comments there.
 .build-hs

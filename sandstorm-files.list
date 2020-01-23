@@ -1,0 +1,34 @@
+# *** WARNING: GENERATED FILE ***
+# This file is automatically updated and rewritten in sorted order every time
+# the app runs in dev mode. You may manually add or remove files, but don't
+# expect comments or ordering to be retained.
+etc/gai.conf
+etc/ld.so.cache
+index.html
+lib64
+proc/cpuinfo
+sandcal
+sandstorm-http-bridge
+sandstorm-http-bridge-config
+sandstorm-manifest
+ui/ui.js
+usr/lib/ld-2.30.so
+usr/lib/ld-linux-x86-64.so.2
+usr/lib/libc-2.30.so
+usr/lib/libc.so.6
+usr/lib/libdl-2.30.so
+usr/lib/libdl.so.2
+usr/lib/libffi.so.6
+usr/lib/libffi.so.6.0.4
+usr/lib/libgmp.so.10
+usr/lib/libgmp.so.10.3.2
+usr/lib/libm-2.30.so
+usr/lib/libm.so.6
+usr/lib/libpthread-2.30.so
+usr/lib/libpthread.so.0
+usr/lib/librt-2.30.so
+usr/lib/librt.so.1
+usr/lib/libutil-2.30.so
+usr/lib/libutil.so.1
+usr/lib/libz.so.1
+usr/lib/libz.so.1.2.11
