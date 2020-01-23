@@ -27,9 +27,6 @@ main = do
     when (args == ["--init"]) $ do
         DB.with db DB.initSchema
     scotty 3000 $ do
-        get "/ui.js" $ do
-            setHeader "Content-Type" "application/javascript"
-            file "ui/ui.js"
         traverse_ (handle db) Route.allRoutes
         notFound $ do
             status status404
@@ -43,6 +40,9 @@ handle db rt = do
 
 handleRt :: DB.DB -> Route -> ActionM ()
 handleRt _db Root = elmPage
+handleRt _db Script = do
+    setHeader "Content-Type" "application/javascript"
+    file "ui/ui.js"
 handleRt _db (NewEvent GET) = elmPage
 handleRt db AllEvents = do
     events <- liftIO $ DB.with db DB.allEvents
