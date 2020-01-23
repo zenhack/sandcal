@@ -27,12 +27,7 @@ main = do
     when (args == ["--init"]) $ do
         DB.with db DB.initSchema
     scotty 3000 $ do
-        traverse_ (handle db)
-            [ Root
-            , AllEvents
-            , NewEvent GET
-            , NewEvent POST
-            ]
+        traverse_ (handle db) Route.allRoutes
         notFound $ do
             status status404
             elmPage
