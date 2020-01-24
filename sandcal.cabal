@@ -56,9 +56,11 @@ common shared-opts
     , aeson ^>=1.4.6
     , heredoc ^>=0.2.0
     , http-types ^>=0.12.3
+    , iCalendar ^>=0.4.0
   ghc-options:
     -Wall
     -Wno-missing-signatures
+    -Wno-orphans
     -Werror
   default-language:    Haskell2010
 

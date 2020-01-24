@@ -1,5 +1,6 @@
-{-# LANGUAGE DeriveGeneric    #-}
-{-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE OverloadedLabels   #-}
+{-# LANGUAGE StandaloneDeriving #-}
 module SandCal.DB
     ( DB
     , DBT
@@ -7,6 +8,7 @@ module SandCal.DB
     , initSchema
     , with
     , Event(..)
+    , Recur(..)
     , allEvents
     , addEvent
     ) where
@@ -15,6 +17,8 @@ import Database.Selda         hiding (with)
 import Database.Selda.Backend (SeldaConnection, runSeldaT)
 import Database.Selda.SQLite
 import Zhp
+
+import qualified Text.ICalendar.Types as ICal
 
 type DB = SeldaConnection SQLite
 
@@ -30,6 +34,7 @@ with db m = runSeldaT m db
 initSchema :: MonadSelda m => m ()
 initSchema = do
     createTable events
+    createTable recurs
 
 -------------------- Schema -----------------------
 
@@ -40,8 +45,24 @@ data Event = Event
     } deriving(Show, Generic)
 instance SqlRow Event
 
+data Recur = Recur
+    { rEventId   :: ID Event
+    , rFrequency :: ICal.Frequency
+    , rUntil     :: Maybe Int
+    } deriving(Show, Generic)
+instance SqlRow Recur
+
+deriving instance Enum ICal.Frequency
+deriving instance Read  ICal.Frequency
+deriving instance Bounded ICal.Frequency
+deriving instance Generic ICal.Frequency
+instance SqlType ICal.Frequency
+
 events :: Table Event
 events = table "events" [#evId :- autoPrimary]
+
+recurs :: Table Recur
+recurs = table "recurs" []
 
 -------------------- Canned queries -----------------------
 
