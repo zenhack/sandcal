@@ -1,6 +1,5 @@
-{-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE OverloadedLabels   #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveGeneric    #-}
+{-# LANGUAGE OverloadedLabels #-}
 module SandCal.DB
     ( DB
     , DBT
@@ -18,7 +17,7 @@ import Database.Selda.Backend (SeldaConnection, runSeldaT)
 import Database.Selda.SQLite
 import Zhp
 
-import qualified Text.ICalendar.Types as ICal
+import qualified ICal.Types as ICal
 
 type DB = SeldaConnection SQLite
 
@@ -51,12 +50,6 @@ data Recur = Recur
     , rUntil     :: Maybe Int
     } deriving(Show, Generic)
 instance SqlRow Recur
-
-deriving instance Enum ICal.Frequency
-deriving instance Read  ICal.Frequency
-deriving instance Bounded ICal.Frequency
-deriving instance Generic ICal.Frequency
-instance SqlType ICal.Frequency
 
 events :: Table Event
 events = table "events" [#evId :- autoPrimary]

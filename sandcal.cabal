@@ -72,6 +72,7 @@ executable sandcal
     , SandCal.Config
     , SandCal.Route
     , SandCal.ApiTypes
+    , ICal.Types
   hs-source-dirs:      src
 test-suite tests
   import: shared-opts

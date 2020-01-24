@@ -51,6 +51,7 @@ handleRt db AllEvents = do
             { ApiTypes.summary = DB.evSummary e
             , ApiTypes.start = DB.evDTStart e
             , ApiTypes.end = DB.evDTStart e -- TODO: actually add the end field to the db.
+            , ApiTypes.recurs = []
             }
         | e <- events
         ]

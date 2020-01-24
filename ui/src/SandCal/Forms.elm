@@ -14,6 +14,7 @@ import Http
 import Parser exposing (Parser)
 import SandCal.Api as Api
 import SandCal.Types as Types
+import Set exposing (Set)
 import Time
 
 
@@ -51,6 +52,7 @@ convertEvent ev =
             { summary = ev.summary
             , start = DTUtil.partsToPosix Time.utc startDate startTime
             , end = DTUtil.partsToPosix Time.utc startDate endTime
+            , recurs = []
             }
         )
         (parseField DTUtil.dateParser StartDate ev.startDate)
