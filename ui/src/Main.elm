@@ -156,9 +156,16 @@ update msg (Model m) =
             , Nav.load url
             )
 
-        UrlChange _ ->
-            ( Model m
-            , Ports.syncFrame ()
+        UrlChange url ->
+            let
+                ( page, cmd ) =
+                    initPage url
+            in
+            ( Model { m | page = page }
+            , Cmd.batch
+                [ Cmd.map PageMsg cmd
+                , Ports.syncFrame ()
+                ]
             )
 
 

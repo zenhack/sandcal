@@ -9,7 +9,7 @@
 				const app = Elm.Main.init()
 				app.ports.syncFrame.subscribe(function() {
 					window.parent.postMessage({
-						setPath: location.path + location.hash,
+						setPath: location.pathname + location.hash,
 					}, '*');
 					window.parent.postMessage({
 						setTitle: document.title,
