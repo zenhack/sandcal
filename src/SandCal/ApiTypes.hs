@@ -5,6 +5,8 @@ module SandCal.ApiTypes
     , Recur(..)
     ) where
 
+import Elminator (ToHType)
+
 import Zhp
 
 import qualified Data.Text as T
@@ -24,6 +26,7 @@ data Event = Event
     deriving(Show, Read, Eq, Generic)
 instance ToJSON Event
 instance FromJSON Event
+instance ToHType Event
 
 data Recur = Recur
     { until     :: Maybe Int
@@ -32,3 +35,4 @@ data Recur = Recur
     deriving(Show, Read, Eq, Generic)
 instance ToJSON Recur
 instance FromJSON Recur
+instance ToHType Recur

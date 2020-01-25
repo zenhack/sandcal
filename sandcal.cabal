@@ -57,6 +57,7 @@ common shared-opts
     , heredoc ^>=0.2.0
     , http-types ^>=0.12.3
     , iCalendar ^>=0.4.0
+    , elminator ^>=0.2.4
   ghc-options:
     -Wall
     -Wno-missing-signatures
@@ -72,6 +73,7 @@ executable sandcal
     , SandCal.Config
     , SandCal.Route
     , SandCal.ApiTypes
+    , GenElm
     , ICal.Types
   hs-source-dirs:      src
 test-suite tests

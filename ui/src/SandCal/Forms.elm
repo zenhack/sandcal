@@ -14,7 +14,7 @@ import Html.Events exposing (onClick, onInput)
 import Http
 import Parser exposing (Parser)
 import SandCal.Api as Api
-import SandCal.Types as Types
+import SandCal.ApiTypes as Types
 import Set exposing (Set)
 import Time
 
@@ -50,11 +50,13 @@ convertEvent : NewEvent -> Result Error Types.Event
 convertEvent ev =
     Result.map3
         (\startDate startTime endTime ->
-            { summary = ev.summary
-            , start = DTUtil.partsToPosix Time.utc startDate startTime
-            , end = DTUtil.partsToPosix Time.utc startDate endTime
-            , recurs = []
-            }
+            Types.Event
+                { summary = ev.summary
+                , start = DTUtil.partsToPosix Time.utc startDate startTime |> Time.posixToMillis
+                , end = DTUtil.partsToPosix Time.utc startDate endTime |> Time.posixToMillis
+                , recurs = []
+                , id = Nothing
+                }
         )
         (parseField DTUtil.dateParser StartDate ev.startDate)
         (parseField DTUtil.timeOfDayParser StartTime ev.startTime)

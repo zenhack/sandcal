@@ -7,8 +7,8 @@ import Html.Attributes exposing (for, href, name, type_, value)
 import Http
 import Ports
 import SandCal.Api as Api
+import SandCal.ApiTypes as Types
 import SandCal.Forms as Forms
-import SandCal.Types as Types
 import Time
 import Url
 import Url.Parser exposing ((</>))
@@ -143,7 +143,7 @@ viewEvents events =
             ul []
                 (evs
                     |> List.map
-                        (\ev ->
+                        (\(Types.Event ev) ->
                             li [] [ text ev.summary ]
                         )
                 )
