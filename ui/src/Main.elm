@@ -7,8 +7,8 @@ import Html.Attributes exposing (for, href, name, type_, value)
 import Http
 import Ports
 import SandCal.Api as Api
-import SandCal.ApiTypes as Types
 import SandCal.Pages.NewEvent as NewEvent
+import SandCal.Types as Types
 import Time
 import Url
 import Url.Parser exposing ((</>))
@@ -143,7 +143,7 @@ viewEvents events =
             ul []
                 (evs
                     |> List.filterMap
-                        (\(Types.Event ev) ->
+                        (\ev ->
                             -- TODO: these should never actually be `Nothing`; the server always
                             -- includes the types in all-events.json; tweak the types to rule
                             -- this out.

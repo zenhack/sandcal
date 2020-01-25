@@ -1,6 +1,4 @@
-elm_src := \
-	$(shell find ui/src -type f -name '*.elm') \
-	ui/gen/SandCal/ApiTypes.elm
+elm_src := $(shell find ui/src -type f -name '*.elm')
 hs_src := $(shell find src -type f -name '*.hs')
 
 all: ui/ui.js sandcal
@@ -11,8 +9,7 @@ dev: all
 
 ui/ui.js: ui/elm.json $(elm_src)
 	cd ui; elm make --debug src/Main.elm --output ui.js
-ui/gen/SandCal/ApiTypes.elm: sandcal
-	./sandcal --gen-elm > $@
+
 .build-hs: cabal.project $(wildcard *.cabal) $(hs_src)
 	cabal new-build
 	@# Create a sentinel file, so we can depend on this without

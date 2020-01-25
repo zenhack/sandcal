@@ -14,7 +14,7 @@ import Html.Events exposing (onCheck, onClick, onInput)
 import Http
 import Parser exposing (Parser)
 import SandCal.Api as Api
-import SandCal.ApiTypes as Types
+import SandCal.Types as Types
 import Set exposing (Set)
 import Time
 
@@ -59,18 +59,17 @@ convertEvent : Model -> Result Error Types.Event
 convertEvent ev =
     Result.map3
         (\startDate startTime endTime ->
-            Types.Event
-                { summary = ev.summary
-                , start = DTUtil.partsToPosix Time.utc startDate startTime |> Time.posixToMillis
-                , end = DTUtil.partsToPosix Time.utc startDate endTime |> Time.posixToMillis
-                , recurs =
-                    if ev.isRecurring then
-                        [ ev.recur ]
+            { summary = ev.summary
+            , start = DTUtil.partsToPosix Time.utc startDate startTime
+            , end = DTUtil.partsToPosix Time.utc startDate endTime
+            , recurs =
+                if ev.isRecurring then
+                    [ ev.recur ]
 
-                    else
-                        []
-                , id = Nothing
-                }
+                else
+                    []
+            , id = Nothing
+            }
         )
         (parseField DTUtil.dateParser StartDate ev.startDate)
         (parseField DTUtil.timeOfDayParser StartTime ev.startTime)
@@ -97,10 +96,9 @@ init =
     , error = Nothing
     , isRecurring = False
     , recur =
-        Types.Recur
-            { frequency = Types.Weekly
-            , until = Nothing
-            }
+        { frequency = Types.Weekly
+        , until = Nothing
+        }
     }
 
 
@@ -196,20 +194,18 @@ viewRecurInput { isRecurring, recur } =
                     []
 
                 else
-                    case recur of
-                        Types.Recur { frequency, until } ->
-                            [ select []
-                                (frequencyChoices
-                                    |> List.map
-                                        (\choice ->
-                                            option
-                                                [ selected (choice == frequency) ]
-                                                -- TODO: get rid of this use of Debug,
-                                                -- so we can --optimize.
-                                                [ text (Debug.toString choice) ]
-                                        )
+                    [ select []
+                        (frequencyChoices
+                            |> List.map
+                                (\choice ->
+                                    option
+                                        [ selected (choice == recur.frequency) ]
+                                        -- TODO: get rid of this use of Debug,
+                                        -- so we can --optimize.
+                                        [ text (Debug.toString choice) ]
                                 )
-                            ]
+                        )
+                    ]
                )
         )
 

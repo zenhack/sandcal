@@ -8,7 +8,6 @@ import Zhp
 
 import Data.Aeson     (FromJSON, ToJSON)
 import Database.Selda (SqlType)
-import Elminator      (ToHType)
 import GHC.Generics   (Generic)
 
 import Text.ICalendar.Types
@@ -20,4 +19,3 @@ deriving instance Generic Frequency
 instance SqlType Frequency
 instance ToJSON Frequency
 instance FromJSON Frequency
-instance ToHType Frequency
