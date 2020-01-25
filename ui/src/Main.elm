@@ -142,9 +142,18 @@ viewEvents events =
         Just (Ok evs) ->
             ul []
                 (evs
-                    |> List.map
+                    |> List.filterMap
                         (\(Types.Event ev) ->
-                            li [] [ text ev.summary ]
+                            -- TODO: these should never actually be `Nothing`; the server always
+                            -- includes the types in all-events.json; tweak the types to rule
+                            -- this out.
+                            Maybe.map
+                                (\id ->
+                                    li []
+                                        [ a [ href ("/event/" ++ id) ] [ text ev.summary ]
+                                        ]
+                                )
+                                ev.id
                         )
                 )
 
