@@ -242,9 +242,7 @@ viewRecurForm { isRecurring, recur } =
                         (\choice ->
                             option
                                 [ selected (choice == recur.frequency) ]
-                                -- TODO: get rid of this use of Debug,
-                                -- so we can --optimize.
-                                [ text (Debug.toString choice) ]
+                                [ text (Types.frequencyToString choice) ]
                         )
                 )
             ]

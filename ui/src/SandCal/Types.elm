@@ -6,6 +6,7 @@ module SandCal.Types exposing
     , decodeFrequency
     , encodeEvent
     , encodeFrequency
+    , frequencyToString
     )
 
 import Json.Decode as D
@@ -70,29 +71,33 @@ decodeFrequency =
 
 
 encodeFrequency : Frequency -> E.Value
-encodeFrequency freq =
-    E.string <|
-        case freq of
-            Secondly ->
-                "Secondly"
+encodeFrequency =
+    frequencyToString >> E.string
 
-            Minutely ->
-                "Minutely"
 
-            Hourly ->
-                "Hourly"
+frequencyToString : Frequency -> String
+frequencyToString freq =
+    case freq of
+        Secondly ->
+            "Secondly"
 
-            Daily ->
-                "Daily"
+        Minutely ->
+            "Minutely"
 
-            Weekly ->
-                "Weekly"
+        Hourly ->
+            "Hourly"
 
-            Monthly ->
-                "Monthly"
+        Daily ->
+            "Daily"
 
-            Yearly ->
-                "Yearly"
+        Weekly ->
+            "Weekly"
+
+        Monthly ->
+            "Monthly"
+
+        Yearly ->
+            "Yearly"
 
 
 encodeRecur : Recur -> E.Value
