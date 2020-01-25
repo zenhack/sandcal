@@ -17,6 +17,7 @@ import SandCal.Api as Api
 import SandCal.Types as Types
 import Set exposing (Set)
 import Time
+import Util.Html.Events exposing (onChange)
 
 
 type Msg
@@ -24,6 +25,7 @@ type Msg
     | SubmitEvent
     | EventSubmitResult (Result Http.Error String)
     | SetRecurring Bool
+    | SetFrequency Types.Frequency
 
 
 type alias Model =
@@ -110,6 +112,18 @@ update navKey msg ev =
 
         SetRecurring isRecurring ->
             ( { ev | isRecurring = isRecurring }
+            , Cmd.none
+            )
+
+        SetFrequency newFreq ->
+            let
+                oldRecur =
+                    ev.recur
+
+                newRecur =
+                    { oldRecur | frequency = newFreq }
+            in
+            ( { ev | recur = newRecur }
             , Cmd.none
             )
 
@@ -219,7 +233,10 @@ viewRecurForm { isRecurring, recur } =
             []
 
          else
-            [ select [ displayRow ]
+            [ select
+                [ displayRow
+                , onChange SetFrequency Types.decodeFrequency
+                ]
                 (frequencyChoices
                     |> List.map
                         (\choice ->

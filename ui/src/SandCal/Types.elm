@@ -3,7 +3,9 @@ module SandCal.Types exposing
     , Frequency(..)
     , Recur
     , decodeEvent
+    , decodeFrequency
     , encodeEvent
+    , encodeFrequency
     )
 
 import Json.Decode as D
