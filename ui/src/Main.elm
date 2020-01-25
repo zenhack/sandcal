@@ -18,6 +18,7 @@ type Model
     = Model
         { page : Page
         , navKey : Nav.Key
+        , grainTitle : String
         }
 
 
@@ -35,6 +36,7 @@ type Msg
     = ClickedLink Browser.UrlRequest
     | UrlChange Url.Url
     | PageMsg PageMsg
+    | GrainTitleChange String
 
 
 type PageMsg
@@ -54,6 +56,7 @@ init _ url navKey =
     in
     ( Model
         { navKey = navKey
+        , grainTitle = ""
         , page = page
         }
     , Cmd.map PageMsg cmd
@@ -79,11 +82,33 @@ initPage url =
             )
 
 
+viewTitle : String -> String -> String
+viewTitle grainTitle pageTitle =
+    let
+        mainTitle =
+            case grainTitle of
+                "" ->
+                    "SandCal"
+
+                _ ->
+                    grainTitle
+
+        subTitle =
+            case pageTitle of
+                "" ->
+                    ""
+
+                _ ->
+                    " - " ++ pageTitle
+    in
+    mainTitle ++ subTitle
+
+
 view : Model -> Browser.Document Msg
-view (Model { page }) =
+view (Model { page, grainTitle }) =
     case page of
         EventsPage { events } ->
-            { title = "SandCal"
+            { title = viewTitle grainTitle ""
             , body =
                 [ viewEvents events
                 , a [ href "/event/new" ] [ text "New Event" ]
@@ -91,7 +116,7 @@ view (Model { page }) =
             }
 
         NewEventPage form ->
-            { title = "SandCal - New Event"
+            { title = viewTitle grainTitle "New Event"
             , body =
                 [ Forms.viewNewEvent form
                     |> Html.map (NewEventPageMsg >> PageMsg)
@@ -99,7 +124,7 @@ view (Model { page }) =
             }
 
         NotFoundPage ->
-            { title = "SandCal - Not Found"
+            { title = viewTitle grainTitle "Not Found"
             , body = [ text "404 - not found" ]
             }
 
@@ -168,6 +193,11 @@ update msg (Model m) =
                 ]
             )
 
+        GrainTitleChange newTitle ->
+            ( Model { m | grainTitle = newTitle }
+            , Cmd.none
+            )
+
 
 updatePage : PageMsg -> Page -> ( Page, Cmd PageMsg )
 updatePage pageMsg page =
@@ -194,7 +224,7 @@ updatePage pageMsg page =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Ports.grainTitle GrainTitleChange
 
 
 main =
