@@ -9,7 +9,7 @@ module SandCal.Pages.NewEvent exposing
 import Browser.Navigation as Nav
 import DTUtil
 import Html exposing (..)
-import Html.Attributes exposing (for, name, selected, type_, value)
+import Html.Attributes exposing (for, name, selected, style, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Http
 import Parser exposing (Parser)
@@ -137,11 +137,29 @@ update navKey msg ev =
             )
 
 
+displayTable =
+    style "display" "table"
+
+
+displayRow =
+    style "display" "table-row"
+
+
+displayCell =
+    style "display" "table-cell"
+
+
 labeledInput : String -> List (Attribute msg) -> List (Html msg) -> Html msg
 labeledInput nam attrs kids =
-    div []
-        [ label [ for nam ] [ text nam ]
-        , input (name nam :: attrs) kids
+    div [ displayRow ]
+        [ label
+            [ for nam
+            , displayCell
+            ]
+            [ text nam ]
+        , input
+            (name nam :: displayCell :: attrs)
+            kids
         ]
 
 
@@ -161,52 +179,58 @@ view form =
                 []
     in
     div []
-        [ inputField "Summary"
-            "text"
-            (Just form.summary)
-            (\s f -> { f | summary = s })
-        , inputField "Date"
-            "date"
-            form.startDate
-            (\s f -> { f | startDate = Just s })
-        , inputField "Start Time"
-            "time"
-            form.startTime
-            (\s f -> { f | startTime = Just s })
-        , inputField "End Time"
-            "time"
-            form.endTime
-            (\s f -> { f | endTime = Just s })
-        , viewRecurInput form
+        [ div [ displayTable ]
+            [ inputField "Summary"
+                "text"
+                (Just form.summary)
+                (\s f -> { f | summary = s })
+            , inputField "Date"
+                "date"
+                form.startDate
+                (\s f -> { f | startDate = Just s })
+            , inputField "Start Time"
+                "time"
+                form.startTime
+                (\s f -> { f | startTime = Just s })
+            , inputField "End Time"
+                "time"
+                form.endTime
+                (\s f -> { f | endTime = Just s })
+            , viewIsRecurring form.isRecurring
+            ]
+        , viewRecurForm form
         , button [ onClick SubmitEvent ] [ text "Create" ]
         ]
 
 
-viewRecurInput : { a | isRecurring : Bool, recur : Types.Recur } -> Html Msg
-viewRecurInput { isRecurring, recur } =
-    div []
-        (labeledInput "Recurring?"
-            [ type_ "checkbox"
-            , onCheck SetRecurring
-            ]
-            []
-            :: (if not isRecurring then
-                    []
+viewIsRecurring : Bool -> Html Msg
+viewIsRecurring isRecurring =
+    labeledInput "Recurring?"
+        [ type_ "checkbox"
+        , onCheck SetRecurring
+        ]
+        []
 
-                else
-                    [ select []
-                        (frequencyChoices
-                            |> List.map
-                                (\choice ->
-                                    option
-                                        [ selected (choice == recur.frequency) ]
-                                        -- TODO: get rid of this use of Debug,
-                                        -- so we can --optimize.
-                                        [ text (Debug.toString choice) ]
-                                )
+
+viewRecurForm : { a | isRecurring : Bool, recur : Types.Recur } -> Html Msg
+viewRecurForm { isRecurring, recur } =
+    div []
+        (if not isRecurring then
+            []
+
+         else
+            [ select [ displayRow ]
+                (frequencyChoices
+                    |> List.map
+                        (\choice ->
+                            option
+                                [ selected (choice == recur.frequency) ]
+                                -- TODO: get rid of this use of Debug,
+                                -- so we can --optimize.
+                                [ text (Debug.toString choice) ]
                         )
-                    ]
-               )
+                )
+            ]
         )
 
 
