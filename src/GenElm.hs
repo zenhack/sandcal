@@ -1,25 +1,32 @@
-{-# LANGUAGE TemplateHaskell #-}
 module GenElm
-    ( elmSource
+    ( generate
     ) where
 
 import Zhp
 
-import Data.Aeson (defaultOptions)
-import Data.Text  (Text)
+import Elm
+import Servant.Elm
 
-import Elminator
 import ICal.Types       (Frequency)
 import SandCal.ApiTypes
 
-elmSource :: Text
-elmSource =
-    $(generateFor
-        Elm0p19
-        defaultOptions
-        "SandCal.ApiTypes"
-        (Just "./ui/gen/SandCal/ApiTypes.elm") $ do
-            include (Proxy :: Proxy Event) $ Everything Mono
-            include (Proxy :: Proxy Recur) $ Everything Mono
-            include (Proxy :: Proxy Frequency) $ Everything Mono
-    )
+generate :: IO ()
+generate = do
+    let spec = Spec
+            ["SandCal", "ApiTypes"]
+            (mconcat
+                [ [ defElmImports ]
+                , generateElmForAPI (Proxy :: Proxy SandCalApi)
+                , typeSpec (Proxy :: Proxy Event)
+                , typeSpec (Proxy :: Proxy Recur)
+                , typeSpec (Proxy :: Proxy Frequency)
+                ]
+            )
+    specsToDir [spec] "ui/gen"
+
+
+typeSpec proxy =
+    [ toElmTypeSource proxy
+    , toElmDecoderSource proxy
+    , toElmEncoderSource proxy
+    ]

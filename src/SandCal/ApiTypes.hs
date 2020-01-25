@@ -1,11 +1,17 @@
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TypeOperators         #-}
 module SandCal.ApiTypes
     ( Event(..)
     , Recur(..)
+
+    , SandCalApi
     ) where
 
-import Elminator (ToHType)
+import Elm         (ElmType)
+import Servant.API
 
 import Zhp
 
@@ -23,16 +29,16 @@ data Event = Event
     , recurs  :: [Recur]
     , id      :: Maybe T.Text
     }
-    deriving(Show, Read, Eq, Generic)
-instance ToJSON Event
-instance FromJSON Event
-instance ToHType Event
+    deriving(Show, Read, Eq, Generic, ElmType, ToJSON, FromJSON)
 
 data Recur = Recur
     { until     :: Maybe Int
     , frequency :: ICal.Frequency
     }
-    deriving(Show, Read, Eq, Generic)
-instance ToJSON Recur
-instance FromJSON Recur
-instance ToHType Recur
+    deriving(Show, Read, Eq, Generic, ElmType, ToJSON, FromJSON)
+
+type SandCalApi
+    = AllEvents
+    :<|> NewEvent
+type AllEvents = "all-events.json" :> Get '[JSON] [Event]
+type NewEvent = "event" :> "new" :> ReqBody '[JSON] Event :> Post '[JSON] T.Text

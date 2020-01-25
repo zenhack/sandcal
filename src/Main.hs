@@ -6,13 +6,13 @@ import Zhp
 
 import Database.Selda (def)
 
-import qualified Data.Text    as T
-import qualified Data.Text.IO as TIO
+import qualified Data.Text as T
 
 import Network.HTTP.Types.Status (status404)
 import Web.Scotty
 
 import qualified GenElm
+
 import qualified SandCal.ApiTypes as ApiTypes
 import           SandCal.Config   (cfgDBPath, getConfig)
 import qualified SandCal.DB       as DB
@@ -27,7 +27,7 @@ main :: IO ()
 main = do
     args <- getArgs
     when (args == ["--gen-elm"]) $ do
-        TIO.putStrLn GenElm.elmSource
+        GenElm.generate
         exitSuccess
     dbPath <- cfgDBPath <$> getConfig
     db <- DB.connect dbPath

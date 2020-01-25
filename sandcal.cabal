@@ -58,6 +58,9 @@ common shared-opts
     , http-types ^>=0.12.3
     , iCalendar ^>=0.4.0
     , elminator ^>=0.2.4
+    , servant
+    , servant-elm ^>=0.7.1
+    , elm-export ^>=0.6.0
   ghc-options:
     -Wall
     -Wno-missing-signatures
@@ -73,8 +76,8 @@ executable sandcal
     , SandCal.Config
     , SandCal.Route
     , SandCal.ApiTypes
-    , GenElm
     , ICal.Types
+    , GenElm
   hs-source-dirs:      src
 test-suite tests
   import: shared-opts
