@@ -28,6 +28,9 @@ main = do
         DB.with db DB.initSchema
     scotty 3000 $ do
         traverse_ (handle db) Route.allRoutes
+        get "/event/:eid" $ do
+            eid <- param "eid"
+            handleRt db (Route.Event eid)
         notFound $ do
             status status404
             elmPage
@@ -44,6 +47,7 @@ handleRt _db Script = do
     setHeader "Content-Type" "application/javascript"
     file "ui/ui.js"
 handleRt _db (NewEvent GET) = elmPage
+handleRt _db (Event _) = elmPage
 handleRt db AllEvents = do
     events <- liftIO $ DB.with db DB.allEvents
     json $

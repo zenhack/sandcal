@@ -6,6 +6,7 @@ module SandCal.Forms exposing
     , viewNewEvent
     )
 
+import Browser.Navigation as Nav
 import DTUtil
 import Html exposing (..)
 import Html.Attributes exposing (for, name, type_, value)
@@ -81,8 +82,8 @@ initNewEvent =
     }
 
 
-updateNewEvent : NewEventMsg -> NewEvent -> ( NewEvent, Cmd NewEventMsg )
-updateNewEvent msg ev =
+updateNewEvent : Nav.Key -> NewEventMsg -> NewEvent -> ( NewEvent, Cmd NewEventMsg )
+updateNewEvent navKey msg ev =
     case msg of
         UpdateNewEvent f ->
             ( f ev, Cmd.none )
@@ -104,10 +105,10 @@ updateNewEvent msg ev =
             , Cmd.none
             )
 
-        EventSubmitResult (Ok _) ->
+        EventSubmitResult (Ok eid) ->
             -- TODO: redirect to the event's page.
             ( ev
-            , Cmd.none
+            , Nav.pushUrl navKey eid
             )
 
 

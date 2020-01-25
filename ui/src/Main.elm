@@ -165,7 +165,7 @@ update msg (Model m) =
         PageMsg pageMsg ->
             let
                 ( newPage, cmd ) =
-                    updatePage pageMsg m.page
+                    updatePage m.navKey pageMsg m.page
             in
             ( Model { m | page = newPage }
             , Cmd.map PageMsg cmd
@@ -199,8 +199,8 @@ update msg (Model m) =
             )
 
 
-updatePage : PageMsg -> Page -> ( Page, Cmd PageMsg )
-updatePage pageMsg page =
+updatePage : Nav.Key -> PageMsg -> Page -> ( Page, Cmd PageMsg )
+updatePage navKey pageMsg page =
     case ( page, pageMsg ) of
         ( EventsPage p, EventsPageMsg (AllEventsResult res) ) ->
             ( EventsPage { p | events = Just res }
@@ -210,7 +210,7 @@ updatePage pageMsg page =
         ( NewEventPage form, NewEventPageMsg msg ) ->
             let
                 ( newForm, cmd ) =
-                    Forms.updateNewEvent msg form
+                    Forms.updateNewEvent navKey msg form
             in
             ( NewEventPage newForm
             , Cmd.map NewEventPageMsg cmd
