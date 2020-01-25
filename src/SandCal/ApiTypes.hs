@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 module SandCal.ApiTypes
     ( Event(..)
     , Recur(..)
@@ -18,6 +19,7 @@ data Event = Event
     , start   :: !Int
     , end     :: !Int
     , recurs  :: [Recur]
+    , id      :: Maybe T.Text
     }
     deriving(Show, Read, Eq, Generic)
 instance ToJSON Event

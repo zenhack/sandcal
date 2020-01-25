@@ -6,6 +6,8 @@ import Zhp
 
 import Database.Selda (def)
 
+import qualified Data.Text as T
+
 import Network.HTTP.Types.Status (status404)
 import Web.Scotty
 
@@ -56,6 +58,7 @@ handleRt db AllEvents = do
             , ApiTypes.start = DB.evDTStart e
             , ApiTypes.end = DB.evDTStart e -- TODO: actually add the end field to the db.
             , ApiTypes.recurs = []
+            , ApiTypes.id = Just (T.pack $ show $ DB.evId e)
             }
         | e <- events
         ]
