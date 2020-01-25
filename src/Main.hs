@@ -57,9 +57,17 @@ handleRt db AllEvents = do
         ]
 handleRt db (NewEvent POST) = do
     ev <- jsonData
-    eid <- liftIO $ DB.with db $ DB.addEvent DB.Event
-        { DB.evId = def
-        , DB.evSummary = ApiTypes.summary ev
-        , DB.evDTStart = ApiTypes.start ev
-        }
+    eid <- liftIO $ DB.with db $ do
+        eid <- DB.addEvent DB.Event
+            { DB.evId = def
+            , DB.evSummary = ApiTypes.summary ev
+            , DB.evDTStart = ApiTypes.start ev
+            }
+        for_ (ApiTypes.recurs ev) $ \r ->
+            DB.addRecur DB.Recur
+                { DB.rEventId = eid
+                , DB.rFrequency = ApiTypes.frequency r
+                , DB.rUntil = ApiTypes.until r
+                }
+        pure eid
     json (show eid)

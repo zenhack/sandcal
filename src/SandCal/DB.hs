@@ -10,6 +10,7 @@ module SandCal.DB
     , Recur(..)
     , allEvents
     , addEvent
+    , addRecur
     ) where
 
 import Database.Selda         hiding (with)
@@ -64,3 +65,6 @@ allEvents = query $ select events
 
 addEvent :: MonadSelda m => Event -> m (ID Event)
 addEvent ev = insertWithPK events [ev]
+
+addRecur :: MonadSelda m => Recur -> m (ID Recur)
+addRecur r = insertWithPK recurs [r]

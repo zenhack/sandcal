@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 module SandCal.ApiTypes
     ( Event(..)
+    , Recur(..)
     ) where
 
 import Zhp
