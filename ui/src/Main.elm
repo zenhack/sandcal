@@ -8,7 +8,7 @@ import Http
 import Ports
 import SandCal.Api as Api
 import SandCal.ApiTypes as Types
-import SandCal.Forms as Forms
+import SandCal.Pages.NewEvent as NewEvent
 import Time
 import Url
 import Url.Parser exposing ((</>))
@@ -28,7 +28,7 @@ type alias EventsResult =
 
 type Page
     = EventsPage { events : Maybe EventsResult }
-    | NewEventPage Forms.NewEvent
+    | NewEventPage NewEvent.Model
     | NotFoundPage
 
 
@@ -41,7 +41,7 @@ type Msg
 
 type PageMsg
     = EventsPageMsg EventsPageMsg
-    | NewEventPageMsg Forms.NewEventMsg
+    | NewEventPageMsg NewEvent.Msg
 
 
 type EventsPageMsg
@@ -77,7 +77,7 @@ initPage url =
             )
 
         Just NewEvent ->
-            ( NewEventPage Forms.initNewEvent
+            ( NewEventPage NewEvent.init
             , Cmd.none
             )
 
@@ -118,7 +118,7 @@ view (Model { page, grainTitle }) =
         NewEventPage form ->
             { title = viewTitle grainTitle "New Event"
             , body =
-                [ Forms.viewNewEvent form
+                [ NewEvent.view form
                     |> Html.map (NewEventPageMsg >> PageMsg)
                 ]
             }
@@ -219,7 +219,7 @@ updatePage navKey pageMsg page =
         ( NewEventPage form, NewEventPageMsg msg ) ->
             let
                 ( newForm, cmd ) =
-                    Forms.updateNewEvent navKey msg form
+                    NewEvent.update navKey msg form
             in
             ( NewEventPage newForm
             , Cmd.map NewEventPageMsg cmd

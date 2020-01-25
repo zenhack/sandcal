@@ -1,9 +1,9 @@
-module SandCal.Forms exposing
-    ( NewEvent
-    , NewEventMsg
-    , initNewEvent
-    , updateNewEvent
-    , viewNewEvent
+module SandCal.Pages.NewEvent exposing
+    ( Model
+    , Msg
+    , init
+    , update
+    , view
     )
 
 import Browser.Navigation as Nav
@@ -19,13 +19,13 @@ import Set exposing (Set)
 import Time
 
 
-type NewEventMsg
-    = UpdateNewEvent (NewEvent -> NewEvent)
+type Msg
+    = UpdateNewEvent (Model -> Model)
     | SubmitEvent
     | EventSubmitResult (Result Http.Error String)
 
 
-type alias NewEvent =
+type alias Model =
     { summary : String
     , startDate : Maybe String
     , startTime : Maybe String
@@ -46,7 +46,7 @@ type FieldId
     | EndTime
 
 
-convertEvent : NewEvent -> Result Error Types.Event
+convertEvent : Model -> Result Error Types.Event
 convertEvent ev =
     Result.map3
         (\startDate startTime endTime ->
@@ -74,8 +74,8 @@ parseField p fieldId field =
                 |> Result.mapError (\_ -> ParseError fieldId)
 
 
-initNewEvent : NewEvent
-initNewEvent =
+init : Model
+init =
     { summary = ""
     , startDate = Nothing
     , startTime = Nothing
@@ -84,8 +84,8 @@ initNewEvent =
     }
 
 
-updateNewEvent : Nav.Key -> NewEventMsg -> NewEvent -> ( NewEvent, Cmd NewEventMsg )
-updateNewEvent navKey msg ev =
+update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
+update navKey msg ev =
     case msg of
         UpdateNewEvent f ->
             ( f ev, Cmd.none )
@@ -114,18 +114,18 @@ updateNewEvent navKey msg ev =
             )
 
 
-viewNewEvent : NewEvent -> Html NewEventMsg
-viewNewEvent form =
+view : Model -> Html Msg
+view form =
     let
         maybeValue viewVal =
             Maybe.map (List.singleton << viewVal)
                 >> Maybe.withDefault []
 
-        inputField nam ty val update =
+        inputField nam ty val updateFn =
             div []
                 [ label [ for nam ] [ text nam ]
                 , input
-                    (onInput (\s -> UpdateNewEvent (update s))
+                    (onInput (\s -> UpdateNewEvent (updateFn s))
                         :: type_ ty
                         :: name nam
                         :: maybeValue value val
