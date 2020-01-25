@@ -9,8 +9,8 @@ module SandCal.Pages.NewEvent exposing
 import Browser.Navigation as Nav
 import DTUtil
 import Html exposing (..)
-import Html.Attributes exposing (for, name, type_, value)
-import Html.Events exposing (onClick, onInput)
+import Html.Attributes exposing (for, name, selected, type_, value)
+import Html.Events exposing (onCheck, onClick, onInput)
 import Http
 import Parser exposing (Parser)
 import SandCal.Api as Api
@@ -23,6 +23,7 @@ type Msg
     = UpdateNewEvent (Model -> Model)
     | SubmitEvent
     | EventSubmitResult (Result Http.Error String)
+    | SetRecurring Bool
 
 
 type alias Model =
@@ -31,6 +32,14 @@ type alias Model =
     , startTime : Maybe String
     , endTime : Maybe String
     , error : Maybe Error
+
+    -- We store wether we're specifying a recurring event and what the
+    -- recurrence is separately. This may seem like an obivous use case
+    -- for Maybe, but we actually *do* want to track recur even when
+    -- isRecurring = False, because if the user unchecks and then re-checks
+    -- the box, we want to remember what the value was.
+    , isRecurring : Bool
+    , recur : Types.Recur
     }
 
 
@@ -54,7 +63,12 @@ convertEvent ev =
                 { summary = ev.summary
                 , start = DTUtil.partsToPosix Time.utc startDate startTime |> Time.posixToMillis
                 , end = DTUtil.partsToPosix Time.utc startDate endTime |> Time.posixToMillis
-                , recurs = []
+                , recurs =
+                    if ev.isRecurring then
+                        [ ev.recur ]
+
+                    else
+                        []
                 , id = Nothing
                 }
         )
@@ -81,6 +95,12 @@ init =
     , startTime = Nothing
     , endTime = Nothing
     , error = Nothing
+    , isRecurring = False
+    , recur =
+        Types.Recur
+            { frequency = Types.Weekly
+            , until = Nothing
+            }
     }
 
 
@@ -89,6 +109,11 @@ update navKey msg ev =
     case msg of
         UpdateNewEvent f ->
             ( f ev, Cmd.none )
+
+        SetRecurring isRecurring ->
+            ( { ev | isRecurring = isRecurring }
+            , Cmd.none
+            )
 
         SubmitEvent ->
             case convertEvent ev of
@@ -114,6 +139,14 @@ update navKey msg ev =
             )
 
 
+labeledInput : String -> List (Attribute msg) -> List (Html msg) -> Html msg
+labeledInput nam attrs kids =
+    div []
+        [ label [ for nam ] [ text nam ]
+        , input (name nam :: attrs) kids
+        ]
+
+
 view : Model -> Html Msg
 view form =
     let
@@ -122,16 +155,12 @@ view form =
                 >> Maybe.withDefault []
 
         inputField nam ty val updateFn =
-            div []
-                [ label [ for nam ] [ text nam ]
-                , input
-                    (onInput (\s -> UpdateNewEvent (updateFn s))
-                        :: type_ ty
-                        :: name nam
-                        :: maybeValue value val
-                    )
-                    []
-                ]
+            labeledInput nam
+                (onInput (\s -> UpdateNewEvent (updateFn s))
+                    :: type_ ty
+                    :: maybeValue value val
+                )
+                []
     in
     div []
         [ inputField "Summary"
@@ -150,5 +179,44 @@ view form =
             "time"
             form.endTime
             (\s f -> { f | endTime = Just s })
+        , viewRecurInput form
         , button [ onClick SubmitEvent ] [ text "Create" ]
         ]
+
+
+viewRecurInput : { a | isRecurring : Bool, recur : Types.Recur } -> Html Msg
+viewRecurInput { isRecurring, recur } =
+    div []
+        (labeledInput "Recurring?"
+            [ type_ "checkbox"
+            , onCheck SetRecurring
+            ]
+            []
+            :: (if not isRecurring then
+                    []
+
+                else
+                    case recur of
+                        Types.Recur { frequency, until } ->
+                            [ select []
+                                (frequencyChoices
+                                    |> List.map
+                                        (\choice ->
+                                            option
+                                                [ selected (choice == frequency) ]
+                                                -- TODO: get rid of this use of Debug,
+                                                -- so we can --optimize.
+                                                [ text (Debug.toString choice) ]
+                                        )
+                                )
+                            ]
+               )
+        )
+
+
+frequencyChoices =
+    [ Types.Daily
+    , Types.Weekly
+    , Types.Monthly
+    , Types.Yearly
+    ]
