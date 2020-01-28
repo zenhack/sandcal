@@ -21,6 +21,10 @@ elmPage = do
     setHeader "Content-Type" "text/html"
     file "index.html"
 
+do404 = do
+    status status404
+    elmPage
+
 main :: IO ()
 main = do
     args <- getArgs
@@ -33,9 +37,25 @@ main = do
         get "/event/:eid" $ do
             eid <- param "eid"
             handleRt db (Route.Event eid)
-        notFound $ do
-            status status404
-            elmPage
+        get "/api/event/:eid" $ do
+            eid <- param "eid"
+            res <- liftIO $ DB.with db (DB.getEvent eid)
+            case res of
+                Nothing -> do404
+                Just (e, rs) ->
+                    json $ ApiTypes.Event
+                        { ApiTypes.summary = DB.evSummary e
+                        , ApiTypes.start = DB.evDTStart e
+                        , ApiTypes.end = DB.evDTStart e
+                        , ApiTypes.id = Just (T.pack $ show $ DB.evId e)
+                        , ApiTypes.recurs =
+                            [ ApiTypes.Recur
+                                { ApiTypes.until = DB.rUntil r
+                                , ApiTypes.frequency = DB.rFrequency r
+                                }
+                            | r <- rs ]
+                        }
+        notFound $ do404
 
 handle db rt = do
     let method = case Route.method rt of

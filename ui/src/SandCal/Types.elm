@@ -29,7 +29,7 @@ type alias Event =
     , start : Time.Posix
     , end : Time.Posix
     , recurs : List Recur
-    , id : Maybe String
+    , id : Maybe Int
     }
 
 
@@ -125,7 +125,7 @@ decodeEvent =
         (D.field "start" decodeTime)
         (D.field "end" decodeTime)
         (D.field "recurs" <| D.list decodeRecur)
-        (D.maybe (D.field "id" D.string))
+        (D.maybe (D.field "id" D.int))
 
 
 decodeTime : D.Decoder Time.Posix
@@ -145,8 +145,8 @@ encodeEvent { summary, start, end, recurs, id } =
                 Nothing ->
                     []
 
-                Just str ->
-                    [ ( "id", E.string str ) ]
+                Just intId ->
+                    [ ( "id", E.int intId ) ]
     in
     E.object
         (idField

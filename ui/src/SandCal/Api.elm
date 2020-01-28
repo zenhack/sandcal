@@ -1,4 +1,4 @@
-module SandCal.Api exposing (addEvent, allEvents)
+module SandCal.Api exposing (addEvent, allEvents, getEvent)
 
 import Http
 import Json.Decode as D
@@ -19,4 +19,12 @@ addEvent mkMsg event =
         { url = "/api/event/new"
         , body = Http.jsonBody (Types.encodeEvent event)
         , expect = Http.expectJson mkMsg D.string
+        }
+
+
+getEvent : (Result Http.Error Types.Event -> msg) -> Int -> Cmd msg
+getEvent mkMsg id =
+    Http.get
+        { url = "/api/event/" ++ String.fromInt id
+        , expect = Http.expectJson mkMsg Types.decodeEvent
         }

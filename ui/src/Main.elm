@@ -8,6 +8,7 @@ import Http
 import Ports
 import SandCal.Api as Api
 import SandCal.Pages.NewEvent as NewEvent
+import SandCal.Pages.SingleEvent as SingleEvent
 import SandCal.Types as Types
 import Time
 import Url
@@ -29,6 +30,7 @@ type alias EventsResult =
 type Page
     = EventsPage { events : Maybe EventsResult }
     | NewEventPage NewEvent.Model
+    | SingleEventPage SingleEvent.Model
     | NotFoundPage
 
 
@@ -42,6 +44,7 @@ type Msg
 type PageMsg
     = EventsPageMsg EventsPageMsg
     | NewEventPageMsg NewEvent.Msg
+    | SingleEventPageMsg SingleEvent.Msg
 
 
 type EventsPageMsg
@@ -79,6 +82,15 @@ initPage url =
         Just NewEvent ->
             ( NewEventPage NewEvent.init
             , Cmd.none
+            )
+
+        Just (SingleEvent id) ->
+            let
+                ( page, cmd ) =
+                    SingleEvent.init id
+            in
+            ( SingleEventPage page
+            , Cmd.map SingleEventPageMsg cmd
             )
 
 
@@ -123,6 +135,11 @@ view (Model { page, grainTitle }) =
                 ]
             }
 
+        SingleEventPage eventPg ->
+            { title = viewTitle grainTitle "Event" -- TODO: fill in the summary?
+            , body = [ SingleEvent.view eventPg ]
+            }
+
         NotFoundPage ->
             { title = viewTitle grainTitle "Not Found"
             , body = [ text "404 - not found" ]
@@ -150,7 +167,7 @@ viewEvents events =
                             Maybe.map
                                 (\id ->
                                     li []
-                                        [ a [ href ("/event/" ++ id) ] [ text ev.summary ]
+                                        [ a [ href ("/event/" ++ String.fromInt id) ] [ text ev.summary ]
                                         ]
                                 )
                                 ev.id
@@ -225,6 +242,11 @@ updatePage navKey pageMsg page =
             , Cmd.map NewEventPageMsg cmd
             )
 
+        ( SingleEventPage eventPg, SingleEventPageMsg msg ) ->
+            ( SingleEventPage (SingleEvent.update msg eventPg)
+            , Cmd.none
+            )
+
         _ ->
             ( page
             , Cmd.none
@@ -250,6 +272,7 @@ main =
 type Route
     = Root
     | NewEvent
+    | SingleEvent Int
 
 
 urlParser : Url.Parser.Parser (Route -> a) a
@@ -257,4 +280,5 @@ urlParser =
     Url.Parser.oneOf
         [ Url.Parser.map Root Url.Parser.top
         , Url.Parser.map NewEvent (Url.Parser.s "event" </> Url.Parser.s "new")
+        , Url.Parser.map SingleEvent (Url.Parser.s "event" </> Url.Parser.int)
         ]

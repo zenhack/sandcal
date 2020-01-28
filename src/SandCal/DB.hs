@@ -10,6 +10,7 @@ module SandCal.DB
     , Recur(..)
     , allEvents
     , addEvent
+    , getEvent
     , addRecur
     ) where
 
@@ -17,6 +18,9 @@ import Database.Selda         hiding (with)
 import Database.Selda.Backend (SeldaConnection, runSeldaT)
 import Database.Selda.SQLite
 import Zhp
+
+import qualified Data.Text as T
+import           Text.Read (readMaybe)
 
 import qualified ICal.Types as ICal
 
@@ -68,3 +72,24 @@ addEvent ev = insertWithPK events [ev]
 
 addRecur :: MonadSelda m => Recur -> m (ID Recur)
 addRecur r = insertWithPK recurs [r]
+
+getEvent :: MonadSelda m => T.Text -> m (Maybe (Event, [Recur]))
+getEvent identTxt =
+    case readMaybe (T.unpack identTxt) of
+        Nothing       -> pure Nothing
+        Just identInt -> go (toId identInt)
+  where
+    go ident = do
+        es <- query $ do
+            event <- select events
+            restrict (event ! #evId .== literal ident)
+            pure event
+        case es of
+            [] -> pure Nothing
+            (_:_:_) -> error "impossible: duplicate event ids"
+            [event] -> do
+                rs <- query $ do
+                    recur <- select recurs
+                    restrict $ recur ! #rEventId .== literal (evId event)
+                    pure recur
+                pure $ Just (event, rs)
