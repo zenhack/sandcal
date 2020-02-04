@@ -11,7 +11,7 @@ ui/ui.js: ui/elm.json $(elm_src)
 	cd ui; elm make --optimize src/Main.elm --output ui.js
 
 .build-hs: cabal.project $(wildcard *.cabal) $(hs_src)
-	cabal new-build
+	cabal v2-build
 	@# Create a sentinel file, so we can depend on this without
 	@# having to specify the path the binary, which is deep under
 	@# dist-newstyle.
