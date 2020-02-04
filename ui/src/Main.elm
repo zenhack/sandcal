@@ -116,33 +116,42 @@ viewTitle grainTitle pageTitle =
     mainTitle ++ subTitle
 
 
+viewPage : List (Html Msg) -> List (Html Msg)
+viewPage content =
+    [ h1 [] [ a [ href "/" ] [ text "SandCal" ] ]
+    , div [] content
+    ]
+
+
 view : Model -> Browser.Document Msg
 view (Model { page, grainTitle }) =
     case page of
         EventsPage { events } ->
             { title = viewTitle grainTitle ""
             , body =
-                [ viewEvents events
-                , a [ href "/event/new" ] [ text "New Event" ]
-                ]
+                viewPage
+                    [ viewEvents events
+                    , a [ href "/event/new" ] [ text "New Event" ]
+                    ]
             }
 
         NewEventPage form ->
             { title = viewTitle grainTitle "New Event"
             , body =
-                [ NewEvent.view form
-                    |> Html.map (NewEventPageMsg >> PageMsg)
-                ]
+                viewPage
+                    [ NewEvent.view form
+                        |> Html.map (NewEventPageMsg >> PageMsg)
+                    ]
             }
 
         SingleEventPage eventPg ->
             { title = viewTitle grainTitle "Event" -- TODO: fill in the summary?
-            , body = [ SingleEvent.view eventPg ]
+            , body = viewPage [ SingleEvent.view eventPg ]
             }
 
         NotFoundPage ->
             { title = viewTitle grainTitle "Not Found"
-            , body = [ text "404 - not found" ]
+            , body = viewPage [ text "404 - not found" ]
             }
 
 
