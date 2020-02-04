@@ -145,7 +145,7 @@ view (Model { page, grainTitle }) =
             }
 
         SingleEventPage eventPg ->
-            { title = viewTitle grainTitle "Event" -- TODO: fill in the summary?
+            { title = viewTitle grainTitle <| SingleEvent.viewTitle eventPg
             , body = viewPage [ SingleEvent.view eventPg ]
             }
 

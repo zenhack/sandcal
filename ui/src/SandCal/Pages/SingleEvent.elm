@@ -4,6 +4,7 @@ module SandCal.Pages.SingleEvent exposing
     , init
     , update
     , view
+    , viewTitle
     )
 
 import Html exposing (..)
@@ -37,6 +38,19 @@ update (Load res) model =
 
         Err err ->
             LoadFailed err
+
+
+viewTitle : Model -> String
+viewTitle model =
+    case model of
+        NotLoaded _ ->
+            "Event: (loading)"
+
+        Loaded ev ->
+            "Event: " ++ ev.summary
+
+        LoadFailed err ->
+            "Event: (error loading event)"
 
 
 view : Model -> Html msg
