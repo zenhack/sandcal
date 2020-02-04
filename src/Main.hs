@@ -4,9 +4,7 @@ module Main (main) where
 
 import Zhp
 
-import Database.Selda (def)
-
-import qualified Data.Text as T
+import Database.Selda (def, fromId)
 
 import Network.HTTP.Types.Status (status404)
 import Web.Scotty
@@ -47,7 +45,7 @@ main = do
                         { ApiTypes.summary = DB.evSummary e
                         , ApiTypes.start = DB.evDTStart e
                         , ApiTypes.end = DB.evDTStart e
-                        , ApiTypes.id = Just (T.pack $ show $ DB.evId e)
+                        , ApiTypes.id = Just (fromId $ DB.evId e)
                         , ApiTypes.recurs =
                             [ ApiTypes.Recur
                                 { ApiTypes.until = DB.rUntil r
@@ -78,7 +76,7 @@ handleRt db AllEvents = do
             , ApiTypes.start = DB.evDTStart e
             , ApiTypes.end = DB.evDTStart e -- TODO: actually add the end field to the db.
             , ApiTypes.recurs = []
-            , ApiTypes.id = Just (T.pack $ show $ DB.evId e)
+            , ApiTypes.id = Just (fromId $ DB.evId e)
             }
         | e <- events
         ]

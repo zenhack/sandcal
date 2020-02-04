@@ -19,7 +19,7 @@ data Event = Event
     , start   :: !Int
     , end     :: !Int
     , recurs  :: [Recur]
-    , id      :: Maybe T.Text
+    , id      :: Maybe Int
     }
     deriving(Show, Read, Eq, Generic)
 instance ToJSON Event
