@@ -10,7 +10,7 @@ module SandCal.Pages.SingleEvent exposing
 import DTUtil
 import DTUtil.Month
 import Html exposing (..)
-import Html.Attributes exposing (datetime)
+import Html.Attributes exposing (class, datetime)
 import Http
 import SandCal.Api as Api
 import SandCal.Types as Types
@@ -59,8 +59,8 @@ viewTitle model =
 
 {-| TODO: this doesn't belong here; move it into a util module.
 -}
-viewTime : Time.Posix -> Html msg
-viewTime posixTime =
+viewTime : List (Attribute msg) -> Time.Posix -> Html msg
+viewTime attrs posixTime =
     let
         dt =
             DTUtil.fromPosix Time.utc posixTime
@@ -87,7 +87,7 @@ viewTime posixTime =
         dtString =
             dateString ++ " " ++ timeString
     in
-    time [ datetime dtString ] [ text dtString ]
+    time (datetime dtString :: attrs) [ text dtString ]
 
 
 view : Model -> Html msg
@@ -100,8 +100,8 @@ view model =
             text "Failed to load."
 
         Loaded ev ->
-            div []
-                [ h2 [] [ text ev.summary ]
-                , p [] [ text "Start: ", viewTime ev.start ]
-                , p [] [ text "End: ", viewTime ev.end ]
+            div [ class "h-event" ]
+                [ h2 [ class "p-name" ] [ text ev.summary ]
+                , p [] [ text "Start: ", viewTime [ class "dt-start" ] ev.start ]
+                , p [] [ text "End: ", viewTime [ class "dt-end" ] ev.end ]
                 ]
