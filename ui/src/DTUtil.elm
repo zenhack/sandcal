@@ -54,6 +54,25 @@ toPosix { zone, date, time } =
         }
 
 
+fromPosix : Time.Zone -> Time.Posix -> DateTime
+fromPosix zone time =
+    let
+        { year, month, day, hour, minute } =
+            Time.Extra.posixToParts zone time
+    in
+    { zone = zone
+    , date =
+        { year = year
+        , month = month
+        , day = day
+        }
+    , time =
+        { hour = hour
+        , minute = minute
+        }
+    }
+
+
 {-| Parser for dates of the form YYYY-MM-DD
 -}
 dateParser : Parser Date
