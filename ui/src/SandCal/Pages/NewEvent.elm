@@ -62,8 +62,18 @@ convertEvent ev =
     Result.map3
         (\startDate startTime endTime ->
             { summary = ev.summary
-            , start = DTUtil.partsToPosix Time.utc startDate startTime
-            , end = DTUtil.partsToPosix Time.utc startDate endTime
+            , start =
+                DTUtil.toPosix
+                    { zone = Time.utc
+                    , date = startDate
+                    , time = startTime
+                    }
+            , end =
+                DTUtil.toPosix
+                    { zone = Time.utc
+                    , date = startDate
+                    , time = endTime
+                    }
             , recurs =
                 if ev.isRecurring then
                     [ ev.recur ]

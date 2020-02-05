@@ -27,8 +27,22 @@ type alias TimeOfDay =
     }
 
 
-partsToPosix : Time.Zone -> Date -> TimeOfDay -> Time.Posix
-partsToPosix zone { year, month, day } { hour, minute } =
+type alias DateTime =
+    { date : Date
+    , time : TimeOfDay
+    , zone : Time.Zone
+    }
+
+
+toPosix : DateTime -> Time.Posix
+toPosix { zone, date, time } =
+    let
+        { year, month, day } =
+            date
+
+        { hour, minute } =
+            time
+    in
     Time.Extra.partsToPosix zone
         { year = year
         , month = month
