@@ -1,7 +1,10 @@
 module SandCal.Pages.Events exposing (Model, Msg, init, update, view)
 
+import File exposing (File)
+import File.Select
 import Html exposing (..)
 import Html.Attributes exposing (href)
+import Html.Events exposing (onClick)
 import Http
 import SandCal.Api as Api
 import SandCal.Types as Types
@@ -17,6 +20,9 @@ type alias EventsResult =
 
 type Msg
     = AllEventsResult (Result Http.Error (List Types.Event))
+    | SelectFile
+    | FileChosen File
+    | UploadResult (Result Http.Error ())
 
 
 init : ( Model, Cmd Msg )
@@ -26,11 +32,16 @@ init =
     )
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view (Model { events }) =
     div []
         [ viewEvents events
         , a [ href "/event/new" ] [ text "New Event" ]
+        , div []
+            [ button
+                [ onClick SelectFile ]
+                [ text "Import ICalendar File" ]
+            ]
         ]
 
 
@@ -63,6 +74,31 @@ viewEvents events =
                 )
 
 
-update : Msg -> Model -> Model
-update (AllEventsResult res) (Model m) =
-    Model { m | events = Just res }
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg (Model m) =
+    case msg of
+        AllEventsResult res ->
+            ( Model { m | events = Just res }
+            , Cmd.none
+            )
+
+        SelectFile ->
+            ( Model m
+            , File.Select.file [ "text/calendar" ] FileChosen
+            )
+
+        FileChosen file ->
+            ( Model m
+            , Api.importICalendar UploadResult file
+            )
+
+        UploadResult (Ok _) ->
+            ( Model m
+            , Api.allEvents AllEventsResult
+            )
+
+        UploadResult (Err err) ->
+            -- XXX: clean this up:
+            ( Model { m | events = Just (Err err) }
+            , Cmd.none
+            )

@@ -126,7 +126,10 @@ view (Model { page, grainTitle }) =
         EventsPage events ->
             { title = viewTitle grainTitle ""
             , body =
-                viewPage [ Events.view events ]
+                viewPage
+                    [ Events.view events
+                        |> Html.map (EventsPageMsg >> PageMsg)
+                    ]
             }
 
         NewEventPage form ->
@@ -203,8 +206,12 @@ updatePage : Nav.Key -> PageMsg -> Page -> ( Page, Cmd PageMsg )
 updatePage navKey pageMsg page =
     case ( page, pageMsg ) of
         ( EventsPage p, EventsPageMsg msg ) ->
-            ( EventsPage (Events.update msg p)
-            , Cmd.none
+            let
+                ( newPage, cmd ) =
+                    Events.update msg p
+            in
+            ( EventsPage newPage
+            , Cmd.map EventsPageMsg cmd
             )
 
         ( NewEventPage form, NewEventPageMsg msg ) ->

@@ -1,5 +1,6 @@
-module SandCal.Api exposing (addEvent, allEvents, getEvent)
+module SandCal.Api exposing (addEvent, allEvents, getEvent, importICalendar)
 
+import File exposing (File)
 import Http
 import Json.Decode as D
 import SandCal.Types as Types
@@ -27,4 +28,13 @@ getEvent mkMsg id =
     Http.get
         { url = "/api/event/" ++ String.fromInt id
         , expect = Http.expectJson mkMsg Types.decodeEvent
+        }
+
+
+importICalendar : (Result Http.Error () -> msg) -> File -> Cmd msg
+importICalendar mkMsg file =
+    Http.post
+        { url = "/api/import.ics"
+        , body = Http.fileBody file
+        , expect = Http.expectWhatever mkMsg
         }
