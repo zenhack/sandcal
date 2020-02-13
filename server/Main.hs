@@ -65,7 +65,7 @@ handleRt :: DB.DB -> Route -> ActionM ()
 handleRt _db Root = elmPage
 handleRt _db Script = do
     setHeader "Content-Type" "application/javascript"
-    file "ui/ui.js"
+    file "ui.js"
 handleRt _db (NewEvent GET) = elmPage
 handleRt _db (Event _) = elmPage
 handleRt db AllEvents = do

@@ -73,7 +73,7 @@ executable sandcal
     , SandCal.Route
     , SandCal.ApiTypes
     , ICal.Types
-  hs-source-dirs:      src
+  hs-source-dirs:      server
 test-suite tests
   import: shared-opts
   type: exitcode-stdio-1.0

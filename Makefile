@@ -1,5 +1,5 @@
-elm_src := $(shell find ui/src -type f -name '*.elm')
-hs_src := $(shell find src -type f -name '*.hs')
+elm_src := $(shell find ui -type f -name '*.elm')
+hs_src := $(shell find server -type f -name '*.hs')
 
 all: ui/ui.js sandcal
 run: all
@@ -7,8 +7,8 @@ run: all
 dev: all
 	spk dev
 
-ui/ui.js: ui/elm.json $(elm_src)
-	cd ui; elm make --optimize src/Main.elm --output ui.js
+ui.js: ui/elm.json $(elm_src)
+	elm make --optimize ui/Main.elm --output $@
 
 .build-hs: cabal.project $(wildcard *.cabal) $(hs_src)
 	cabal v2-build
