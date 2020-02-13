@@ -21,3 +21,6 @@ cabal.project.local
 /sandcal
 # Used by the Makefile; see comments there.
 .build-hs
+
+elm-stuff
+ui.js
