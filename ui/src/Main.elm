@@ -7,6 +7,7 @@ import Html.Attributes exposing (for, href, name, type_, value)
 import Http
 import Ports
 import SandCal.Api as Api
+import SandCal.Pages.Events as Events
 import SandCal.Pages.NewEvent as NewEvent
 import SandCal.Pages.SingleEvent as SingleEvent
 import SandCal.Types as Types
@@ -23,12 +24,8 @@ type Model
         }
 
 
-type alias EventsResult =
-    Result Http.Error (List Types.Event)
-
-
 type Page
-    = EventsPage { events : Maybe EventsResult }
+    = EventsPage Events.Model
     | NewEventPage NewEvent.Model
     | SingleEventPage SingleEvent.Model
     | NotFoundPage
@@ -42,13 +39,9 @@ type Msg
 
 
 type PageMsg
-    = EventsPageMsg EventsPageMsg
+    = EventsPageMsg Events.Msg
     | NewEventPageMsg NewEvent.Msg
     | SingleEventPageMsg SingleEvent.Msg
-
-
-type EventsPageMsg
-    = AllEventsResult (Result Http.Error (List Types.Event))
 
 
 init : {} -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -75,8 +68,12 @@ initPage url =
             )
 
         Just Root ->
-            ( EventsPage { events = Nothing }
-            , Api.allEvents (AllEventsResult >> EventsPageMsg)
+            let
+                ( page, cmd ) =
+                    Events.init
+            in
+            ( EventsPage page
+            , Cmd.map EventsPageMsg cmd
             )
 
         Just NewEvent ->
@@ -126,13 +123,10 @@ viewPage content =
 view : Model -> Browser.Document Msg
 view (Model { page, grainTitle }) =
     case page of
-        EventsPage { events } ->
+        EventsPage events ->
             { title = viewTitle grainTitle ""
             , body =
-                viewPage
-                    [ viewEvents events
-                    , a [ href "/event/new" ] [ text "New Event" ]
-                    ]
+                viewPage [ Events.view events ]
             }
 
         NewEventPage form ->
@@ -153,35 +147,6 @@ view (Model { page, grainTitle }) =
             { title = viewTitle grainTitle "Not Found"
             , body = viewPage [ text "404 - not found" ]
             }
-
-
-viewEvents : Maybe EventsResult -> Html msg
-viewEvents events =
-    case events of
-        Nothing ->
-            text "Loading..."
-
-        Just (Err err) ->
-            -- TODO: more descriptive
-            text "An error occurred communicating with the server."
-
-        Just (Ok evs) ->
-            ul []
-                (evs
-                    |> List.filterMap
-                        (\ev ->
-                            -- TODO: these should never actually be `Nothing`; the server always
-                            -- includes the types in all-events.json; tweak the types to rule
-                            -- this out.
-                            Maybe.map
-                                (\id ->
-                                    li []
-                                        [ a [ href ("/event/" ++ String.fromInt id) ] [ text ev.summary ]
-                                        ]
-                                )
-                                ev.id
-                        )
-                )
 
 
 onUrlRequest : Browser.UrlRequest -> Msg
@@ -237,8 +202,8 @@ update msg (Model m) =
 updatePage : Nav.Key -> PageMsg -> Page -> ( Page, Cmd PageMsg )
 updatePage navKey pageMsg page =
     case ( page, pageMsg ) of
-        ( EventsPage p, EventsPageMsg (AllEventsResult res) ) ->
-            ( EventsPage { p | events = Just res }
+        ( EventsPage p, EventsPageMsg msg ) ->
+            ( EventsPage (Events.update msg p)
             , Cmd.none
             )
 
