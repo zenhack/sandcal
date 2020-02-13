@@ -4,14 +4,18 @@ module Main (main) where
 
 import Zhp
 
-import Database.Selda (def, fromId)
+import qualified Database.Selda as Selda
 
-import Network.HTTP.Types.Status (status404)
+import qualified Data.Default as Default
+
+import Network.HTTP.Types.Status (status400, status404)
 import Web.Scotty
 
 import qualified SandCal.ApiTypes as ApiTypes
 import           SandCal.Config   (cfgDBPath, getConfig)
 import qualified SandCal.DB       as DB
+
+import Text.ICalendar.Parser (parseICalendar)
 
 main :: IO ()
 main = do
@@ -27,12 +31,12 @@ main = do
             file "ui.js"
         get "/event/:eid" elmPage
         get "/event/new" elmPage
-
         get "/api/all-events.json" $ getAllEvents db
         post "/api/event/new" $ postNewEvent db
         get "/api/event/:eid" $ do
             eid <- param "eid"
             getEvent db eid
+        post "/api/import.ics" $ importICS db
         notFound $ do404
 
 elmPage = do
@@ -47,7 +51,7 @@ getAllEvents db = do
             , ApiTypes.start = DB.evDTStart e
             , ApiTypes.end = DB.evDTStart e -- TODO: actually add the end field to the db.
             , ApiTypes.recurs = []
-            , ApiTypes.id = Just (fromId $ DB.evId e)
+            , ApiTypes.id = Just (Selda.fromId $ DB.evId e)
             }
         | e <- events
         ]
@@ -61,7 +65,7 @@ getEvent db eid = do
                 { ApiTypes.summary = DB.evSummary e
                 , ApiTypes.start = DB.evDTStart e
                 , ApiTypes.end = DB.evDTStart e
-                , ApiTypes.id = Just (fromId $ DB.evId e)
+                , ApiTypes.id = Just (Selda.fromId $ DB.evId e)
                 , ApiTypes.recurs =
                     [ ApiTypes.Recur
                         { ApiTypes.until = DB.rUntil r
@@ -74,7 +78,7 @@ postNewEvent db = do
     ev <- jsonData
     eid <- liftIO $ DB.with db $ do
         eid <- DB.addEvent DB.Event
-            { DB.evId = def
+            { DB.evId = Selda.def
             , DB.evSummary = ApiTypes.summary ev
             , DB.evDTStart = ApiTypes.start ev
             }
@@ -86,6 +90,21 @@ postNewEvent db = do
                 }
         pure eid
     json (show eid)
+
+importICS _db = do
+    bytes <- body
+    case parseICalendar Default.def "import.ics" bytes of
+        Left err -> do
+            liftIO $ putStrLn $ "Error parsing icalendar data: " <> err
+            status status400
+            text "Invalid icalendar file."
+
+        Right (vcals, warns) -> do
+            liftIO $ for_ warns $ \warning ->
+                putStrLn $ "Warning (parsing icalendar data): " <> warning
+            liftIO $ for_ vcals $ \vcal ->
+                print vcal
+            error "TODO"
 
 do404 = do
     status status404

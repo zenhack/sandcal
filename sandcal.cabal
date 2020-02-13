@@ -57,6 +57,7 @@ common shared-opts
     , heredoc ^>=0.2.0
     , http-types ^>=0.12.3
     , iCalendar ^>=0.4.0
+    , data-default ^>=0.7.1
   ghc-options:
     -Wall
     -Wno-missing-signatures
