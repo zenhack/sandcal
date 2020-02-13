@@ -70,7 +70,6 @@ executable sandcal
   other-modules:
       SandCal.DB
     , SandCal.Config
-    , SandCal.Route
     , SandCal.ApiTypes
     , ICal.Types
   hs-source-dirs:      server

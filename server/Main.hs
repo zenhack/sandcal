@@ -12,16 +12,6 @@ import Web.Scotty
 import qualified SandCal.ApiTypes as ApiTypes
 import           SandCal.Config   (cfgDBPath, getConfig)
 import qualified SandCal.DB       as DB
-import           SandCal.Route    (Method(..), Route(..))
-import qualified SandCal.Route    as Route
-
-elmPage = do
-    setHeader "Content-Type" "text/html"
-    file "index.html"
-
-do404 = do
-    status status404
-    elmPage
 
 main :: IO ()
 main = do
@@ -31,44 +21,25 @@ main = do
     when (args == ["--init"]) $ do
         DB.with db DB.initSchema
     scotty 3000 $ do
-        traverse_ (handle db) Route.allRoutes
-        get "/event/:eid" $ do
-            eid <- param "eid"
-            handleRt db (Route.Event eid)
+        get "/" elmPage
+        get "/ui.js" $ do
+            setHeader "Content-Type" "application/javascript"
+            file "ui.js"
+        get "/event/:eid" elmPage
+        get "/event/new" elmPage
+
+        get "/api/all-events.json" $ getAllEvents db
+        post "/api/event/new" $ postNewEvent db
         get "/api/event/:eid" $ do
             eid <- param "eid"
-            res <- liftIO $ DB.with db (DB.getEvent eid)
-            case res of
-                Nothing -> do404
-                Just (e, rs) ->
-                    json $ ApiTypes.Event
-                        { ApiTypes.summary = DB.evSummary e
-                        , ApiTypes.start = DB.evDTStart e
-                        , ApiTypes.end = DB.evDTStart e
-                        , ApiTypes.id = Just (fromId $ DB.evId e)
-                        , ApiTypes.recurs =
-                            [ ApiTypes.Recur
-                                { ApiTypes.until = DB.rUntil r
-                                , ApiTypes.frequency = DB.rFrequency r
-                                }
-                            | r <- rs ]
-                        }
+            getEvent db eid
         notFound $ do404
 
-handle db rt = do
-    let method = case Route.method rt of
-            GET  -> get
-            POST -> post
-    method (Route.path rt) $ handleRt db rt
+elmPage = do
+    setHeader "Content-Type" "text/html"
+    file "index.html"
 
-handleRt :: DB.DB -> Route -> ActionM ()
-handleRt _db Root = elmPage
-handleRt _db Script = do
-    setHeader "Content-Type" "application/javascript"
-    file "ui.js"
-handleRt _db (NewEvent GET) = elmPage
-handleRt _db (Event _) = elmPage
-handleRt db AllEvents = do
+getAllEvents db = do
     events <- liftIO $ DB.with db DB.allEvents
     json $
         [ ApiTypes.Event
@@ -80,7 +51,26 @@ handleRt db AllEvents = do
             }
         | e <- events
         ]
-handleRt db (NewEvent POST) = do
+
+getEvent db eid = do
+    res <- liftIO $ DB.with db (DB.getEvent eid)
+    case res of
+        Nothing -> do404
+        Just (e, rs) ->
+            json $ ApiTypes.Event
+                { ApiTypes.summary = DB.evSummary e
+                , ApiTypes.start = DB.evDTStart e
+                , ApiTypes.end = DB.evDTStart e
+                , ApiTypes.id = Just (fromId $ DB.evId e)
+                , ApiTypes.recurs =
+                    [ ApiTypes.Recur
+                        { ApiTypes.until = DB.rUntil r
+                        , ApiTypes.frequency = DB.rFrequency r
+                        }
+                    | r <- rs ]
+                }
+
+postNewEvent db = do
     ev <- jsonData
     eid <- liftIO $ DB.with db $ do
         eid <- DB.addEvent DB.Event
@@ -96,3 +86,7 @@ handleRt db (NewEvent POST) = do
                 }
         pure eid
     json (show eid)
+
+do404 = do
+    status status404
+    elmPage
