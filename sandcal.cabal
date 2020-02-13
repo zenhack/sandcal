@@ -58,6 +58,7 @@ common shared-opts
     , http-types ^>=0.12.3
     , iCalendar ^>=0.4.0
     , data-default ^>=0.7.1
+    , containers ^>=0.5.11
   ghc-options:
     -Wall
     -Wno-missing-signatures
@@ -73,6 +74,7 @@ executable sandcal
     , SandCal.Config
     , SandCal.ApiTypes
     , ICal.Types
+    , ICal.Convert
   hs-source-dirs:      server
 test-suite tests
   import: shared-opts
