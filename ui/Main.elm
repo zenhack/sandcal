@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (for, href, name, type_, value)
 import Http
+import ICal
 import Ports
 import SandCal.Api as Api
 import SandCal.Pages.Events as Events
