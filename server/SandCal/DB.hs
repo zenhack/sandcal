@@ -1,102 +1,106 @@
-{-# LANGUAGE DeriveGeneric    #-}
-{-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE BangPatterns   #-}
+{-# LANGUAGE DeriveGeneric  #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE QuasiQuotes    #-}
 module SandCal.DB
-    ( DB
-    , DBT
-    , connect
+    ( Conn
+    , Query
+    , open
+    , runQuery
+
+    , eventID
+
+    , EventEntry(..)
+
     , initSchema
-    , with
-    , Event(..)
-    , Recur(..)
     , allEvents
     , addEvent
     , getEvent
-    , addRecur
-    , addEventsWithRecurs
     ) where
 
-import Database.Selda         hiding (with)
-import Database.Selda.Backend (SeldaConnection, runSeldaT)
-import Database.Selda.SQLite
 import Zhp
 
-import qualified Data.Text as T
-import           Text.Read (readMaybe)
+import qualified Data.Aeson             as Aeson
+import qualified Data.ByteString        as BS
+import qualified Data.ByteString.Lazy   as LBS
+import qualified Database.SQLite.Simple as DB
+import qualified ICal
 
-import qualified ICal.Types as ICal
+import Database.SQLite.Simple (NamedParam((:=)))
 
-type DB = SeldaConnection SQLite
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import GHC.Generics           (Generic)
+import Text.Heredoc           (here)
 
-type DBT m a = SeldaT SQLite m a
+----- wrappers, to abstract out storage details.
 
-connect :: FilePath -> IO DB
-connect = sqliteOpen
+newtype Conn = Conn DB.Connection
 
-with :: (MonadIO m, MonadMask m) => DB -> DBT m a -> m a
-with db m = runSeldaT m db
+newtype ID a = ID Int64
 
--- | Initialize the database.
-initSchema :: MonadSelda m => m ()
-initSchema = do
-    createTable events
-    createTable recurs
+instance Show (ID a) where
+    show (ID x) = show x
 
--------------------- Schema -----------------------
+eventID :: Int64 -> ID ICal.VEvent
+eventID = ID
 
-data Event = Event
-    { evId      :: ID Event
-    , evSummary :: Text
-    , evDTStart :: Int
-    } deriving(Show, Generic)
-instance SqlRow Event
+newtype Query a = Query (DB.Connection -> IO a)
 
-data Recur = Recur
-    { rEventId   :: ID Event
-    , rFrequency :: ICal.Frequency
-    , rUntil     :: Maybe Int
-    } deriving(Show, Generic)
-instance SqlRow Recur
+open :: MonadIO m => String -> m Conn
+open path = Conn <$> liftIO (DB.open path)
 
-events :: Table Event
-events = table "events" [#evId :- autoPrimary]
+runQuery :: MonadIO m => Conn -> Query a -> m a
+runQuery (Conn conn) (Query f) = liftIO $ f conn
 
-recurs :: Table Recur
-recurs = table "recurs" []
 
--------------------- Canned queries -----------------------
+---- Helper types that appear in our queries
 
-allEvents :: MonadSelda m => m [Event]
-allEvents = query $ select events
 
-addEvent :: MonadSelda m => Event -> m (ID Event)
-addEvent ev = insertWithPK events [ev]
+data EventEntry = EventEntry
+    { eeId     :: !Int64
+    , eeVEvent :: !ICal.VEvent
+    }
+    deriving(Generic)
+instance Aeson.ToJSON EventEntry
+instance Aeson.FromJSON EventEntry
 
-addRecur :: MonadSelda m => Recur -> m (ID Recur)
-addRecur r = insertWithPK recurs [r]
+instance DB.FromRow EventEntry where
+    fromRow = do
+        (eeId, vevent) <- DB.fromRow
+        let !ev = mustDecode vevent
+        pure EventEntry { eeId, eeVEvent = ev }
 
-addEventsWithRecurs :: MonadSelda m => [(Event, [Recur])] -> m [ID Event]
-addEventsWithRecurs ers = for ers $ \(e, rs) -> do
-    pk <- insertWithPK events [e { evId = def }]
-    _ <- insert recurs [ r { rEventId = pk } | r <- rs ]
-    pure pk
+mustDecode :: BS.ByteString -> ICal.VEvent
+mustDecode bytes = case Aeson.decode (LBS.fromStrict bytes) of
+    Just ev -> ev
+    Nothing -> error "Failed to decode vevent in the db; corrupted database?"
 
-getEvent :: MonadSelda m => T.Text -> m (Maybe (Event, [Recur]))
-getEvent identTxt =
-    case readMaybe (T.unpack identTxt) of
-        Nothing       -> pure Nothing
-        Just identInt -> go (toId identInt)
-  where
-    go ident = do
-        es <- query $ do
-            event <- select events
-            restrict (event ! #evId .== literal ident)
-            pure event
-        case es of
-            [] -> pure Nothing
-            (_:_:_) -> error "impossible: duplicate event ids"
-            [event] -> do
-                rs <- query $ do
-                    recur <- select recurs
-                    restrict $ recur ! #rEventId .== literal (evId event)
-                    pure recur
-                pure $ Just (event, rs)
+----- canned queries.
+
+-- | Initialize the schema.
+initSchema :: Query ()
+initSchema = Query $ \conn -> do
+    DB.execute_ conn
+        [here|
+            CREATE TABLE IF NOT EXISTS events (
+                id INTEGER PRIMARY KEY,
+                vevent BLOB NOT NULL
+            )
+        |]
+
+allEvents :: Query [EventEntry]
+allEvents = Query $ \conn -> DB.query_ conn "SELECT id, vevent FROM events"
+
+addEvent :: ICal.VEvent -> Query (ID ICal.VEvent)
+addEvent ev = Query $ \conn -> do
+    DB.executeNamed conn
+        "INSERT INTO events(vevent) VALUES(:event)"
+        [":event" := Aeson.encode ev]
+    ID <$> DB.lastInsertRowId conn
+
+getEvent :: ID ICal.VEvent -> Query (Maybe ICal.VEvent)
+getEvent (ID ident) = Query $ \conn -> do
+    rs <- DB.queryNamed conn "SELECT vevent FROM events WHERE id = :ident" [":ident" := ident]
+    case rs of
+        []            -> pure Nothing
+        (DB.Only r:_) -> pure $! Just $! mustDecode r

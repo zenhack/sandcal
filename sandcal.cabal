@@ -47,8 +47,7 @@ common shared-opts
       base ^>=4.12
     , zenhack-prelude ^>=0.1
     , scotty ^>=0.11.5
-    , selda ^>=0.5.0
-    , selda-sqlite ^>=0.1.7
+    , sqlite-simple ^>=0.4.16
     , safe-exceptions ^>=0.1.7
     , text ^>=1.2.4
     , time ^>=1.9.3
@@ -59,6 +58,12 @@ common shared-opts
     , iCalendar ^>=0.4.0
     , data-default ^>=0.7.1
     , containers ^>=0.5.11
+    , transformers ^>=0.5.6
+    , bytestring ^>=0.10.10
+    , case-insensitive ^>=1.2.1
+    , network-uri ^>=2.6.2
+    , mime ^>=0.4.0
+    , base64-bytestring ^>=1.0.0
   ghc-options:
     -Wall
     -Wno-missing-signatures
@@ -72,9 +77,7 @@ executable sandcal
   other-modules:
       SandCal.DB
     , SandCal.Config
-    , SandCal.ApiTypes
-    , ICal.Types
-    , ICal.Convert
+    , ICal
   hs-source-dirs:      server
 test-suite tests
   import: shared-opts
