@@ -55,7 +55,7 @@ postNewEvent db = do
     eid <- DB.runQuery db (DB.addEvent ev)
     json (show eid)
 
-importICS _db = do
+importICS db = do
     bytes <- body
     case parseICalendar Default.def "import.ics" bytes of
         Left err -> do
@@ -66,9 +66,7 @@ importICS _db = do
         Right (vcals, warns) -> do
             liftIO $ for_ warns $ \warning ->
                 putStrLn $ "Warning (parsing icalendar data): " <> warning
-            liftIO $ for_ vcals $ \vcal ->
-                print vcal
-            error "TODO"
+            traverse_ (DB.runQuery db . DB.addCalendar) vcals
 
 do404 = do
     status status404

@@ -15,6 +15,7 @@ module SandCal.DB
     , initSchema
     , allEvents
     , addEvent
+    , addCalendar
     , getEvent
     ) where
 
@@ -44,7 +45,7 @@ instance Show (ID a) where
 eventID :: Int64 -> ID ICal.VEvent
 eventID = ID
 
-newtype Query a = Query (DB.Connection -> IO a)
+newtype Query a = Query { getQueryFn :: DB.Connection -> IO a }
 
 open :: MonadIO m => String -> m Conn
 open path = Conn <$> liftIO (DB.open path)
@@ -97,6 +98,12 @@ addEvent ev = Query $ \conn -> do
         "INSERT INTO events(vevent) VALUES(:event)"
         [":event" := Aeson.encode ev]
     ID <$> DB.lastInsertRowId conn
+
+addCalendar :: ICal.VCalendar -> Query ()
+addCalendar vcal = Query $ \conn ->
+    DB.withTransaction conn $ do
+        for_ (ICal.vcEvents vcal) $ \ev ->
+            getQueryFn (addEvent ev) conn
 
 getEvent :: ID ICal.VEvent -> Query (Maybe ICal.VEvent)
 getEvent (ID ident) = Query $ \conn -> do
