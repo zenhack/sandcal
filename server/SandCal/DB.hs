@@ -17,6 +17,8 @@ module SandCal.DB
     , addEvent
     , addCalendar
     , getEvent
+    , getUserTimeZone
+    , setUserTimeZone
     ) where
 
 import Zhp
@@ -24,14 +26,14 @@ import Zhp
 import qualified Data.Aeson             as Aeson
 import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Lazy   as LBS
+import qualified Data.Text              as T
 import qualified Database.SQLite.Simple as DB
 import qualified ICal
 
 import Database.SQLite.Simple (NamedParam((:=)))
 
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import GHC.Generics           (Generic)
-import Text.Heredoc           (here)
+import GHC.Generics (Generic)
+import Text.Heredoc (here)
 
 ----- wrappers, to abstract out storage details.
 
@@ -88,6 +90,13 @@ initSchema = Query $ \conn -> do
                 vevent BLOB NOT NULL
             )
         |]
+    DB.execute_ conn
+        [here|
+            CREATE TABLE IF NOT EXISTS user_timezones (
+                user_id VARCHAR PRIMARY KEY,
+                timezone_name VARCHAR NOT NULL
+            )
+        |]
 
 allEvents :: Query [EventEntry]
 allEvents = Query $ \conn -> DB.query_ conn "SELECT id, vevent FROM events"
@@ -111,3 +120,26 @@ getEvent (ID ident) = Query $ \conn -> do
     case rs of
         []            -> pure Nothing
         (DB.Only r:_) -> pure $! Just $! mustDecode r
+
+--- TODO: use wrapper types instead of timezones.
+
+setUserTimeZone :: T.Text -> T.Text -> Query ()
+setUserTimeZone userId timezoneName = Query $ \conn -> do
+    DB.executeNamed conn
+        [here|
+            INSERT INTO user_timezones(user_id, timezone_name)
+            VALUES (:user_id, :timeone_name)
+        |]
+        [ ":user_id" := userId
+        , ":timezone_name" := timezoneName
+        ]
+
+
+getUserTimeZone :: T.Text -> Query (Maybe T.Text)
+getUserTimeZone userId = Query $ \conn -> do
+    rs <- DB.queryNamed conn
+        "SELECT timezone_name FROM user_timezones WHERE user_id = :user_id"
+        [":user_id" := userId]
+    case rs of
+        []            -> pure Nothing
+        (DB.Only r:_) -> pure $! Just $! r
