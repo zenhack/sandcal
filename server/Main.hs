@@ -16,11 +16,9 @@ import Text.ICalendar.Parser (parseICalendar)
 
 main :: IO ()
 main = do
-    args <- getArgs
     dbPath <- cfgDBPath <$> getConfig
     db <- DB.open dbPath
-    when (args == ["--init"]) $ do
-        DB.runQuery db DB.initSchema
+    DB.runQuery db DB.initSchema
     scotty 3000 $ do
         get "/" elmPage
         get "/ui.js" $ do

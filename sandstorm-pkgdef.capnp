@@ -32,7 +32,7 @@ const pkgdef :Spk.PackageDefinition = (
       )
     ],
 
-    continueCommand = .continueCmd,
+    continueCommand = .startCmd,
     # This is the command called to start your app back up after it has been
     # shut down for inactivity. Here we're using the same command as for
     # starting a new instance, but you could use different commands for each
@@ -231,11 +231,6 @@ const cmdEnv :List(Util.KeyValue) = [
 ];
 
 const startCmd :Spk.Manifest.Command = (
-  argv = ["/sandstorm-http-bridge", "3000", "--", "/sandcal", "--init"],
-  environ = .cmdEnv
-);
-
-const continueCmd :Spk.Manifest.Command = (
   argv = ["/sandstorm-http-bridge", "3000", "--", "/sandcal"],
   environ = .cmdEnv
 );
