@@ -30,6 +30,8 @@ import qualified Data.Text              as T
 import qualified Database.SQLite.Simple as DB
 import qualified ICal
 
+import Data.Time.Zones.DB (TZLabel, fromTZName, toTZName)
+
 import Database.SQLite.Simple (NamedParam((:=)))
 
 import GHC.Generics (Generic)
@@ -94,7 +96,7 @@ initSchema = Query $ \conn -> do
         [here|
             CREATE TABLE IF NOT EXISTS user_timezones (
                 user_id VARCHAR PRIMARY KEY,
-                timezone_name VARCHAR NOT NULL
+                timezone_name BLOB NOT NULL
             )
         |]
 
@@ -121,9 +123,7 @@ getEvent (ID ident) = Query $ \conn -> do
         []            -> pure Nothing
         (DB.Only r:_) -> pure $! Just $! mustDecode r
 
---- TODO: use wrapper types instead of timezones.
-
-setUserTimeZone :: T.Text -> T.Text -> Query ()
+setUserTimeZone :: T.Text -> TZLabel -> Query ()
 setUserTimeZone userId timezoneName = Query $ \conn -> do
     DB.executeNamed conn
         [here|
@@ -131,15 +131,15 @@ setUserTimeZone userId timezoneName = Query $ \conn -> do
             VALUES (:user_id, :timeone_name)
         |]
         [ ":user_id" := userId
-        , ":timezone_name" := timezoneName
+        , ":timezone_name" := toTZName timezoneName
         ]
 
 
-getUserTimeZone :: T.Text -> Query (Maybe T.Text)
+getUserTimeZone :: T.Text -> Query (Maybe TZLabel)
 getUserTimeZone userId = Query $ \conn -> do
     rs <- DB.queryNamed conn
         "SELECT timezone_name FROM user_timezones WHERE user_id = :user_id"
         [":user_id" := userId]
     case rs of
         []            -> pure Nothing
-        (DB.Only r:_) -> pure $! Just $! r
+        (DB.Only r:_) -> pure $! fromTZName r
