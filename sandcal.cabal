@@ -44,7 +44,7 @@ common shared-opts
       NoImplicitPrelude
     , OverloadedStrings
   build-depends:
-      base ^>=4.12
+      base ^>=4.13
     , zenhack-prelude ^>=0.1
     , scotty ^>=0.11.5
     , sqlite-simple ^>=0.4.16
