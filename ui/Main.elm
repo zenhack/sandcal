@@ -13,6 +13,7 @@ import SandCal.Pages.NewEvent as NewEvent
 import SandCal.Pages.SingleEvent as SingleEvent
 import SandCal.Types as Types
 import Time
+import TimeZone
 import Url
 import Url.Parser exposing ((</>))
 
@@ -22,7 +23,14 @@ type Model
         { page : Page
         , navKey : Nav.Key
         , grainTitle : String
+        , timeZone : TimeZoneState
         }
+
+
+type TimeZoneState
+    = Fetching
+    | Prompt
+    | Ready TimeZone.Label
 
 
 type Page
@@ -37,6 +45,7 @@ type Msg
     | UrlChange Url.Url
     | PageMsg PageMsg
     | GrainTitleChange String
+    | TimeZoneResult (Result Http.Error TimeZone.Label)
 
 
 type PageMsg
@@ -55,8 +64,12 @@ init _ url navKey =
         { navKey = navKey
         , grainTitle = ""
         , page = page
+        , timeZone = Fetching
         }
-    , Cmd.map PageMsg cmd
+    , Cmd.batch
+        [ Cmd.map PageMsg cmd
+        , Api.getTimeZone TimeZoneResult
+        ]
     )
 
 
@@ -121,8 +134,8 @@ viewPage content =
     ]
 
 
-view : Model -> Browser.Document Msg
-view (Model { page, grainTitle }) =
+viewReady : TimeZone.Label -> Model -> Browser.Document Msg
+viewReady _ (Model { page, grainTitle }) =
     case page of
         EventsPage events ->
             { title = viewTitle grainTitle ""
@@ -153,6 +166,23 @@ view (Model { page, grainTitle }) =
             }
 
 
+view : Model -> Browser.Document Msg
+view (Model m) =
+    case m.timeZone of
+        Ready tz ->
+            viewReady tz (Model m)
+
+        Fetching ->
+            { title = viewTitle m.grainTitle "Loading..."
+            , body = viewPage [ text "Loading..." ]
+            }
+
+        Prompt ->
+            { title = viewTitle m.grainTitle "Select Time Zone"
+            , body = viewPage [ text "Select Time Zone: ..." ]
+            }
+
+
 onUrlRequest : Browser.UrlRequest -> Msg
 onUrlRequest =
     ClickedLink
@@ -173,6 +203,17 @@ update msg (Model m) =
             in
             ( Model { m | page = newPage }
             , Cmd.map PageMsg cmd
+            )
+
+        TimeZoneResult (Ok tz) ->
+            ( Model { m | timeZone = Ready tz }
+            , Cmd.none
+            )
+
+        TimeZoneResult (Err _) ->
+            -- FIXME: distinguish not set from other http errors.
+            ( Model { m | timeZone = Prompt }
+            , Cmd.none
             )
 
         ClickedLink (Browser.Internal url) ->

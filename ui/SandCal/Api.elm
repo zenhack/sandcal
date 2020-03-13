@@ -1,9 +1,17 @@
-module SandCal.Api exposing (addEvent, allEvents, getEvent, importICalendar)
+module SandCal.Api exposing
+    ( addEvent
+    , allEvents
+    , getEvent
+    , getTimeZone
+    , importICalendar
+    , setTimeZone
+    )
 
 import File exposing (File)
 import Http
 import Json.Decode as D
 import SandCal.Types as Types
+import TimeZone
 
 
 allEvents : (Result Http.Error (List Types.Event) -> msg) -> Cmd msg
@@ -36,5 +44,22 @@ importICalendar mkMsg file =
     Http.post
         { url = "/api/import.ics"
         , body = Http.fileBody file
+        , expect = Http.expectWhatever mkMsg
+        }
+
+
+getTimeZone : (Result Http.Error TimeZone.Label -> msg) -> Cmd msg
+getTimeZone mkMsg =
+    Http.get
+        { url = "/api/timezone"
+        , expect = Http.expectJson mkMsg TimeZone.decodeLabel
+        }
+
+
+setTimeZone : TimeZone.Label -> (Result Http.Error () -> msg) -> Cmd msg
+setTimeZone label mkMsg =
+    Http.post
+        { url = "/api/timezone"
+        , body = Http.jsonBody (TimeZone.encodeLabel label)
         , expect = Http.expectWhatever mkMsg
         }

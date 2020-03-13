@@ -74,7 +74,11 @@ importICS db = do
 getTimeZone db = do
     uid <- Sandstorm.getUserId
     timezone <- liftIO $ DB.runQuery db $ DB.getUserTimeZone uid
-    json (show timezone)
+    case timezone of
+        Just tz -> json (show tz)
+        Nothing -> do
+            status status404
+            text "No timezone set."
 
 setTimeZone db = do
     uid <- Sandstorm.getUserId
