@@ -26,9 +26,10 @@ import Zhp
 import qualified Data.Aeson             as Aeson
 import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Lazy   as LBS
-import qualified Data.Text              as T
 import qualified Database.SQLite.Simple as DB
 import qualified ICal
+
+import qualified Sandstorm
 
 import Data.Time.Zones.DB (TZLabel, fromTZName, toTZName)
 
@@ -123,23 +124,23 @@ getEvent (ID ident) = Query $ \conn -> do
         []            -> pure Nothing
         (DB.Only r:_) -> pure $! Just $! mustDecode r
 
-setUserTimeZone :: T.Text -> TZLabel -> Query ()
+setUserTimeZone :: Sandstorm.UserId -> TZLabel -> Query ()
 setUserTimeZone userId timezoneName = Query $ \conn -> do
     DB.executeNamed conn
         [here|
             INSERT INTO user_timezones(user_id, timezone_name)
             VALUES (:user_id, :timeone_name)
         |]
-        [ ":user_id" := userId
+        [ ":user_id" := Sandstorm.userIdToText userId
         , ":timezone_name" := toTZName timezoneName
         ]
 
 
-getUserTimeZone :: T.Text -> Query (Maybe TZLabel)
+getUserTimeZone :: Sandstorm.UserId -> Query (Maybe TZLabel)
 getUserTimeZone userId = Query $ \conn -> do
     rs <- DB.queryNamed conn
         "SELECT timezone_name FROM user_timezones WHERE user_id = :user_id"
-        [":user_id" := userId]
+        [":user_id" := Sandstorm.userIdToText userId]
     case rs of
         []            -> pure Nothing
         (DB.Only r:_) -> pure $! fromTZName r

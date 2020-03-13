@@ -7,10 +7,13 @@ import Zhp
 import qualified Data.Default as Default
 
 import Network.HTTP.Types.Status (status400, status404)
+import Text.Read                 (readMaybe)
 import Web.Scotty
 
 import           SandCal.Config (cfgDBPath, getConfig)
 import qualified SandCal.DB     as DB
+
+import qualified Sandstorm
 
 import Text.ICalendar.Parser (parseICalendar)
 
@@ -31,6 +34,8 @@ main = do
         get "/api/event/:eid" $ do
             eid <- param "eid"
             getEvent db (DB.eventID eid)
+        get "/api/timezone" $ getTimeZone db
+        post "/api/timezone" $ setTimeZone db
         post "/api/import.ics" $ importICS db
         notFound $ do404
 
@@ -65,6 +70,21 @@ importICS db = do
             liftIO $ for_ warns $ \warning ->
                 putStrLn $ "Warning (parsing icalendar data): " <> warning
             traverse_ (DB.runQuery db . DB.addCalendar) vcals
+
+getTimeZone db = do
+    uid <- Sandstorm.getUserId
+    timezone <- liftIO $ DB.runQuery db $ DB.getUserTimeZone uid
+    json (show timezone)
+
+setTimeZone db = do
+    uid <- Sandstorm.getUserId
+    reqBody <- jsonData
+    case readMaybe reqBody of
+        Just tzLabel ->
+            liftIO $ DB.runQuery db $ DB.setUserTimeZone uid tzLabel
+        Nothing -> do
+            status status400
+            text "Invalid time zone."
 
 do404 = do
     status status404

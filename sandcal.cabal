@@ -79,6 +79,7 @@ executable sandcal
       SandCal.DB
     , SandCal.Config
     , ICal
+    , Sandstorm
   hs-source-dirs:      server
 test-suite tests
   import: shared-opts
