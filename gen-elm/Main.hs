@@ -61,6 +61,7 @@ file = unlines
     [ "module TimeZone exposing"
     , indent $ unlines
         [ "( Label(..)"
+        , ", allZones"
         , ", encodeLabel"
         , ", decodeLabel"
         , ", labelToString"

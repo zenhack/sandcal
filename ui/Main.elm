@@ -3,7 +3,8 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Html exposing (..)
-import Html.Attributes exposing (for, href, name, type_, value)
+import Html.Attributes exposing (disabled, for, href, name, selected, type_, value)
+import Html.Events exposing (onClick)
 import Http
 import ICal
 import Ports
@@ -16,6 +17,7 @@ import Time
 import TimeZone
 import Url
 import Url.Parser exposing ((</>))
+import Util.Html.Events exposing (onChange)
 
 
 type Model
@@ -29,7 +31,7 @@ type Model
 
 type TimeZoneState
     = Fetching
-    | Prompt
+    | Prompt (Maybe TimeZone.Label)
     | Ready TimeZone.Label
 
 
@@ -46,6 +48,9 @@ type Msg
     | PageMsg PageMsg
     | GrainTitleChange String
     | TimeZoneResult (Result Http.Error TimeZone.Label)
+    | UpdateTZChoice TimeZone.Label
+    | ChooseTZ TimeZone.Label
+    | DontCare
 
 
 type PageMsg
@@ -177,9 +182,33 @@ view (Model m) =
             , body = viewPage [ text "Loading..." ]
             }
 
-        Prompt ->
+        Prompt choice ->
             { title = viewTitle m.grainTitle "Select Time Zone"
-            , body = viewPage [ text "Select Time Zone: ..." ]
+            , body =
+                viewPage
+                    [ text "Select Time Zone:"
+                    , select
+                        [ onChange UpdateTZChoice TimeZone.decodeLabel ]
+                        (TimeZone.allZones
+                            |> List.map
+                                (\zone ->
+                                    option
+                                        [ selected (choice == Just zone)
+                                        , value (TimeZone.labelToString zone)
+                                        ]
+                                        [ text (TimeZone.labelToString zone) ]
+                                )
+                        )
+                    , button
+                        (case choice of
+                            Nothing ->
+                                [ disabled True ]
+
+                            Just tz ->
+                                [ onClick (ChooseTZ tz) ]
+                        )
+                        [ text "Set Time Zone" ]
+                    ]
             }
 
 
@@ -212,8 +241,19 @@ update msg (Model m) =
 
         TimeZoneResult (Err _) ->
             -- FIXME: distinguish not set from other http errors.
-            ( Model { m | timeZone = Prompt }
+            ( Model { m | timeZone = Prompt Nothing }
             , Cmd.none
+            )
+
+        UpdateTZChoice choice ->
+            ( Model { m | timeZone = Prompt (Just choice) }
+            , Cmd.none
+            )
+
+        ChooseTZ tz ->
+            ( Model { m | timeZone = Ready tz }
+              -- FIXME: do something with errors:
+            , Api.setTimeZone tz (\_ -> DontCare)
             )
 
         ClickedLink (Browser.Internal url) ->
@@ -242,6 +282,9 @@ update msg (Model m) =
             ( Model { m | grainTitle = newTitle }
             , Cmd.none
             )
+
+        DontCare ->
+            ( Model m, Cmd.none )
 
 
 updatePage : Nav.Key -> PageMsg -> Page -> ( Page, Cmd PageMsg )
