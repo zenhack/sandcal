@@ -1,3 +1,7 @@
+-- Script to generate the 'TimeZone' module for our frontend (Elm) code.
+--
+-- The generated module provides the elm equivalent of the haskell `tz`
+-- package's `TZLabel` type, along with some utility functions.
 module Main (main) where
 
 import Data.List (intercalate)
