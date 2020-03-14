@@ -64,6 +64,7 @@ common shared-opts
     , network-uri ^>=2.6.2
     , mime ^>=0.4.0
     , base64-bytestring ^>=1.0.0
+    , tz ^>=0.1
     , tzdata ^>=0.1
   ghc-options:
     -Wall
@@ -81,6 +82,11 @@ executable sandcal
     , ICal
     , Sandstorm
   hs-source-dirs:      server
+
+executable gen-elm
+  import: shared-opts
+  main-is: Main.hs
+  hs-source-dirs: gen-elm
 test-suite tests
   import: shared-opts
   type: exitcode-stdio-1.0
