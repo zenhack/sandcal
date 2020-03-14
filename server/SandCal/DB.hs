@@ -129,7 +129,7 @@ setUserTimeZone userId timezoneName = Query $ \conn -> do
     DB.executeNamed conn
         [here|
             INSERT INTO user_timezones(user_id, timezone_name)
-            VALUES (:user_id, :timeone_name)
+            VALUES (:user_id, :timezone_name)
         |]
         [ ":user_id" := Sandstorm.userIdToText userId
         , ":timezone_name" := toTZName timezoneName
