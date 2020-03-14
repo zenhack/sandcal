@@ -2,20 +2,30 @@
 {-# LANGUAGE QuasiQuotes    #-}
 module Main (main) where
 
-import Zhp
-
-import qualified Data.Default as Default
-
+import Data.Text.Encoding.Error  (lenientDecode)
+import Data.Time.Zones.All       (TZLabel, fromTZName, toTZName)
 import Network.HTTP.Types.Status (status400, status404)
-import Text.Read                 (readMaybe)
-import Web.Scotty
+import SandCal.Config            (cfgDBPath, getConfig)
+import Text.ICalendar.Parser     (parseICalendar)
 
-import           SandCal.Config (cfgDBPath, getConfig)
-import qualified SandCal.DB     as DB
-
+import qualified Data.ByteString.Lazy    as LBS
+import qualified Data.Default            as Default
+import qualified Data.Text.Lazy          as LT
+import qualified Data.Text.Lazy.Encoding as LT
+import qualified SandCal.DB              as DB
 import qualified Sandstorm
 
-import Text.ICalendar.Parser (parseICalendar)
+import Web.Scotty
+import Zhp
+
+encodeTZLabel :: TZLabel -> LT.Text
+encodeTZLabel =
+    toTZName
+    >>> LBS.fromStrict
+    >>> LT.decodeUtf8With lenientDecode
+
+decodeTZLabel :: LT.Text -> Maybe TZLabel
+decodeTZLabel = LT.encodeUtf8 >>> LBS.toStrict >>> fromTZName
 
 main :: IO ()
 main = do
@@ -75,7 +85,7 @@ getTimeZone db = do
     uid <- Sandstorm.getUserId
     timezone <- liftIO $ DB.runQuery db $ DB.getUserTimeZone uid
     case timezone of
-        Just tz -> json (show tz)
+        Just tz -> json (encodeTZLabel tz)
         Nothing -> do
             status status404
             text "No timezone set."
@@ -83,7 +93,7 @@ getTimeZone db = do
 setTimeZone db = do
     uid <- Sandstorm.getUserId
     reqBody <- jsonData
-    case readMaybe reqBody of
+    case decodeTZLabel reqBody of
         Just tzLabel ->
             liftIO $ DB.runQuery db $ DB.setUserTimeZone uid tzLabel
         Nothing -> do
