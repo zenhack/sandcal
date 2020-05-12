@@ -2,11 +2,13 @@
 {-# LANGUAGE QuasiQuotes    #-}
 module Main (main) where
 
-import Data.Text.Encoding.Error  (lenientDecode)
-import Data.Time.Zones.All       (TZLabel, fromTZName, toTZName)
-import Network.HTTP.Types.Status (status400, status404)
-import SandCal.Config            (cfgDBPath, getConfig)
-import Text.ICalendar.Parser     (parseICalendar)
+import Data.Text.Encoding.Error      (lenientDecode)
+import Data.Time.Zones.All           (TZLabel, fromTZName, toTZName)
+import Network.HTTP.Types.Status     (status400, status404)
+import SandCal.Config                (cfgDBPath, getConfig)
+import Text.Blaze.Html.Renderer.Text (renderHtml)
+import Text.Blaze.Html5              (Html)
+import Text.ICalendar.Parser         (parseICalendar)
 
 import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Default            as Default
@@ -14,9 +16,14 @@ import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified SandCal.DB              as DB
 import qualified Sandstorm
+import qualified View
+
 
 import Web.Scotty
 import Zhp
+
+blaze :: Html -> ActionM ()
+blaze = html . renderHtml
 
 encodeTZLabel :: TZLabel -> LT.Text
 encodeTZLabel =
@@ -45,6 +52,7 @@ main = do
             eid <- param "eid"
             getEvent db (DB.eventID eid)
         get "/api/timezone" $ getTimeZone db
+        get "/settings" $ viewSettings db
         post "/api/timezone" $ setTimeZone db
         post "/api/import.ics" $ importICS db
         notFound $ do404
@@ -80,6 +88,11 @@ importICS db = do
             liftIO $ for_ warns $ \warning ->
                 putStrLn $ "Warning (parsing icalendar data): " <> warning
             traverse_ (DB.runQuery db . DB.addCalendar) vcals
+
+viewSettings db = do
+    uid <- Sandstorm.getUserId
+    result <- DB.runQuery db $ View.settings uid
+    blaze result
 
 getTimeZone db = do
     uid <- Sandstorm.getUserId

@@ -18,8 +18,8 @@ usr/lib/libc-2.31.so
 usr/lib/libc.so.6
 usr/lib/libdl-2.31.so
 usr/lib/libdl.so.2
-usr/lib/libffi.so.6
-usr/lib/libffi.so.6.0.4
+usr/lib/libffi.so.7
+usr/lib/libffi.so.7.1.0
 usr/lib/libgmp.so.10
 usr/lib/libgmp.so.10.4.0
 usr/lib/libm-2.31.so

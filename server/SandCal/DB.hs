@@ -52,6 +52,9 @@ eventID = ID
 
 newtype Query a = Query { getQueryFn :: DB.Connection -> IO a }
 
+instance Functor Query where
+    fmap f q = Query $ fmap f . getQueryFn q
+
 open :: MonadIO m => String -> m Conn
 open path = Conn <$> liftIO (DB.open path)
 

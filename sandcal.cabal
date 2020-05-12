@@ -46,6 +46,7 @@ common shared-opts
   build-depends:
       base ^>=4.13
     , zenhack-prelude ^>=0.1
+    , blaze-html ^>=0.9.1
     , scotty ^>=0.11.5
     , sqlite-simple ^>=0.4.16
     , safe-exceptions ^>=0.1.7
@@ -79,6 +80,7 @@ executable sandcal
   other-modules:
       SandCal.DB
     , SandCal.Config
+    , View
     , ICal
     , Sandstorm
   hs-source-dirs:      server
