@@ -1,18 +1,10 @@
-elm_src := $(shell find ui -type f -name '*.elm')
-hs_src := $(shell find server gen-elm -type f -name '*.hs')
+hs_src := $(shell find src -type f -name '*.hs')
 
-all: ui.js sandcal
+all: sandcal
 run: all
 	./sandcal
 dev: all
 	spk dev
-
-ui.js: elm.json $(elm_src) ui-gen/TimeZone.elm
-	elm make --optimize ui/Main.elm --output $@
-
-ui-gen/TimeZone.elm: .build-hs
-	cabal v2-run gen-elm
-	elm-format --yes $@
 
 .build-hs: cabal.project $(wildcard *.cabal) $(hs_src)
 	cabal v2-build

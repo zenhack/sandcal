@@ -83,12 +83,8 @@ executable sandcal
     , View
     , ICal
     , Sandstorm
-  hs-source-dirs:      server
+  hs-source-dirs:      src
 
-executable gen-elm
-  import: shared-opts
-  main-is: Main.hs
-  hs-source-dirs: gen-elm
 test-suite tests
   import: shared-opts
   type: exitcode-stdio-1.0
