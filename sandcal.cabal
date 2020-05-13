@@ -47,6 +47,7 @@ common shared-opts
       base ^>=4.13
     , zenhack-prelude ^>=0.1
     , blaze-html ^>=0.9.1
+    , blaze-markup ^>=0.8.2
     , scotty ^>=0.11.5
     , sqlite-simple ^>=0.4.16
     , safe-exceptions ^>=0.1.7
@@ -81,6 +82,7 @@ executable sandcal
       SandCal.DB
     , SandCal.Config
     , View
+    , Route
     , ICal
     , Sandstorm
   hs-source-dirs:      src

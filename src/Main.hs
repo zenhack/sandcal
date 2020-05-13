@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase     #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes    #-}
 module Main (main) where
@@ -14,6 +15,7 @@ import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Default            as Default
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
+import qualified Route
 import qualified SandCal.DB              as DB
 import qualified Sandstorm
 import qualified View
@@ -40,12 +42,11 @@ main = do
     db <- DB.open dbPath
     DB.runQuery db DB.initSchema
     scotty 3000 $ do
-        get "/" elmPage
-        get "/ui.js" $ do
-            setHeader "Content-Type" "application/javascript"
-            file "ui.js"
-        get "/event/:eid" elmPage
-        get "/event/new" elmPage
+        Route.scottyM $ \case
+            Route.Get Route.Home -> viewHome db
+            Route.Get Route.Settings -> viewSettings db
+            Route.Post Route.SaveSettings -> setTimeZone db
+            _ -> error "TODO"
         get "/api/all-events.json" $ getAllEvents db
         post "/api/event/new" $ postNewEvent db
         get "/api/event/:eid" $ do
@@ -60,6 +61,11 @@ main = do
 elmPage = do
     setHeader "Content-Type" "text/html"
     file "index.html"
+
+
+viewHome db = do
+    events <- DB.runQuery db DB.allEvents
+    blaze $ View.home events
 
 getAllEvents db = do
     events <- DB.runQuery db DB.allEvents
@@ -105,10 +111,11 @@ getTimeZone db = do
 
 setTimeZone db = do
     uid <- Sandstorm.getUserId
-    reqBody <- jsonData
-    case decodeTZLabel reqBody of
-        Just tzLabel ->
+    timezone <- param "timezone"
+    case decodeTZLabel timezone of
+        Just tzLabel -> do
             liftIO $ DB.runQuery db $ DB.setUserTimeZone uid tzLabel
+            Route.redirectGet Route.Home
         Nothing -> do
             status status400
             text "Invalid time zone."
