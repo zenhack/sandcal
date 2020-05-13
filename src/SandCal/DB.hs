@@ -131,7 +131,8 @@ setUserTimeZone :: Sandstorm.UserId -> TZLabel -> Query ()
 setUserTimeZone userId timezoneName = Query $ \conn -> do
     DB.executeNamed conn
         [here|
-            INSERT INTO user_timezones(user_id, timezone_name)
+            INSERT OR REPLACE
+            INTO user_timezones(user_id, timezone_name)
             VALUES (:user_id, :timezone_name)
         |]
         [ ":user_id" := Sandstorm.userIdToText userId
