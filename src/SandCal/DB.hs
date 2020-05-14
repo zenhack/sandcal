@@ -125,9 +125,7 @@ addEvent ev = Query $ \conn -> do
     ID <$> DB.lastInsertRowId conn
 
 addCalendar :: ICal.VCalendar -> Query ()
-addCalendar vcal = Query $ \conn -> do
-    for_ (ICal.vcEvents vcal) $ \ev ->
-        getQueryFn (addEvent ev) conn
+addCalendar vcal = traverse_ addEvent (ICal.vcEvents vcal)
 
 getEvent :: ID ICal.VEvent -> Query (Maybe ICal.VEvent)
 getEvent (ID ident) = Query $ \conn -> do
