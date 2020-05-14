@@ -21,6 +21,7 @@ data GetRoute
     | Settings
     | Event Int64
     | NewEvent
+    | StyleCss
 
 data PostRoute
     = PostNewEvent
@@ -42,6 +43,7 @@ renderGet Home        = "/"
 renderGet Settings    = "/settings"
 renderGet (Event eid) = fromString $ "/event/" <> show eid
 renderGet NewEvent    = "/event/new"
+renderGet StyleCss    = "/style.css"
 
 redirectGet :: GetRoute -> ActionM ()
 redirectGet rt = do
@@ -59,6 +61,8 @@ scottyM route = do
     get "/event/:eid" $ do
         eid <- param "eid"
         route $ Get $ Event eid
+    get "/style.css" $
+        route $ Get StyleCss
     post "/event/new" $
         route $ Post PostNewEvent
     post "/settings" $

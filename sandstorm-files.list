@@ -11,6 +11,7 @@ sandcal
 sandstorm-http-bridge
 sandstorm-http-bridge-config
 sandstorm-manifest
+style.css
 ui.js
 usr/lib/ld-2.31.so
 usr/lib/ld-linux-x86-64.so.2

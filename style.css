@@ -1,0 +1,11 @@
+
+.postForm {
+	display: table;
+}
+
+.labeledInput {
+	display: table-row;
+}
+.labeledInput > label, .labeledInput > input {
+	display: table-cell;
+}

@@ -43,12 +43,14 @@ main = do
     DB.runQuery db DB.initSchema
     scotty 3000 $ do
         Route.scottyM $ \case
+            Route.Get Route.StyleCss -> file "style.css"
+
             Route.Get Route.Home -> viewHome db
             Route.Get Route.Settings -> viewSettings db
+            Route.Get Route.NewEvent -> viewNewEvent db
+            Route.Get _ -> error "TODO"
             Route.Post Route.SaveSettings -> setTimeZone db
-            _ -> error "TODO"
-        get "/api/all-events.json" $ getAllEvents db
-        post "/api/event/new" $ postNewEvent db
+            Route.Post Route.PostNewEvent -> postNewEvent db
         get "/api/event/:eid" $ do
             eid <- param "eid"
             getEvent db (DB.eventID eid)
@@ -62,25 +64,18 @@ elmPage = do
     setHeader "Content-Type" "text/html"
     file "index.html"
 
+viewNewEvent _db =
+    blaze View.newEvent
 
 viewHome db = do
     events <- DB.runQuery db DB.allEvents
     blaze $ View.home events
-
-getAllEvents db = do
-    events <- DB.runQuery db DB.allEvents
-    json events
 
 getEvent db eid = do
     res <- DB.runQuery db (DB.getEvent eid)
     case res of
         Nothing -> do404
         Just e  -> json e
-
-postNewEvent db = do
-    ev <- jsonData
-    eid <- DB.runQuery db (DB.addEvent ev)
-    json (show eid)
 
 importICS db = do
     bytes <- body
@@ -108,6 +103,13 @@ getTimeZone db = do
         Nothing -> do
             status status404
             text "No timezone set."
+
+postNewEvent _db = do
+    summary <- param "Summary"
+    date <- param "Date"
+    startTime <- param "Start Time"
+    endTime <- param "End Time"
+    error $ show (summary :: String, date :: String, startTime :: String, endTime :: String)
 
 setTimeZone db = do
     uid <- Sandstorm.getUserId

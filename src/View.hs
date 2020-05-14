@@ -3,6 +3,7 @@
 module View
     ( settings
     , home
+    , newEvent
     ) where
 
 import Zhp
@@ -26,7 +27,15 @@ data Document = Document
 docToHtml :: Document -> H.Html
 docToHtml Document{title, body} = H.docTypeHtml $ do
     H.title $ H.toHtml title
+    H.link ! A.rel "stylesheet" ! A.href (H.toValue Route.StyleCss)
     H.body $ body
+
+
+-- FIXME(security): xsrf.
+postForm :: Route.PostRoute -> H.Html -> H.Html
+postForm rt contents =
+    H.form ! A.class_ "postForm" ! A.method "post" ! A.action (H.toValue rt) $
+        contents
 
 home :: [DB.EventEntry] -> H.Html
 home entries = docToHtml Document
@@ -39,6 +48,24 @@ home entries = docToHtml Document
                 $ case ICal.veSummary $ DB.eeVEvent ee of
                     Just summary -> H.toHtml $ ICal.summaryValue summary
                     Nothing      -> "Untitled event"
+        H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
+{-
+            [ button
+                [ onClick SelectFile ]
+                [ text "Import ICalendar File" ]
+            ]
+-}
+    }
+
+newEvent :: H.Html
+newEvent = docToHtml Document
+    { title = "New Event"
+    , body = postForm Route.PostNewEvent $ do
+        labeledInput "Summary" mempty
+        labeledInput "Date" $ A.type_ "date"
+        labeledInput "Start Time" $ A.type_ "time"
+        labeledInput "End Time" $ A.type_ "time"
+        H.button ! A.type_ "submit" $ "Create Event"
     }
 
 settings :: Sandstorm.UserId -> DB.Query H.Html
@@ -58,7 +85,14 @@ settings uid =
         docToHtml $ Document
             { title = "User Settings"
             , body =
-                H.form ! A.method "post" ! A.action (H.toValue Route.SaveSettings) $ do
+                postForm Route.SaveSettings $ do
                     H.select ! A.name "timezone" $ traverse_ tzOption [minBound..maxBound]
                     H.button ! A.type_ "submit" $ "Save Settings"
             }
+
+labeledInput :: T.Text -> H.Attribute -> H.Html
+labeledInput name attrs =
+    let name' = H.toValue name in
+    H.div ! A.class_ "labeledInput" $ do
+        H.label ! A.for name' $ H.toHtml name
+        H.input ! A.name name' ! attrs
