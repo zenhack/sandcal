@@ -37,7 +37,9 @@ day = do
     m <- int
     _ <- char '-'
     d <- int
-    pure $ Time.fromGregorian (fromIntegral y) m d
+    case Time.fromGregorianValid (fromIntegral y) m d of
+        Just v  -> pure v
+        Nothing -> empty
 
 int :: Parser Int
 int = Prelude.read <$> some (oneOf ['0'..'9'])
