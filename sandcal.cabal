@@ -68,6 +68,7 @@ common shared-opts
     , base64-bytestring ^>=1.0.0
     , tz ^>=0.1
     , tzdata ^>=0.1
+    , megaparsec ^>=8.0.0
   ghc-options:
     -Wall
     -Wno-missing-signatures
@@ -85,6 +86,7 @@ executable sandcal
     , Route
     , ICal
     , Sandstorm
+    , DateParsers
   hs-source-dirs:      src
 
 test-suite tests
