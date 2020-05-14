@@ -59,7 +59,8 @@ open :: MonadIO m => String -> m Conn
 open path = Conn <$> liftIO (DB.open path)
 
 runQuery :: MonadIO m => Conn -> Query a -> m a
-runQuery (Conn conn) (Query f) = liftIO $ f conn
+runQuery (Conn conn) (Query f) =
+    liftIO $ DB.withTransaction conn $ f conn
 
 
 ---- Helper types that appear in our queries
@@ -115,10 +116,9 @@ addEvent ev = Query $ \conn -> do
     ID <$> DB.lastInsertRowId conn
 
 addCalendar :: ICal.VCalendar -> Query ()
-addCalendar vcal = Query $ \conn ->
-    DB.withTransaction conn $ do
-        for_ (ICal.vcEvents vcal) $ \ev ->
-            getQueryFn (addEvent ev) conn
+addCalendar vcal = Query $ \conn -> do
+    for_ (ICal.vcEvents vcal) $ \ev ->
+        getQueryFn (addEvent ev) conn
 
 getEvent :: ID ICal.VEvent -> Query (Maybe ICal.VEvent)
 getEvent (ID ident) = Query $ \conn -> do
