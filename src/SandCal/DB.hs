@@ -55,6 +55,15 @@ newtype Query a = Query { getQueryFn :: DB.Connection -> IO a }
 instance Functor Query where
     fmap f q = Query $ fmap f . getQueryFn q
 
+instance Applicative Query where
+    pure x = Query $ \_ -> pure x
+    f <*> x = Query $ \conn -> getQueryFn f conn <*> getQueryFn x conn
+
+instance Monad Query where
+    x >>= f = Query $ \conn -> do
+        x' <- getQueryFn x conn
+        getQueryFn (f x') conn
+
 open :: MonadIO m => String -> m Conn
 open path = Conn <$> liftIO (DB.open path)
 
