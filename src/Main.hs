@@ -56,15 +56,9 @@ main = do
             Route.Get Route.Home -> viewHome db
             Route.Get Route.Settings -> viewSettings db
             Route.Get Route.NewEvent -> viewNewEvent db
-            Route.Get _ -> error "TODO"
+            Route.Get (Route.Event eid) -> getEvent db eid
             Route.Post Route.SaveSettings -> setTimeZone db
             Route.Post Route.PostNewEvent -> postNewEvent db
-        get "/api/event/:eid" $ do
-            eid <- param "eid"
-            getEvent db (DB.eventID eid)
-        get "/api/timezone" $ getTimeZone db
-        get "/settings" $ viewSettings db
-        post "/api/timezone" $ setTimeZone db
         post "/api/import.ics" $ importICS db
         notFound $ do404
 
@@ -80,10 +74,10 @@ viewHome db = do
     blaze $ View.home events
 
 getEvent db eid = do
-    res <- DB.runQuery db (DB.getEvent eid)
+    res <- DB.runQuery db (DB.getEvent (DB.eventID eid))
     case res of
         Nothing -> do404
-        Just e  -> json e
+        Just e  -> blaze $ View.event e
 
 importICS db = do
     bytes <- body
@@ -102,15 +96,6 @@ viewSettings db = do
     uid <- Sandstorm.getUserId
     result <- DB.runQuery db $ View.settings uid
     blaze result
-
-getTimeZone db = do
-    uid <- Sandstorm.getUserId
-    timezone <- liftIO $ DB.runQuery db $ DB.getUserTimeZone uid
-    case timezone of
-        Just tz -> json (encodeTZLabel tz)
-        Nothing -> do
-            status status404
-            text "No timezone set."
 
 postNewEvent db = do
     summary <- param "Summary"

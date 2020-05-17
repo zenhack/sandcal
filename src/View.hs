@@ -4,12 +4,14 @@ module View
     ( settings
     , home
     , newEvent
+    , event
     ) where
 
 import Zhp
 
 import qualified Data.ByteString.Char8       as B8
 import qualified Data.Text                   as T
+import qualified Data.Text.Lazy              as LT
 import qualified Data.Time.Zones.DB          as Tz
 import qualified ICal
 import qualified Route
@@ -36,6 +38,18 @@ postForm :: Route.PostRoute -> H.Html -> H.Html
 postForm rt contents =
     H.form ! A.class_ "postForm" ! A.method "post" ! A.action (H.toValue rt) $
         contents
+
+event :: ICal.VEvent -> H.Html
+event ev =
+    let title = case ICal.veSummary ev of
+            Nothing                               -> "Untitled Event"
+            Just ICal.Summary {ICal.summaryValue} -> summaryValue
+    in
+    docToHtml Document
+        { title = "Event - " <> LT.toStrict title
+        , body =
+            H.h1 $ H.toHtml title
+        }
 
 home :: [DB.EventEntry] -> H.Html
 home entries = docToHtml Document
