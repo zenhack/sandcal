@@ -34,6 +34,7 @@ instance W.Parsable TimeOfDay where
 instance W.Parsable Day where
     parseParam = fmap Day . parseParamWith day
 
+-- | Use the given parsec parser to implement W.Parsable.parseParam
 parseParamWith :: Parser a -> LT.Text -> Either LT.Text a
 parseParamWith p input =
     case parse p "" input of
