@@ -34,10 +34,14 @@ docToHtml Document{title, body} = H.docTypeHtml $ do
 
 
 -- FIXME(security): xsrf.
-postForm :: Route.PostRoute -> H.Html -> H.Html
-postForm rt contents =
-    H.form ! A.class_ "postForm" ! A.method "post" ! A.action (H.toValue rt) $
-        contents
+postForm :: H.Attribute -> Route.PostRoute -> H.Html -> H.Html
+postForm attrs rt contents =
+    H.form
+        ! attrs
+        ! A.class_ "postForm"
+        ! A.method "post"
+        ! A.action (H.toValue rt) $
+            contents
 
 event :: ICal.VEvent -> H.Html
 event ev =
@@ -63,7 +67,7 @@ home entries = docToHtml Document
                     Just summary -> H.toHtml $ ICal.summaryValue summary
                     Nothing      -> "Untitled event"
         H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
-        postForm Route.ImportICS $ do
+        postForm (A.enctype "multipart/form-data") Route.ImportICS $ do
             labeledInput "ICS File" $ A.type_ "file"
             H.button ! A.type_ "submit" $ "Upload"
     }
@@ -71,7 +75,7 @@ home entries = docToHtml Document
 newEvent :: H.Html
 newEvent = docToHtml Document
     { title = "New Event"
-    , body = postForm Route.PostNewEvent $ do
+    , body = postForm mempty Route.PostNewEvent $ do
         labeledInput "Summary" mempty
         labeledInput "Date" $ A.type_ "date"
         labeledInput "Start Time" $ A.type_ "time"
@@ -96,7 +100,7 @@ settings uid =
         docToHtml $ Document
             { title = "User Settings"
             , body =
-                postForm Route.SaveSettings $ do
+                postForm mempty Route.SaveSettings $ do
                     H.select ! A.name "timezone" $ traverse_ tzOption [minBound..maxBound]
                     H.button ! A.type_ "submit" $ "Save Settings"
             }

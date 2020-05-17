@@ -97,8 +97,6 @@ importICS db = do
                 for_ cals' $ \(_, warns) ->
                     for_ warns $ \warning ->
                         putStrLn $ "Warning (parsing icalendar data): " <> warning
-                print cals'
-                hFlush stdout
             DB.runQuery db $
                 for_ cals' $ \(vcals, _) ->
                     traverse_ DB.addCalendar vcals
