@@ -8,7 +8,9 @@ module SandCal.DB
     , open
     , runQuery
 
+    , ID
     , eventID
+    , unEventID
 
     , EventEntry(..)
 
@@ -49,6 +51,9 @@ instance Show (ID a) where
 
 eventID :: Int64 -> ID ICal.VEvent
 eventID = ID
+
+unEventID :: ID ICal.VEvent -> Int64
+unEventID (ID x) = x
 
 newtype Query a = Query { getQueryFn :: DB.Connection -> IO a }
 

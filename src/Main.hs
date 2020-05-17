@@ -1,8 +1,10 @@
+{-# LANGUAGE BangPatterns   #-}
 {-# LANGUAGE LambdaCase     #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes    #-}
 module Main (main) where
 
+import Data.Default                  (def)
 import Data.Text.Encoding.Error      (lenientDecode)
 import Data.Time.Zones.All           (TZLabel, fromTZName, toTZName)
 import Network.HTTP.Types.Status     (status400, status404)
@@ -12,9 +14,13 @@ import Text.Blaze.Html5              (Html)
 import Text.ICalendar.Parser         (parseICalendar)
 
 import qualified Data.ByteString.Lazy    as LBS
-import qualified Data.Default            as Default
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
+import qualified Data.Time               as Time
+import qualified Data.Time.Zones         as Tz
+import qualified Data.UUID               as UUID
+import qualified Data.UUID.V4            as UUID
+import qualified ICal
 import qualified Route
 import qualified SandCal.DB              as DB
 import qualified Sandstorm
@@ -81,7 +87,7 @@ getEvent db eid = do
 
 importICS db = do
     bytes <- body
-    case parseICalendar Default.def "import.ics" bytes of
+    case parseICalendar def "import.ics" bytes of
         Left err -> do
             liftIO $ putStrLn $ "Error parsing icalendar data: " <> err
             status status400
@@ -106,12 +112,101 @@ getTimeZone db = do
             status status404
             text "No timezone set."
 
-postNewEvent _db = do
+postNewEvent db = do
     summary <- param "Summary"
-    DP.Day date <- param "Date"
+    DP.Day day <- param "Date"
     DP.TimeOfDay startTime <- param "Start Time"
     DP.TimeOfDay endTime <- param "End Time"
-    error $ show (summary :: String, date, startTime, endTime)
+
+    uid <- Sandstorm.getUserId
+    maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
+    maybeTz <- liftIO $ for maybeTzLabel $
+        encodeTZLabel
+        >>> LT.unpack
+        >>> Tz.loadTZFromDB
+
+    uuid <- liftIO $ UUID.nextRandom
+
+    let floatingStart = Time.LocalTime
+            { Time.localDay = day
+            , Time.localTimeOfDay = startTime
+            }
+        floatingEnd = floatingStart
+            { Time.localTimeOfDay = endTime
+            }
+        dtStart = case maybeTzLabel of
+            Nothing -> ICal.FloatingDateTime
+                { ICal.dateTimeFloating = floatingStart
+                }
+            Just tz -> ICal.ZonedDateTime
+                { ICal.dateTimeFloating = floatingStart
+                , ICal.dateTimeZone = encodeTZLabel tz
+                }
+        dtEnd = dtStart { ICal.dateTimeFloating = floatingEnd }
+
+        !utcStart = case maybeTz of
+            Just tz -> Tz.localTimeToUTCTZ tz floatingStart
+            Nothing -> error $ mconcat
+                [ "TODO: deal with the case where the user doesn't give us "
+                , "a time zone."
+                ]
+
+        vEvent = ICal.VEvent
+            { ICal.veUID = ICal.UID
+                { ICal.uidValue = LT.fromStrict $ UUID.toText uuid
+                , ICal.uidOther = def
+                }
+            , ICal.veDTStamp = ICal.DTStamp
+                { ICal.dtStampValue = utcStart
+                , ICal.dtStampOther = def
+                }
+            , ICal.veSummary = Just ICal.Summary
+                { ICal.summaryValue = summary
+                , ICal.summaryAltRep = def
+                , ICal.summaryLanguage = def
+                , ICal.summaryOther = def
+                }
+            , ICal.veDTStart = Just ICal.DTStartDateTime
+                { ICal.dtStartDateTimeValue = dtStart
+                , ICal.dtStartOther = def
+                }
+            , ICal.veDTEndDuration = Just $ Left ICal.DTEndDateTime
+                { ICal.dtEndDateTimeValue = dtEnd
+                , ICal.dtEndOther = def
+                }
+
+            -- TODO: fill these in with the current time:
+            , ICal.veCreated = Nothing
+            , ICal.veLastMod = Nothing
+
+            -- Not used for now:
+            , ICal.veClass = def
+            , ICal.veDescription = def
+            , ICal.veGeo = def
+            , ICal.veLocation = def
+            , ICal.veOrganizer = def
+            , ICal.vePriority = def
+            , ICal.veSeq = def
+            , ICal.veStatus = def
+            , ICal.veTransp = def
+            , ICal.veUrl = def
+            , ICal.veRecurId = def
+            , ICal.veRRule = def
+            , ICal.veAttach = def
+            , ICal.veAttendee = def
+            , ICal.veCategories = def
+            , ICal.veComment = def
+            , ICal.veContact = def
+            , ICal.veExDate = def
+            , ICal.veRStatus  = def
+            , ICal.veRelated = def
+            , ICal.veResources = def
+            , ICal.veRDate = def
+            , ICal.veAlarms = def
+            , ICal.veOther = def
+            }
+    evId <- DB.runQuery db $ DB.addEvent vEvent
+    Route.redirectGet $ Route.Event $ DB.unEventID evId
 
 setTimeZone db = do
     uid <- Sandstorm.getUserId
