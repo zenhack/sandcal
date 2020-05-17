@@ -49,12 +49,7 @@ home entries = docToHtml Document
                     Just summary -> H.toHtml $ ICal.summaryValue summary
                     Nothing      -> "Untitled event"
         H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
-{-
-            [ button
-                [ onClick SelectFile ]
-                [ text "Import ICalendar File" ]
-            ]
--}
+    -- TODO: import ics file.
     }
 
 newEvent :: H.Html
