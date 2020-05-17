@@ -59,7 +59,7 @@ main = do
             Route.Get (Route.Event eid) -> getEvent db eid
             Route.Post Route.SaveSettings -> setTimeZone db
             Route.Post Route.PostNewEvent -> postNewEvent db
-        post "/api/import.ics" $ importICS db
+            Route.Post Route.ImportICS -> importICS db
         notFound $ do404
 
 elmPage = do
@@ -90,7 +90,8 @@ importICS db = do
         Right (vcals, warns) -> do
             liftIO $ for_ warns $ \warning ->
                 putStrLn $ "Warning (parsing icalendar data): " <> warning
-            traverse_ (DB.runQuery db . DB.addCalendar) vcals
+            DB.runQuery db $ traverse_ DB.addCalendar vcals
+            Route.redirectGet Route.Home
 
 viewSettings db = do
     uid <- Sandstorm.getUserId

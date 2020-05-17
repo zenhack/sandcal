@@ -26,6 +26,7 @@ data GetRoute
 data PostRoute
     = PostNewEvent
     | SaveSettings
+    | ImportICS
 
 instance ToValue Route where
     toValue (Get r)  = toValue r
@@ -34,6 +35,7 @@ instance ToValue Route where
 instance ToValue PostRoute where
     toValue PostNewEvent = "/event/new"
     toValue SaveSettings = "/settings"
+    toValue ImportICS    = "/import.ics"
 
 instance ToValue GetRoute where
     toValue = renderGet
@@ -67,3 +69,5 @@ scottyM route = do
         route $ Post PostNewEvent
     post "/settings" $
         route $ Post SaveSettings
+    post "/import.ics" $
+        route $ Post ImportICS
