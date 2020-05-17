@@ -56,7 +56,7 @@ scottyM :: (Route -> ActionM ()) -> ScottyM ()
 scottyM route = do
     get "/" $
         route $ Get Home
-    get "/" $
+    get "/settings" $
         route $ Get Settings
     get "/event/new" $
         route $ Get NewEvent
