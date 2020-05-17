@@ -68,7 +68,7 @@ home entries = docToHtml Document
                     Nothing      -> "Untitled event"
         H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
         postForm (A.enctype "multipart/form-data") Route.ImportICS $ do
-            labeledInput "ICS File" $ A.type_ "file"
+            labeledInput "ICS File" $ A.type_ "file" <> A.accept "text/calendar"
             H.button ! A.type_ "submit" $ "Upload"
     }
 
