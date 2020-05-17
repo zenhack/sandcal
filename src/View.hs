@@ -63,7 +63,9 @@ home entries = docToHtml Document
                     Just summary -> H.toHtml $ ICal.summaryValue summary
                     Nothing      -> "Untitled event"
         H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
-    -- TODO: import ics file.
+        postForm Route.ImportICS $ do
+            labeledInput "ICS File" $ A.type_ "file"
+            H.button ! A.type_ "submit" $ "Upload"
     }
 
 newEvent :: H.Html

@@ -8,6 +8,7 @@ import Data.Default                  (def)
 import Data.Text.Encoding.Error      (lenientDecode)
 import Data.Time.Zones.All           (TZLabel, fromTZName, toTZName)
 import Network.HTTP.Types.Status     (status400, status404)
+import Network.Wai.Parse             (FileInfo(..))
 import SandCal.Config                (cfgDBPath, getConfig)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5              (Html)
@@ -80,17 +81,27 @@ getEvent db eid = do
         Just e  -> blaze $ View.event e
 
 importICS db = do
-    bytes <- body
-    case parseICalendar def "import.ics" bytes of
+    fs <- files
+    let cals = for fs $ \(_, FileInfo{fileName, fileContent}) ->
+            parseICalendar def (show fileName) fileContent
+    case cals of
         Left err -> do
-            liftIO $ putStrLn $ "Error parsing icalendar data: " <> err
+            liftIO $ do
+                putStrLn $ "Error parsing icalendar data: " <> err
+                hFlush stdout
             status status400
             text "Invalid icalendar file."
 
-        Right (vcals, warns) -> do
-            liftIO $ for_ warns $ \warning ->
-                putStrLn $ "Warning (parsing icalendar data): " <> warning
-            DB.runQuery db $ traverse_ DB.addCalendar vcals
+        Right cals' -> do
+            liftIO $ do
+                for_ cals' $ \(_, warns) ->
+                    for_ warns $ \warning ->
+                        putStrLn $ "Warning (parsing icalendar data): " <> warning
+                print cals'
+                hFlush stdout
+            DB.runQuery db $
+                for_ cals' $ \(vcals, _) ->
+                    traverse_ DB.addCalendar vcals
             Route.redirectGet Route.Home
 
 viewSettings db = do
