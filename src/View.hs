@@ -59,6 +59,11 @@ home :: [DB.EventEntry] -> H.Html
 home entries = docToHtml Document
     { title = "All Events"
     , body = do
+        H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
+        H.h1 "Import Calendar"
+        postForm (A.enctype "multipart/form-data") Route.ImportICS $ do
+            labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
+            H.button ! A.type_ "submit" $ "Upload"
         H.h1 "All Events"
         H.ul $ for_ entries $ \ee ->
             H.li $ H.a
@@ -66,10 +71,6 @@ home entries = docToHtml Document
                 $ case ICal.veSummary $ DB.eeVEvent ee of
                     Just summary -> H.toHtml $ ICal.summaryValue summary
                     Nothing      -> "Untitled event"
-        H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
-        postForm (A.enctype "multipart/form-data") Route.ImportICS $ do
-            labeledInput "ICS File" $ A.type_ "file" <> A.accept "text/calendar"
-            H.button ! A.type_ "submit" $ "Upload"
     }
 
 newEvent :: H.Html
