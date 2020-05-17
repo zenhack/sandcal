@@ -123,7 +123,7 @@ postNewEvent db = do
     maybeTz <- liftIO $ for maybeTzLabel $
         encodeTZLabel
         >>> LT.unpack
-        >>> Tz.loadTZFromDB
+        >>> Tz.loadSystemTZ
 
     uuid <- liftIO $ UUID.nextRandom
 
