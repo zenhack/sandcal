@@ -1,6 +1,11 @@
+-- This module provides Web.Scotty.Parsable instances for dates & times as they
+-- are provided by browsers' form elements.
+--
+-- The instances are defined on newtype wrappers around corresponding types
+-- from the time package.
 module DateParsers
-    ( timeOfDay
-    , day
+    ( TimeOfDay(..)
+    , Day(..)
     ) where
 
 import qualified Prelude
@@ -12,10 +17,28 @@ import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
-import qualified Data.Text as T
-import qualified Data.Time as Time
+import qualified Data.Text.Lazy as LT
+import qualified Data.Time      as Time
 
-type Parser = Parsec Void T.Text
+import qualified Web.Scotty as W
+
+type Parser = Parsec Void LT.Text
+
+newtype TimeOfDay = TimeOfDay Time.TimeOfDay
+
+newtype Day = Day Time.Day
+
+instance W.Parsable TimeOfDay where
+    parseParam = fmap TimeOfDay . parseParamWith timeOfDay
+
+instance W.Parsable Day where
+    parseParam = fmap Day . parseParamWith day
+
+parseParamWith :: Parser a -> LT.Text -> Either LT.Text a
+parseParamWith p input =
+    case parse p "" input of
+        Right v -> Right v
+        Left e  -> Left $ LT.pack (show e)
 
 timeOfDay :: Parser Time.TimeOfDay
 timeOfDay = do

@@ -20,6 +20,8 @@ import qualified SandCal.DB              as DB
 import qualified Sandstorm
 import qualified View
 
+import qualified DateParsers as DP
+
 
 import Web.Scotty
 import Zhp
@@ -106,10 +108,10 @@ getTimeZone db = do
 
 postNewEvent _db = do
     summary <- param "Summary"
-    date <- param "Date"
-    startTime <- param "Start Time"
-    endTime <- param "End Time"
-    error $ show (summary :: String, date :: String, startTime :: String, endTime :: String)
+    DP.Day date <- param "Date"
+    DP.TimeOfDay startTime <- param "Start Time"
+    DP.TimeOfDay endTime <- param "End Time"
+    error $ show (summary :: String, date, startTime, endTime)
 
 setTimeZone db = do
     uid <- Sandstorm.getUserId
