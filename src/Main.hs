@@ -80,7 +80,7 @@ viewHome db = do
                 & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
             )
             & Occurrences.merge
-    blaze $ View.home $ map Occurrences.ocItem occurs
+    blaze $ View.home occurs
 
 getEvent db eid = do
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))

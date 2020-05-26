@@ -14,6 +14,7 @@ import qualified Data.Text                   as T
 import qualified Data.Text.Lazy              as LT
 import qualified Data.Time.Zones.DB          as Tz
 import qualified ICal
+import qualified Occurrences                 as Oc
 import qualified Route
 import qualified SandCal.DB                  as DB
 import qualified Sandstorm                   as Sandstorm
@@ -55,7 +56,7 @@ event ev =
             H.h1 $ H.toHtml title
         }
 
-home :: [DB.EventEntry] -> H.Html
+home :: [Oc.Occurrence DB.EventEntry] -> H.Html
 home entries = docToHtml Document
     { title = "All Events"
     , body = do
@@ -65,7 +66,8 @@ home entries = docToHtml Document
             labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
             H.button ! A.type_ "submit" $ "Upload"
         H.h1 "All Events"
-        H.ul $ for_ entries $ \ee ->
+        H.ul $ for_ entries $ \oc ->
+            let ee = Oc.ocItem oc in
             H.li $ H.a
                 ! A.href (H.toValue $ Route.Event $ DB.eeId ee)
                 $ case ICal.veSummary $ DB.eeVEvent ee of
