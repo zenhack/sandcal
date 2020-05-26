@@ -21,6 +21,7 @@ usr/lib/libdl-2.31.so
 usr/lib/libdl.so.2
 usr/lib/libffi.so.7
 usr/lib/libffi.so.7.1.0
+usr/lib/libgcc_s.so.1
 usr/lib/libgmp.so.10
 usr/lib/libgmp.so.10.4.0
 usr/lib/libm-2.31.so
@@ -29,6 +30,8 @@ usr/lib/libpthread-2.31.so
 usr/lib/libpthread.so.0
 usr/lib/librt-2.31.so
 usr/lib/librt.so.1
+usr/lib/libstdc++.so.6
+usr/lib/libstdc++.so.6.0.28
 usr/lib/libutil-2.31.so
 usr/lib/libutil.so.1
 usr/lib/libz.so.1

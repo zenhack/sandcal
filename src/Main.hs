@@ -28,6 +28,7 @@ import qualified Sandstorm
 import qualified View
 
 import qualified DateParsers as DP
+import qualified Occurrences
 
 
 import Web.Scotty
@@ -72,7 +73,14 @@ viewNewEvent _db =
 
 viewHome db = do
     events <- DB.runQuery db DB.allEvents
-    blaze $ View.home events
+    let occurs =
+            events
+            & map (\ev ->
+                Occurrences.eventOccurrences (DB.eeVEvent ev)
+                & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
+            )
+            & Occurrences.merge
+    blaze $ View.home $ map Occurrences.ocItem occurs
 
 getEvent db eid = do
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))

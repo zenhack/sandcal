@@ -89,6 +89,7 @@ executable sandcal
     , ICal
     , Sandstorm
     , DateParsers
+    , Occurrences
   hs-source-dirs:      src
 
 test-suite tests
