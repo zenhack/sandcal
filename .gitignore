@@ -24,3 +24,7 @@ cabal.project.local
 
 elm-stuff
 ui.js
+
+
+# Sandstorm package:
+*.spk

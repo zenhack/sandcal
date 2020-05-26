@@ -5,6 +5,7 @@ run: all
 	./sandcal
 dev: all
 	spk dev
+pack: sandcal.spk
 
 .build-hs: cabal.project $(wildcard *.cabal) $(hs_src)
 	cabal v2-build
@@ -15,5 +16,7 @@ dev: all
 sandcal: .build-hs
 	find dist-newstyle -type f -executable -name sandcal -exec cp \{} ./ \;
 	strip $@
+sandcal.spk: all
+	spk pack $@
 
-.PHONY: all run dev
+.PHONY: all run dev pack
