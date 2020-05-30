@@ -80,6 +80,7 @@ viewHome db = do
                 & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
             )
             & Occurrences.merge
+            & take 100
     blaze $ View.home occurs
 
 getEvent db eid = do

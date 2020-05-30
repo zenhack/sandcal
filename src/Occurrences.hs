@@ -118,6 +118,21 @@ expandFreq ev freq =
         Secondly -> iterateNominalDiffTime Time.secondsToNominalDiffTime
         Minutely -> iterateNominalDiffTime ((* 60) >>> Time.secondsToNominalDiffTime)
         Hourly -> iterateNominalDiffTime ((* (60 * 60)) >>> Time.secondsToNominalDiffTime)
+        Weekly ->
+            let octTime' n = case octTime start of
+                    LocalOCAllDay day ->
+                        LocalOCAllDay $ Time.addDays n day
+                    LocalOCAtTime localTime ->
+                        LocalOCAtTime localTime
+                            { Time.localDay = Time.addDays n (Time.localDay localTime)
+                            }
+            in
+            [ Occurrence
+                { ocItem = ev
+                , ocTimeStamp = start { octTime = octTime' n }
+                }
+            | n <- [0,7..]
+            ]
         _ -> [] -- TODO
   where
     start = getEventStartTime ev
