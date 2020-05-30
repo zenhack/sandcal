@@ -4,13 +4,16 @@ module View.Common
     , docToHtml
     , labeledInput
     , postForm
+    , tzSelect
     ) where
 
 import Zhp
 
 import qualified Route
 
+import qualified Data.ByteString.Char8       as B8
 import qualified Data.Text                   as T
+import qualified Data.Time.Zones.All         as Tz
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
@@ -42,3 +45,18 @@ postForm attrs rt contents =
         ! A.method "post"
         ! A.action (H.toValue rt) $
             contents
+
+tzSelect :: T.Text -> Maybe Tz.TZLabel -> H.Html
+tzSelect label userTz =
+    let addSelected :: Tz.TZLabel -> (H.Html -> H.Html) -> H.Html -> H.Html
+        addSelected tz elt
+         | (Just tz) == userTz = elt ! A.selected ""
+         | otherwise = elt
+
+        name :: IsString a => Tz.TZLabel -> a
+        name tz = fromString $ B8.unpack $ Tz.toTZName tz
+
+        tzOption :: Tz.TZLabel -> H.Html
+        tzOption tz = addSelected tz H.option ! A.value (name tz) $ (name tz)
+    in
+    H.select ! A.name (H.toValue label) $ traverse_ tzOption [minBound..maxBound]
