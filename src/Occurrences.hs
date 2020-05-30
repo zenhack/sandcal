@@ -37,7 +37,7 @@ data ZonedOCTime = ZonedOCTime
 -- For times that are ambiguous or invalid because of timezone changes
 -- (DST being the most obvious), we just fudge it and pick the earliest
 -- reasonable interpretation. Accordingly, this should *not* be used
--- anywhere
+-- anywhere where the distinction is critical.
 zonedOCTimeToUTCFudge :: ZonedOCTime -> Time.UTCTime
 zonedOCTimeToUTCFudge zot =
     let localTime = case octTime zot of
