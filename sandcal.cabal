@@ -44,14 +44,14 @@ common shared-opts
       NoImplicitPrelude
     , OverloadedStrings
   build-depends:
-      base ^>=4.13
+      base >=4.13 && <5
     , zenhack-prelude ^>=0.1
     , blaze-html ^>=0.9.1
     , blaze-markup ^>=0.8.2
     , scotty ^>=0.11.5
     , sqlite-simple ^>=0.4.16
     , safe-exceptions ^>=0.1.7
-    , text ^>=1.2.4
+    , text ^>=1.2.3
     , time ^>=1.9.3
     , parsec ^>=3.1.13
     , aeson ^>=1.4.6
@@ -59,7 +59,7 @@ common shared-opts
     , http-types ^>=0.12.3
     , iCalendar ^>=0.4.0
     , data-default ^>=0.7.1
-    , containers ^>=0.5.11
+    , containers >=0.5.11 && <0.7
     , transformers ^>=0.5.6
     , bytestring ^>=0.10.10
     , case-insensitive ^>=1.2.1
