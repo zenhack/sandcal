@@ -172,8 +172,19 @@ ruleOccurrences vevent recur =
     case recurUntilCount recur of
         Nothing                      -> unbounded
         Just (Right count)           -> take count unbounded
-        Just (Left dateAndMaybeTime) -> takeUntil dateAndMaybeTime unbounded
+        Just (Left dateAndMaybeTime) -> takeWhile (matchesUntil dateAndMaybeTime) unbounded
 
 
-takeUntil :: Either Date DateTime -> [Occurrence a] -> [Occurrence a]
-takeUntil _ = id -- TODO
+matchesUntil :: Either Date DateTime -> Occurrence a -> Bool
+matchesUntil limit Occurrence{ocTimeStamp = zot} = case limit of
+    Left Date{dateValue} -> zonedOCTimeDay zot < dateValue
+    Right (UTCDateTime utc) -> zonedOCTimeToUTCFudge zot < utc
+    Right (FloatingDateTime lt) -> case octTime zot of
+        LocalOCAllDay day -> day < Time.localDay lt
+        LocalOCAtTime lt' -> lt' < lt
+    Right ZonedDateTime{dateTimeFloating = lt} ->
+        case octTime zot of
+            -- FIXME: take the time zone into account, and get rid of
+            -- copypasta from above.
+            LocalOCAllDay day -> day < Time.localDay lt
+            LocalOCAtTime lt' -> lt' < lt
