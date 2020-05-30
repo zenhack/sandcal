@@ -2,6 +2,8 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Occurrences
     ( Occurrence(..)
+    , LocalOCTime(..)
+    , ZonedOCTime(..)
     , eventOccurrences
     , merge
     ) where
