@@ -2,47 +2,26 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module View
     ( settings
-    , home
     , newEvent
     , event
+    , View.Home.home
     ) where
 
 import Zhp
 
+import View.Common
+
 import qualified Data.ByteString.Char8       as B8
-import qualified Data.Text                   as T
 import qualified Data.Text.Lazy              as LT
 import qualified Data.Time.Zones.DB          as Tz
 import qualified ICal
-import qualified Occurrences                 as Oc
 import qualified Route
 import qualified SandCal.DB                  as DB
 import qualified Sandstorm                   as Sandstorm
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
-
-data Document = Document
-    { title :: T.Text
-    , body  :: H.Html
-    }
-
-docToHtml :: Document -> H.Html
-docToHtml Document{title, body} = H.docTypeHtml $ do
-    H.title $ H.toHtml title
-    H.link ! A.rel "stylesheet" ! A.href (H.toValue Route.StyleCss)
-    H.body $ body
-
-
--- FIXME(security): xsrf.
-postForm :: H.Attribute -> Route.PostRoute -> H.Html -> H.Html
-postForm attrs rt contents =
-    H.form
-        ! attrs
-        ! A.class_ "postForm"
-        ! A.method "post"
-        ! A.action (H.toValue rt) $
-            contents
+import qualified View.Home
 
 event :: ICal.VEvent -> H.Html
 event ev =
@@ -55,25 +34,6 @@ event ev =
         , body =
             H.h1 $ H.toHtml title
         }
-
-home :: [Oc.Occurrence DB.EventEntry] -> H.Html
-home entries = docToHtml Document
-    { title = "All Events"
-    , body = do
-        H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
-        H.h1 "Import Calendar"
-        postForm (A.enctype "multipart/form-data") Route.ImportICS $ do
-            labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
-            H.button ! A.type_ "submit" $ "Upload"
-        H.h1 "All Events"
-        H.ul $ for_ entries $ \oc ->
-            let ee = Oc.ocItem oc in
-            H.li $ H.a
-                ! A.href (H.toValue $ Route.Event $ DB.eeId ee)
-                $ case ICal.veSummary $ DB.eeVEvent ee of
-                    Just summary -> H.toHtml $ ICal.summaryValue summary
-                    Nothing      -> "Untitled event"
-    }
 
 newEvent :: H.Html
 newEvent = docToHtml Document
@@ -107,10 +67,3 @@ settings uid =
                     H.select ! A.name "timezone" $ traverse_ tzOption [minBound..maxBound]
                     H.button ! A.type_ "submit" $ "Save Settings"
             }
-
-labeledInput :: T.Text -> H.Attribute -> H.Html
-labeledInput name attrs =
-    let name' = H.toValue name in
-    H.div ! A.class_ "labeledInput" $ do
-        H.label ! A.for name' $ H.toHtml name
-        H.input ! A.name name' ! attrs

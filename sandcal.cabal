@@ -85,6 +85,8 @@ executable sandcal
       SandCal.DB
     , SandCal.Config
     , View
+    , View.Common
+    , View.Home
     , Route
     , ICal
     , Sandstorm
