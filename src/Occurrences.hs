@@ -29,6 +29,7 @@ data ZonedOCTime = ZonedOCTime
     { octZone :: TZ
     , octTime :: LocalOCTime
     }
+    deriving(Show)
 
 -- | Convert a ZonedOCTime to a UTCTime.
 --
@@ -50,11 +51,12 @@ data Occurrence a = Occurrence
     { ocItem      :: a
     , ocTimeStamp :: ZonedOCTime
     }
-    deriving(Functor)
+    deriving(Functor, Show)
 
 data StartTimeError
     = FloatingStartTime
     | BadTimeZone LT.Text
+    deriving(Show)
 
 zonedOCTimeFromUTC :: Time.UTCTime -> ZonedOCTime
 zonedOCTimeFromUTC utcTime = ZonedOCTime

@@ -84,7 +84,7 @@ data EventEntry = EventEntry
     { eeId     :: !Int64
     , eeVEvent :: !ICal.VEvent
     }
-    deriving(Generic)
+    deriving(Show, Generic)
 instance Aeson.ToJSON EventEntry
 instance Aeson.FromJSON EventEntry
 
