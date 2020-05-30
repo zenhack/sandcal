@@ -5,6 +5,7 @@ module Occurrences
     , LocalOCTime(..)
     , ZonedOCTime(..)
     , eventOccurrences
+    , zonedOCTimeDay
     , merge
     ) where
 
@@ -59,6 +60,11 @@ data StartTimeError
     = FloatingStartTime
     | BadTimeZone LT.Text
     deriving(Show)
+
+zonedOCTimeDay :: ZonedOCTime -> Time.Day
+zonedOCTimeDay zot = case octTime zot of
+    LocalOCAllDay day       -> day
+    LocalOCAtTime localTime -> Time.localDay localTime
 
 zonedOCTimeFromUTC :: Time.UTCTime -> ZonedOCTime
 zonedOCTimeFromUTC utcTime = ZonedOCTime
