@@ -7,6 +7,7 @@ module Occurrences
     , eventOccurrences
     , zonedOCTimeDay
     , merge
+    , dropBeforeUTC
     ) where
 
 import Zhp
@@ -99,6 +100,10 @@ eventDTStart ev =
 
 merge :: [[Occurrence a]] -> [Occurrence a]
 merge = foldl' (mergeOn (ocTimeStamp >>> zonedOCTimeToUTCFudge)) []
+
+dropBeforeUTC :: Time.UTCTime -> [Occurrence a] -> [Occurrence a]
+dropBeforeUTC utc = dropWhile $ \Occurrence{ocTimeStamp} ->
+    zonedOCTimeToUTCFudge ocTimeStamp < utc
 
 mergeOn :: Ord b => (a -> b) -> [a] -> [a] -> [a]
 mergeOn _ xs [] = xs
