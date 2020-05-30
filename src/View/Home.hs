@@ -39,11 +39,22 @@ makeItems' day (o@Oc.Occurrence{Oc.ocTimeStamp}:os) =
 viewItem :: Item -> H.Html
 viewItem (DayHeading day) =
     H.h2 $ H.toHtml (show day) -- TODO: nicer formatting
-viewItem (Occurrence Oc.Occurrence{Oc.ocItem}) = H.div $ H.a
-    ! A.href (H.toValue $ Route.Event $ DB.eeId ocItem)
-    $ case ICal.veSummary $ DB.eeVEvent ocItem of
-        Just summary -> H.toHtml $ ICal.summaryValue summary
-        Nothing      -> "Untitled event"
+viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
+    let title = case ICal.veSummary $ DB.eeVEvent ocItem of
+            Just summary -> H.toHtml $ ICal.summaryValue summary
+            Nothing      -> "Untitled event"
+        timeStamp = case Oc.octTime zot of
+            Oc.LocalOCAllDay _ ->
+                "All Day"
+            Oc.LocalOCAtTime Time.LocalTime{Time.localTimeOfDay} ->
+                H.toHtml $ show localTimeOfDay
+    in
+    H.div $ do
+        timeStamp
+        " : "
+        H.a
+            ! A.href (H.toValue $ Route.Event $ DB.eeId ocItem)
+            $ title
 
 home :: [Oc.Occurrence DB.EventEntry] -> H.Html
 home entries = docToHtml Document
