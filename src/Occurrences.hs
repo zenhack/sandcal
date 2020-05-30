@@ -133,7 +133,7 @@ expandFreq ev freq =
                 { ocItem = ev
                 , ocTimeStamp = start { octTime = octTime' n }
                 }
-            | n <- [0,7..]
+            | n <- [7,14..]
             ]
         _ -> [] -- TODO
   where
