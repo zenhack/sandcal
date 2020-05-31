@@ -58,12 +58,12 @@ viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
 
 home :: [Oc.Occurrence DB.EventEntry] -> H.Html
 home entries = docToHtml Document
-    { title = "All Events"
+    { title = "Upcoming Events"
     , body = do
         H.h1 "Import Calendar"
         postForm (A.enctype "multipart/form-data") Route.ImportICS $ do
             labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
             H.button ! A.type_ "submit" $ "Upload"
-        H.h1 "All Events"
+        H.h1 "Upcoming Events"
         H.ul $ traverse_ viewItem (makeItems entries)
     }
