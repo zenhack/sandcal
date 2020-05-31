@@ -60,7 +60,6 @@ home :: [Oc.Occurrence DB.EventEntry] -> H.Html
 home entries = docToHtml Document
     { title = "All Events"
     , body = do
-        H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
         H.h1 "Import Calendar"
         postForm (A.enctype "multipart/form-data") Route.ImportICS $ do
             labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"

@@ -3,6 +3,7 @@ module View.Common
     ( Document(..)
     , docToHtml
     , labeledInput
+    , navigation
     , postForm
     , tzSelect
     , labeledTzSelect
@@ -28,7 +29,9 @@ docToHtml :: Document -> H.Html
 docToHtml Document{title, body} = H.docTypeHtml $ do
     H.title $ H.toHtml title
     H.link ! A.rel "stylesheet" ! A.href (H.toValue Route.StyleCss)
-    H.body $ body
+    H.body $ do
+        navigation
+        body
 
 labeledInput :: T.Text -> H.Attribute -> H.Html
 labeledInput name attrs =
@@ -67,3 +70,9 @@ labeledTzSelect name userTz =
     H.div ! A.class_ "labeledInput" $ do
         H.label ! A.for (H.toValue name) $ H.toHtml name
         tzSelect name userTz
+
+navigation :: H.Html
+navigation = H.nav $ H.ul $ do
+    H.li $ H.a ! A.href (H.toValue $ Route.Home) $ "Upcoming Events"
+    H.li $ H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
+    H.li $ H.a ! A.href (H.toValue $ Route.Settings) $ "Settings"
