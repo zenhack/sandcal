@@ -76,3 +76,4 @@ navigation = H.nav $ H.ul $ do
     H.li $ H.a ! A.href (H.toValue $ Route.Home) $ "Upcoming Events"
     H.li $ H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
     H.li $ H.a ! A.href (H.toValue $ Route.Settings) $ "Settings"
+    H.li $ H.a ! A.href (H.toValue $ Route.ImportICS) $ "Import"

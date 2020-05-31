@@ -26,6 +26,7 @@ import qualified Route
 import qualified SandCal.DB              as DB
 import qualified Sandstorm
 import qualified View
+import qualified View.Import
 
 import qualified DateParsers as DP
 import qualified Occurrences
@@ -59,9 +60,11 @@ main = do
             Route.Get Route.Settings -> viewSettings db
             Route.Get Route.NewEvent -> viewNewEvent db
             Route.Get (Route.Event eid) -> getEvent db eid
+            Route.Get Route.ImportICS -> blaze $ View.Import.importICS
+
             Route.Post Route.SaveSettings -> setTimeZone db
             Route.Post Route.PostNewEvent -> postNewEvent db
-            Route.Post Route.ImportICS -> importICS db
+            Route.Post Route.PostImportICS -> importICS db
         notFound $ do404
 
 elmPage = do

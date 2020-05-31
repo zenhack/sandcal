@@ -22,20 +22,21 @@ data GetRoute
     | Event Int64
     | NewEvent
     | StyleCss
+    | ImportICS
 
 data PostRoute
     = PostNewEvent
     | SaveSettings
-    | ImportICS
+    | PostImportICS
 
 instance ToValue Route where
     toValue (Get r)  = toValue r
     toValue (Post r) = toValue r
 
 instance ToValue PostRoute where
-    toValue PostNewEvent = "/event/new"
-    toValue SaveSettings = "/settings"
-    toValue ImportICS    = "/import.ics"
+    toValue PostNewEvent  = "/event/new"
+    toValue SaveSettings  = "/settings"
+    toValue PostImportICS = "/import.ics"
 
 instance ToValue GetRoute where
     toValue = renderGet
@@ -46,6 +47,7 @@ renderGet Settings    = "/settings"
 renderGet (Event eid) = fromString $ "/event/" <> show eid
 renderGet NewEvent    = "/event/new"
 renderGet StyleCss    = "/style.css"
+renderGet ImportICS   = "/import"
 
 redirectGet :: GetRoute -> ActionM ()
 redirectGet rt = do
@@ -65,9 +67,11 @@ scottyM route = do
         route $ Get $ Event eid
     get "/style.css" $
         route $ Get StyleCss
+    get "/import" $
+        route $ Get ImportICS
     post "/event/new" $
         route $ Post PostNewEvent
     post "/settings" $
         route $ Post SaveSettings
     post "/import.ics" $
-        route $ Post ImportICS
+        route $ Post PostImportICS
