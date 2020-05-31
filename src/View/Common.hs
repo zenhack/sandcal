@@ -72,8 +72,12 @@ labeledTzSelect name userTz =
         tzSelect name userTz
 
 navigation :: H.Html
-navigation = H.nav $ H.ul $ do
-    H.li $ H.a ! A.href (H.toValue $ Route.Home) $ "Upcoming Events"
-    H.li $ H.a ! A.href (H.toValue $ Route.NewEvent) $ "New Event"
-    H.li $ H.a ! A.href (H.toValue $ Route.Settings) $ "Settings"
-    H.li $ H.a ! A.href (H.toValue $ Route.ImportICS) $ "Import"
+navigation = H.nav $ H.ul $ traverse_ navItem
+    [ (Route.Home, "Upcoming Events")
+    , (Route.NewEvent, "New Event")
+    , (Route.Settings, "Settings")
+    , (Route.ImportICS, "Import")
+    ]
+  where
+    navItem (rt, label) =
+        H.li $ H.a ! A.href (H.toValue rt) $ label
