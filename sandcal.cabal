@@ -87,6 +87,7 @@ executable sandcal
     , View
     , View.Common
     , View.Home
+    , View.NewEvent
     , Route
     , ICal
     , Sandstorm

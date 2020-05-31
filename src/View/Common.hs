@@ -5,6 +5,7 @@ module View.Common
     , labeledInput
     , postForm
     , tzSelect
+    , labeledTzSelect
     ) where
 
 import Zhp
@@ -60,3 +61,9 @@ tzSelect label userTz =
         tzOption tz = addSelected tz H.option ! A.value (name tz) $ (name tz)
     in
     H.select ! A.name (H.toValue label) $ traverse_ tzOption [minBound..maxBound]
+
+labeledTzSelect :: T.Text -> Maybe Tz.TZLabel -> H.Html
+labeledTzSelect name userTz =
+    H.div ! A.class_ "labeledInput" $ do
+        H.label ! A.for (H.toValue name) $ H.toHtml name
+        tzSelect name userTz

@@ -2,9 +2,9 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module View
     ( settings
-    , newEvent
     , event
     , View.Home.home
+    , View.NewEvent.newEvent
     ) where
 
 import Zhp
@@ -20,6 +20,7 @@ import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
 import qualified View.Home
+import qualified View.NewEvent
 
 event :: ICal.VEvent -> H.Html
 event ev =
@@ -32,17 +33,6 @@ event ev =
         , body =
             H.h1 $ H.toHtml title
         }
-
-newEvent :: H.Html
-newEvent = docToHtml Document
-    { title = "New Event"
-    , body = postForm mempty Route.PostNewEvent $ do
-        labeledInput "Summary" mempty
-        labeledInput "Date" $ A.type_ "date"
-        labeledInput "Start Time" $ A.type_ "time"
-        labeledInput "End Time" $ A.type_ "time"
-        H.button ! A.type_ "submit" $ "Create Event"
-    }
 
 settings :: Sandstorm.UserId -> DB.Query H.Html
 settings uid =

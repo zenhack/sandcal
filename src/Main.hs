@@ -43,8 +43,8 @@ encodeTZLabel =
     >>> LBS.fromStrict
     >>> LT.decodeUtf8With lenientDecode
 
-decodeTZLabel :: LT.Text -> Maybe TZLabel
-decodeTZLabel = LT.encodeUtf8 >>> LBS.toStrict >>> fromTZName
+decodeTZLabel :: LBS.ByteString -> Maybe TZLabel
+decodeTZLabel = LBS.toStrict >>> fromTZName
 
 main :: IO ()
 main = do
@@ -68,8 +68,10 @@ elmPage = do
     setHeader "Content-Type" "text/html"
     file "index.html"
 
-viewNewEvent _db =
-    blaze View.newEvent
+viewNewEvent db = do
+    uid <- Sandstorm.getUserId
+    maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
+    blaze $ View.newEvent maybeTzLabel
 
 viewHome db = do
     events <- DB.runQuery db DB.allEvents
@@ -123,13 +125,9 @@ postNewEvent db = do
     DP.Day day <- param "Date"
     DP.TimeOfDay startTime <- param "Start Time"
     DP.TimeOfDay endTime <- param "End Time"
-
-    uid <- Sandstorm.getUserId
-    maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
-    maybeTz <- liftIO $ for maybeTzLabel $
-        encodeTZLabel
-        >>> LT.unpack
-        >>> Tz.loadSystemTZ
+    tzName <- param "Time Zone"
+    tzLabel <- decodeTZLabelOr400 tzName
+    tz <- liftIO $ Tz.loadSystemTZ $ LT.unpack $ encodeTZLabel tzLabel
 
     uuid <- liftIO $ UUID.nextRandom
 
@@ -140,22 +138,13 @@ postNewEvent db = do
         floatingEnd = floatingStart
             { Time.localTimeOfDay = endTime
             }
-        dtStart = case maybeTzLabel of
-            Nothing -> ICal.FloatingDateTime
-                { ICal.dateTimeFloating = floatingStart
-                }
-            Just tz -> ICal.ZonedDateTime
-                { ICal.dateTimeFloating = floatingStart
-                , ICal.dateTimeZone = encodeTZLabel tz
-                }
+        dtStart = ICal.ZonedDateTime
+            { ICal.dateTimeFloating = floatingStart
+            , ICal.dateTimeZone = encodeTZLabel tzLabel
+            }
         dtEnd = dtStart { ICal.dateTimeFloating = floatingEnd }
 
-        !utcStart = case maybeTz of
-            Just tz -> Tz.localTimeToUTCTZ tz floatingStart
-            Nothing -> error $ mconcat
-                [ "TODO: deal with the case where the user doesn't give us "
-                , "a time zone."
-                ]
+        !utcStart = Tz.localTimeToUTCTZ tz floatingStart
 
         vEvent = ICal.VEvent
             { ICal.veUID = ICal.UID
@@ -214,16 +203,20 @@ postNewEvent db = do
     evId <- DB.runQuery db $ DB.addEvent vEvent
     Route.redirectGet $ Route.Event $ DB.unEventID evId
 
-setTimeZone db = do
-    uid <- Sandstorm.getUserId
-    timezone <- param "timezone"
+decodeTZLabelOr400 :: LBS.ByteString -> ActionM TZLabel
+decodeTZLabelOr400 timezone =
     case decodeTZLabel timezone of
-        Just tzLabel -> do
-            liftIO $ DB.runQuery db $ DB.setUserTimeZone uid tzLabel
-            Route.redirectGet Route.Home
+        Just tzLabel -> pure tzLabel
         Nothing -> do
             status status400
             text "Invalid time zone."
+            finish
+
+setTimeZone db = do
+    uid <- Sandstorm.getUserId
+    tzLabel <- param "timezone" >>= decodeTZLabelOr400
+    liftIO $ DB.runQuery db $ DB.setUserTimeZone uid tzLabel
+    Route.redirectGet Route.Home
 
 do404 = do
     status status404
