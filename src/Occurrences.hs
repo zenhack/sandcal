@@ -143,12 +143,14 @@ expandFreq viewStart ev freq =
                         LocalOCAtTime localTime
                             { Time.localDay = Time.addDays n (Time.localDay localTime)
                             }
+                startIdx = findStartPoint $ \i ->
+                    viewStart < zonedOCTimeToUTCFudge (start { octTime = octTime' (fromIntegral i * 7) })
             in
             [ Occurrence
                 { ocItem = ev
-                , ocTimeStamp = start { octTime = octTime' n }
+                , ocTimeStamp = start { octTime = octTime' (fromIntegral (startIdx + n) * 7) }
                 }
-            | n <- [7,14..]
+            | n <- [0..]
             ]
         _ -> [] -- TODO
   where
@@ -166,7 +168,7 @@ expandFreq viewStart ev freq =
                     startIdx = findStartPoint $ \i ->
                         viewStart < zonedOCTimeToUTCFudge (atIdx i)
                 in
-                [1..]
+                [0..]
                 & map (\i -> Occurrence
                     { ocItem = ev
                     , ocTimeStamp = atIdx (startIdx + i)
