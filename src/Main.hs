@@ -86,7 +86,6 @@ viewHome db = do
                 & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
             )
             & Occurrences.merge
-            & Occurrences.dropBeforeUTC utcNow
             & take 100
     blaze $ View.home occurs
 

@@ -8,7 +8,6 @@ module Occurrences
     , eventOccurrences
     , zonedOCTimeDay
     , merge
-    , dropBeforeUTC
     ) where
 
 import Zhp
@@ -100,11 +99,22 @@ eventDTStart ev =
                     }
 
 merge :: [[Occurrence a]] -> [Occurrence a]
-merge = foldl' (mergeOn (ocTimeStamp >>> zonedOCTimeToUTCFudge)) []
+merge = mergeManyOn (ocTimeStamp >>> zonedOCTimeToUTCFudge)
 
-dropBeforeUTC :: Time.UTCTime -> [Occurrence a] -> [Occurrence a]
-dropBeforeUTC utc = dropWhile $ \Occurrence{ocTimeStamp} ->
-    zonedOCTimeToUTCFudge ocTimeStamp < utc
+mergeManyOn :: Ord b => (a -> b) -> [[a]] -> [a]
+mergeManyOn f lists =
+    case lists of
+        [] -> []
+        [x] -> x
+        _ ->
+            let (xs, ys) = split lists in
+            mergeOn f (mergeManyOn f xs) (mergeManyOn f ys)
+  where
+    split [] = ([], [])
+    split [x] = ([x], [])
+    split (x:y:zs) =
+        let (xs, ys) = split zs in
+        (x:xs, y:ys)
 
 mergeOn :: Ord b => (a -> b) -> [a] -> [a] -> [a]
 mergeOn _ xs [] = xs
@@ -117,12 +127,16 @@ eventOccurrences :: Time.UTCTime -> VEvent -> [Occurrence VEvent]
 eventOccurrences start ev =
     let rules = map rRuleValue $ Set.toList (veRRule ev)
         streams = map (ruleOccurrences start ev) rules
+        eventStartTime = getEventStartTime ev
+        hd =
+            [ Occurrence
+                { ocItem = ev
+                , ocTimeStamp = eventStartTime
+                }
+            | zonedOCTimeToUTCFudge eventStartTime >= start
+            ]
     in
-    Occurrence
-        { ocItem = ev
-        , ocTimeStamp = getEventStartTime ev
-        }
-    : merge streams
+    hd <> merge streams
 
 unboundedOccurrences :: Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
 unboundedOccurrences start ev recur =
