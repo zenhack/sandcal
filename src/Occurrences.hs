@@ -166,6 +166,28 @@ expandFreq ev freq =
                     }
                 )
 
+{-
+-- | @findStartPoint p@ efficiently finds the first non-negative
+-- integer @i@ for which @p i == True@, where @p@ must be monotonically
+-- increasing, i.e. if @i > j@ and @p i@, then @p j@.
+--
+-- Running time is @O(log(firstStartPoint p))@.
+findStartPoint :: (Int -> Bool) -> Int
+findStartPoint p = go 0 0 1 where
+    -- Basic idea of the algorithm is as follows:
+    --
+    -- * check integers at exponentially increasing intervals until we
+    --   find one that satisfies p.
+    -- * Go back to the last number we inspected where p returned false.
+    -- * Setting the stride back to 1, start counting up again from there (again
+    --   exponentially increasing the stride).
+    -- * Keep doing this until you see @p i == False && p (i+1) == True@.
+    go last i stride
+        | p i && i > (last+1) = go last (last+1) 1
+        | p i = i
+        | otherwise = go i (i+stride) (stride*2)
+-}
+
 ruleOccurrences :: VEvent -> Recur -> [Occurrence VEvent]
 ruleOccurrences vevent recur =
     let unbounded = unboundedOccurrences vevent recur in
