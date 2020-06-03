@@ -86,6 +86,7 @@ executable sandcal
     , SandCal.Config
     , View
     , View.Common
+    , View.Event
     , View.Home
     , View.Import
     , View.NewEvent
