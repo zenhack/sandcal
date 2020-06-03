@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns   #-}
 {-# LANGUAGE DeriveFunctor  #-}
 {-# LANGUAGE NamedFieldPuns #-}
 module Occurrences
@@ -112,10 +113,10 @@ mergeOn f (x:xs) (y:ys)
     | f x < f y = x : mergeOn f xs (y:ys)
     | otherwise = y : mergeOn f (x:xs) ys
 
-eventOccurrences :: VEvent -> [Occurrence VEvent]
-eventOccurrences ev =
+eventOccurrences :: Time.UTCTime -> VEvent -> [Occurrence VEvent]
+eventOccurrences start ev =
     let rules = map rRuleValue $ Set.toList (veRRule ev)
-        streams = map (ruleOccurrences ev) rules
+        streams = map (ruleOccurrences start ev) rules
     in
     Occurrence
         { ocItem = ev
@@ -123,16 +124,17 @@ eventOccurrences ev =
         }
     : merge streams
 
-unboundedOccurrences :: VEvent -> Recur -> [Occurrence VEvent]
-unboundedOccurrences ev recur =
-    expandFreq ev (recurFreq recur)
+unboundedOccurrences :: Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
+unboundedOccurrences start ev recur =
+    expandFreq start ev (recurFreq recur)
 
-expandFreq :: VEvent -> Frequency -> [Occurrence VEvent]
-expandFreq ev freq =
+
+expandFreq :: Time.UTCTime -> VEvent -> Frequency -> [Occurrence VEvent]
+expandFreq viewStart ev freq =
     case freq of
-        Secondly -> iterateNominalDiffTime Time.secondsToNominalDiffTime
-        Minutely -> iterateNominalDiffTime ((* 60) >>> Time.secondsToNominalDiffTime)
-        Hourly -> iterateNominalDiffTime ((* (60 * 60)) >>> Time.secondsToNominalDiffTime)
+        Secondly -> iterateNominalDiffTime id
+        Minutely -> iterateNominalDiffTime (* 60)
+        Hourly -> iterateNominalDiffTime (* (60 * 60))
         Weekly ->
             let octTime' n = case octTime start of
                     LocalOCAllDay day ->
@@ -151,22 +153,26 @@ expandFreq ev freq =
         _ -> [] -- TODO
   where
     start = getEventStartTime ev
-    iterateNominalDiffTime toNDF =
+    iterateNominalDiffTime toSeconds =
+        let toNDF = toSeconds >>> fromIntegral >>> Time.secondsToNominalDiffTime in
         case octTime start of
             LocalOCAllDay _ ->
                 -- Shouldn't see this on fractional parts of a day.
                 []
             LocalOCAtTime localTime ->
-                [1..]
-                & map (\n -> Occurrence
-                    { ocItem = ev
-                    , ocTimeStamp = start
-                        { octTime = LocalOCAtTime $ Time.addLocalTime (toNDF n) localTime
+                let atIdx i = start
+                        { octTime = LocalOCAtTime $ Time.addLocalTime (toNDF i) localTime
                         }
+                    startIdx = findStartPoint $ \i ->
+                        viewStart < zonedOCTimeToUTCFudge (atIdx i)
+                in
+                [1..]
+                & map (\i -> Occurrence
+                    { ocItem = ev
+                    , ocTimeStamp = atIdx (startIdx + i)
                     }
                 )
 
-{-
 -- | @findStartPoint p@ efficiently finds the first non-negative
 -- integer @i@ for which @p i == True@, where @p@ must be monotonically
 -- increasing, i.e. if @i > j@ and @p i@, then @p j@.
@@ -182,15 +188,14 @@ findStartPoint p = go 0 0 1 where
     -- * Setting the stride back to 1, start counting up again from there (again
     --   exponentially increasing the stride).
     -- * Keep doing this until you see @p i == False && p (i+1) == True@.
-    go last i stride
+    go !last !i !stride
         | p i && i > (last+1) = go last (last+1) 1
         | p i = i
         | otherwise = go i (i+stride) (stride*2)
--}
 
-ruleOccurrences :: VEvent -> Recur -> [Occurrence VEvent]
-ruleOccurrences vevent recur =
-    let unbounded = unboundedOccurrences vevent recur in
+ruleOccurrences :: Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
+ruleOccurrences start vevent recur =
+    let unbounded = unboundedOccurrences start vevent recur in
     case recurUntilCount recur of
         Nothing                      -> unbounded
         Just (Right count)           -> take count unbounded

@@ -82,7 +82,7 @@ viewHome db = do
     let occurs =
             events
             & map (\ev ->
-                Occurrences.eventOccurrences (DB.eeVEvent ev)
+                Occurrences.eventOccurrences utcNow (DB.eeVEvent ev)
                 & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
             )
             & Occurrences.merge
