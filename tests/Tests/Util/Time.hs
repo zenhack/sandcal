@@ -23,7 +23,7 @@ tests =
 weekBoundsTests = do
     it "Should always return a 7-day interval" $
         hedgehog prop_weekBounds_size
-    it "Sould always return an interval including the reference point" $
+    it "Should always return an interval including the reference point" $
         hedgehog prop_weekBounds_include
     it "Should always return an interval starting at the beginning of the week." $
         hedgehog prop_weekBounds_startDay
@@ -47,5 +47,6 @@ prop_weekBounds_include = weekBoundsProp $ \_ refPoint (start, end) -> do
     diff refPoint (<=) end
 
 -- prop_weekBounds_startDay :: WeekBoundsProp
-prop_weekBounds_startDay = weekBoundsProp $ \startOfWeek _ (start, _) ->
+prop_weekBounds_startDay = weekBoundsProp $ \startOfWeek _ (start, end) -> do
     Time.dayOfWeek start === startOfWeek
+    Time.dayOfWeek end === pred startOfWeek

@@ -16,8 +16,11 @@ import qualified Data.Time as Time
 -- @refPoint@ and @end@ is the last.
 weekBounds :: Time.DayOfWeek -> Time.Day -> (Time.Day, Time.Day)
 weekBounds startOfWeek refPoint =
-    let offset = fromEnum startOfWeek - fromEnum (Time.dayOfWeek refPoint)
-        end = Time.addDays (fromIntegral $ offset - 1) refPoint
-        start = Time.addDays (fromIntegral $ 7 - offset) refPoint
+    let rawOffset = fromEnum (Time.dayOfWeek refPoint) - fromEnum startOfWeek
+        offset = if rawOffset < 0
+            then rawOffset + 7
+            else rawOffset `mod` 7
+        start = Time.addDays (fromIntegral $ -offset) refPoint
+        end = Time.addDays 6 start
     in
     (start, end)

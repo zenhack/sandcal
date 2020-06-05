@@ -6,7 +6,7 @@ run: all
 dev: all
 	spk dev
 check:
-	cabal v2-test
+	cabal v2-run sandcal:test:tests
 pack: sandcal.spk
 
 .build-hs: cabal.project $(wildcard *.cabal) $(hs_src)
