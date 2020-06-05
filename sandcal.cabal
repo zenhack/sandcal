@@ -78,11 +78,11 @@ common shared-opts
     -Werror
   default-language:    Haskell2010
 
-executable sandcal
+library libsandcal
   import: shared-opts
-  main-is: Main.hs
-  other-modules:
-      SandCal.DB
+  exposed-modules:
+      LibMain
+    , SandCal.DB
     , SandCal.Config
     , View
     , View.Common
@@ -96,10 +96,17 @@ executable sandcal
     , Sandstorm
     , DateParsers
     , Occurrences
-  hs-source-dirs:      src
+  hs-source-dirs: src
+
+executable sandcal
+  import: shared-opts
+  main-is: Main.hs
+  build-depends: libsandcal
+  hs-source-dirs: exe
 
 test-suite tests
   import: shared-opts
   type: exitcode-stdio-1.0
+  build-depends: libsandcal
   hs-source-dirs: tests
   main-is: Main.hs

@@ -2,7 +2,7 @@
 {-# LANGUAGE LambdaCase     #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes    #-}
-module Main (main) where
+module LibMain (main) where
 
 import Data.Default                  (def)
 import Data.Text.Encoding.Error      (lenientDecode)
