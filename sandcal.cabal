@@ -90,6 +90,7 @@ executable sandcal
     , View.Home
     , View.Import
     , View.NewEvent
+    , View.Week
     , Route
     , ICal
     , Sandstorm
