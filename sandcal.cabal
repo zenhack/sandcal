@@ -96,6 +96,7 @@ library libsandcal
     , Sandstorm
     , DateParsers
     , Occurrences
+    , Util.Time
   hs-source-dirs: src
 
 executable sandcal
