@@ -80,16 +80,8 @@ viewNewEvent db = do
     blaze $ View.newEvent maybeTzLabel
 
 viewHome db = do
-    events <- DB.runQuery db DB.allEvents
     utcNow <- liftIO $ Time.getCurrentTime
-    let occurs =
-            events
-            & map (\ev ->
-                Occurrences.eventOccurrences utcNow (DB.eeVEvent ev)
-                & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
-            )
-            & Occurrences.merge
-            & take 100
+    occurs <- take 100 <$> getOccursSince db utcNow
     blaze $ View.home occurs
 
 viewWeek db refDay = do
@@ -101,16 +93,18 @@ viewWeek db refDay = do
             Just label -> Tz.tzByLabel label
             Nothing    -> error "TODO: deal with no timezone."
     let utcStart = Tz.localTimeToUTCTZ tz (UT.startOfDay startDay)
-    events <- DB.runQuery db DB.allEvents
-    let occurs =
-            events
-            & map (\ev ->
-                Occurrences.eventOccurrences utcStart (DB.eeVEvent ev)
-                & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
-            )
-            & Occurrences.merge
-            & take 100
+    occurs <- take 100 <$> getOccursSince db utcStart
     blaze $ View.home occurs
+
+getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
+getOccursSince db utc = do
+    events <- DB.runQuery db DB.allEvents
+    pure $ events
+        & map (\ev ->
+            Occurrences.eventOccurrences utc (DB.eeVEvent ev)
+            & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
+        )
+        & Occurrences.merge
 
 getEvent db eid = do
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))
