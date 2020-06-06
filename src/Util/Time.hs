@@ -4,6 +4,8 @@
 -- library, but do not appear to be covered by the @time@ package.
 module Util.Time
     ( weekBounds
+    , startOfDay
+    , endOfDay
     ) where
 
 import Zhp
@@ -24,3 +26,18 @@ weekBounds startOfWeek refPoint =
         end = Time.addDays 6 start
     in
     (start, end)
+
+-- | Get the start time of a day.
+startOfDay :: Time.Day -> Time.LocalTime
+startOfDay day = Time.LocalTime
+    { Time.localDay = day
+    , Time.localTimeOfDay = Time.TimeOfDay 0 0 0
+    }
+
+-- | Get end time of a day, ignoring leap seconds (i.e. assume there is no
+-- leap second).
+endOfDay :: Time.Day -> Time.LocalTime
+endOfDay day = Time.LocalTime
+    { Time.localDay = day
+    , Time.localTimeOfDay = Time.TimeOfDay 23 59 59
+    }

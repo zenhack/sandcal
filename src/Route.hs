@@ -12,12 +12,15 @@ import Network.HTTP.Types.Status (status303)
 import Text.Blaze                (ToValue(toValue))
 import Web.Scotty
 
+import qualified Data.Time as Time
+
 data Route
     = Get GetRoute
     | Post PostRoute
 
 data GetRoute
     = Home
+    | Week Time.Day
     | Settings
     | Event Int64
     | NewEvent
@@ -43,6 +46,9 @@ instance ToValue GetRoute where
 
 renderGet :: IsString a => GetRoute -> a
 renderGet Home        = "/"
+renderGet (Week day) =
+    let (y, m, d) = Time.toGregorian day in
+    fromString $ "/week/" <> show y <> "/" <> show m <> "/" <> show d
 renderGet Settings    = "/settings"
 renderGet (Event eid) = fromString $ "/event/" <> show eid
 renderGet NewEvent    = "/event/new"
@@ -58,6 +64,11 @@ scottyM :: (Route -> ActionM ()) -> ScottyM ()
 scottyM route = do
     get "/" $
         route $ Get Home
+    get "/week/:y/:m/:d" $ do
+        y <- param "y"
+        m <- param "m"
+        d <- param "d"
+        route $ Get $ Week $ Time.fromGregorian y m d
     get "/settings" $
         route $ Get Settings
     get "/event/new" $

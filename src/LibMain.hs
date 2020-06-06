@@ -19,12 +19,14 @@ import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.Time               as Time
 import qualified Data.Time.Zones         as Tz
+import qualified Data.Time.Zones.All     as Tz
 import qualified Data.UUID               as UUID
 import qualified Data.UUID.V4            as UUID
 import qualified ICal
 import qualified Route
 import qualified SandCal.DB              as DB
 import qualified Sandstorm
+import qualified Util.Time               as UT
 import qualified View
 import qualified View.Import
 
@@ -57,6 +59,7 @@ main = do
             Route.Get Route.StyleCss -> file "style.css"
 
             Route.Get Route.Home -> viewHome db
+            Route.Get (Route.Week refDay) -> viewWeek db refDay
             Route.Get Route.Settings -> viewSettings db
             Route.Get Route.NewEvent -> viewNewEvent db
             Route.Get (Route.Event eid) -> getEvent db eid
@@ -83,6 +86,26 @@ viewHome db = do
             events
             & map (\ev ->
                 Occurrences.eventOccurrences utcNow (DB.eeVEvent ev)
+                & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
+            )
+            & Occurrences.merge
+            & take 100
+    blaze $ View.home occurs
+
+viewWeek db refDay = do
+    -- TODO: allow the user to configure the start of the week.
+    let (startDay, _endDay) = UT.weekBounds Time.Sunday refDay
+    uid <- Sandstorm.getUserId
+    maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
+    let !tz = case maybeTzLabel of
+            Just label -> Tz.tzByLabel label
+            Nothing    -> error "TODO: deal with no timezone."
+    let utcStart = Tz.localTimeToUTCTZ tz (UT.startOfDay startDay)
+    events <- DB.runQuery db DB.allEvents
+    let occurs =
+            events
+            & map (\ev ->
+                Occurrences.eventOccurrences utcStart (DB.eeVEvent ev)
                 & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
             )
             & Occurrences.merge
