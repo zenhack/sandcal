@@ -25,6 +25,7 @@ data GetRoute
     | Event Int64
     | NewEvent
     | StyleCss
+    | SandstormJS
     | ImportICS
 
 data PostRoute
@@ -53,6 +54,7 @@ renderGet Settings    = "/settings"
 renderGet (Event eid) = fromString $ "/event/" <> show eid
 renderGet NewEvent    = "/event/new"
 renderGet StyleCss    = "/style.css"
+renderGet SandstormJS = "/sandstorm.js"
 renderGet ImportICS   = "/import"
 
 redirectGet :: GetRoute -> ActionM ()
@@ -78,6 +80,8 @@ scottyM route = do
         route $ Get $ Event eid
     get "/style.css" $
         route $ Get StyleCss
+    get "/sandstorm.js" $
+        route $ Get SandstormJS
     get "/import" $
         route $ Get ImportICS
     post "/event/new" $

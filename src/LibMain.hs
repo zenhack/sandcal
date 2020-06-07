@@ -57,6 +57,7 @@ main = do
     scotty 3000 $ do
         Route.scottyM $ \case
             Route.Get Route.StyleCss -> file "style.css"
+            Route.Get Route.SandstormJS -> file "sandstorm.js"
 
             Route.Get Route.Home -> viewHome db
             Route.Get (Route.Week refDay) -> viewWeek db refDay
