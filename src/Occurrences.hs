@@ -7,6 +7,7 @@ module Occurrences
     , ZonedOCTime(..)
     , eventOccurrences
     , zonedOCTimeDay
+    , zonedOCTimeToUTCFudge
     , merge
     ) where
 
