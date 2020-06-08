@@ -8,6 +8,7 @@ module Occurrences
     , eventOccurrences
     , zonedOCTimeDay
     , zonedOCTimeToUTCFudge
+    , ocTimeInZoneFudge
     , merge
     ) where
 
@@ -35,6 +36,21 @@ data ZonedOCTime = ZonedOCTime
     , octTime :: LocalOCTime
     }
     deriving(Show)
+
+-- | Convert a ZonedOCTime to a LocalOCTime in the specified timezone.
+--
+-- Leaves LocalOCAllDay unchanged.
+--
+-- See also the notes about invalid/ambiguous times re: 'zonedOCTimeTOUTCFudge'.
+ocTimeInZoneFudge :: TZ -> ZonedOCTime -> LocalOCTime
+ocTimeInZoneFudge tz zot = case octTime zot of
+    LocalOCAllDay day -> LocalOCAllDay day
+    LocalOCAtTime localTime ->
+        let utc = TZ.localTimeToUTCTZ (octZone zot) localTime
+            local' = TZ.utcToLocalTimeTZ tz utc
+        in
+        LocalOCAtTime local'
+
 
 -- | Convert a ZonedOCTime to a UTCTime.
 --

@@ -1,7 +1,8 @@
-{-# LANGUAGE BangPatterns   #-}
-{-# LANGUAGE LambdaCase     #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE QuasiQuotes    #-}
+{-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE QuasiQuotes           #-}
 module LibMain (main) where
 
 import Data.Default                  (def)
@@ -87,7 +88,8 @@ viewHome db = do
 
 viewWeek db refDay = do
     -- TODO: allow the user to configure the start of the week.
-    let (startDay, endDay) = UT.weekBounds Time.Sunday refDay
+    let firstDayOfWeek = Time.Sunday
+        (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
     uid <- Sandstorm.getUserId
     maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
     let !tz = case maybeTzLabel of
@@ -95,12 +97,16 @@ viewWeek db refDay = do
             Nothing    -> error "TODO: deal with no timezone."
         utcStart = Tz.localTimeToUTCTZ tz (UT.startOfDay startDay)
         utcEnd   = Tz.localTimeToUTCTZ tz (UT.endOfDay endDay)
+        zonedOCTime = Occurrences.ZonedOCTime
+            { octZone = tz
+            , octTime = Occurrences.LocalOCAllDay refDay
+            }
     occurs <- takeWhile
             (\o ->
                 Occurrences.zonedOCTimeToUTCFudge (Occurrences.ocTimeStamp o) <= utcEnd
             )
         <$> getOccursSince db utcStart
-    blaze $ View.home occurs
+    blaze $ View.week firstDayOfWeek zonedOCTime occurs
 
 getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
 getOccursSince db utc = do

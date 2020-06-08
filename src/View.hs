@@ -5,6 +5,7 @@ module View
     , View.Event.event
     , View.Home.home
     , View.NewEvent.newEvent
+    , View.Week.week
     ) where
 
 import Zhp
@@ -20,6 +21,7 @@ import qualified Text.Blaze.Html5.Attributes as A
 import qualified View.Event
 import qualified View.Home
 import qualified View.NewEvent
+import qualified View.Week
 
 settings :: Sandstorm.UserId -> DB.Query H.Html
 settings uid =
