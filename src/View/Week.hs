@@ -19,7 +19,7 @@ import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5.Attributes as A
 
 minutesPerCell :: Int
-minutesPerCell = 15
+minutesPerCell = 30
 
 data GridLoc = GridLoc
     { dayOfWeek :: Time.DayOfWeek
