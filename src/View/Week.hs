@@ -132,7 +132,7 @@ week startOfWeek now occurs =
             & mconcat
     in
     docToHtml $ Document
-        { title = "Week of TODO"
+        { title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now)
         , body = H.div
             ! A.class_ "week-grid"
             $ for_ items (viewItem startOfWeek)
