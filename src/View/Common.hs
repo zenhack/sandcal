@@ -34,7 +34,7 @@ eventSummary ev = case ICal.veSummary ev of
 
 docToHtml :: Document -> H.Html
 docToHtml Document{title, body} = H.docTypeHtml $ do
-    H.title $ H.toHtml title
+    H.title $ H.toHtml (title <> " · SandCal")
     H.link ! A.rel "stylesheet" ! A.href (H.toValue Route.StyleCss)
     H.script ! A.src (H.toValue Route.SandstormJS) $ pure ()
     H.body $ do
