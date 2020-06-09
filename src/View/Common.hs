@@ -7,6 +7,7 @@ module View.Common
     , postForm
     , tzSelect
     , labeledTzSelect
+    , eventSummary
     ) where
 
 import Zhp
@@ -16,6 +17,7 @@ import qualified Route
 import qualified Data.ByteString.Char8       as B8
 import qualified Data.Text                   as T
 import qualified Data.Time.Zones.All         as Tz
+import qualified ICal
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
@@ -24,6 +26,11 @@ data Document = Document
     { title :: T.Text
     , body  :: H.Html
     }
+
+eventSummary :: ICal.VEvent -> H.Html
+eventSummary ev = case ICal.veSummary ev of
+    Just summary -> H.toHtml $ ICal.summaryValue summary
+    Nothing      -> "Untitled event"
 
 docToHtml :: Document -> H.Html
 docToHtml Document{title, body} = H.docTypeHtml $ do

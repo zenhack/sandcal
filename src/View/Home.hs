@@ -7,7 +7,6 @@ import Zhp
 
 import View.Common
 
-import qualified ICal
 import qualified Occurrences as Oc
 import qualified Route
 import qualified SandCal.DB  as DB
@@ -40,9 +39,7 @@ viewItem :: Item -> H.Html
 viewItem (DayHeading day) =
     H.h2 $ H.toHtml (show day) -- TODO: nicer formatting
 viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
-    let title = case ICal.veSummary $ DB.eeVEvent ocItem of
-            Just summary -> H.toHtml $ ICal.summaryValue summary
-            Nothing      -> "Untitled event"
+    let title = eventSummary $ DB.eeVEvent ocItem
         timeStamp = case Oc.octTime zot of
             Oc.LocalOCAllDay _ ->
                 "All Day"

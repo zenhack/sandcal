@@ -78,9 +78,14 @@ viewItem startOfWeek (DayStart day) =
         ! dayStyle startOfWeek day
         ! A.class_ "week-day-heading"
         $ H.toHtml $ show day
-viewItem startOfWeek Event{eventLoc, eventOccur = _todo} =
+viewItem startOfWeek Event{eventLoc, eventOccur} =
     H.div ! locStyle startOfWeek eventLoc $ do
-        H.h3 $ "THING"
+        viewOccur eventOccur
+
+
+viewOccur :: Oc.Occurrence DB.EventEntry -> H.Html
+viewOccur Oc.Occurrence{ocItem = DB.EventEntry{eeVEvent}} =
+    H.h3 $ eventSummary eeVEvent
 
 ocDay :: TZ -> Oc.ZonedOCTime -> Time.Day
 ocDay tz zot = case Oc.octTime zot of
