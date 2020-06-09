@@ -9,3 +9,12 @@
 .labeledInput > label, .labeledInput > input {
 	display: table-cell;
 }
+
+.week-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+}
+
+.week-day-heading {
+	grid-row: 1;
+}

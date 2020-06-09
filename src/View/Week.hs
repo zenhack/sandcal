@@ -72,7 +72,10 @@ locStyle startOfWeek GridLoc{dayOfWeek, rowStart, rowEnd} =
 
 viewItem :: Time.DayOfWeek -> Item -> H.Html
 viewItem startOfWeek (DayStart day) =
-    H.h2 ! dayStyle startOfWeek day $ H.toHtml $ show day
+    H.h2
+        ! dayStyle startOfWeek day
+        ! A.class_ "week-day-heading"
+        $ H.toHtml $ show day
 viewItem startOfWeek Event{eventLoc, eventOccur = _todo} =
     H.div ! locStyle startOfWeek eventLoc $ do
         H.h3 $ "THING"
@@ -123,5 +126,7 @@ week startOfWeek now occurs =
     in
     docToHtml $ Document
         { title = "Week of TODO"
-        , body = for_ items (viewItem startOfWeek)
+        , body = H.div
+            ! A.class_ "week-grid"
+            $ for_ items (viewItem startOfWeek)
         }
