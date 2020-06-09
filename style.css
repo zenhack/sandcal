@@ -19,3 +19,8 @@
 .week-day-heading {
 	grid-row: 1;
 }
+
+.week-item {
+	border: 1px solid gray;
+	border-radius: 5px;
+}

@@ -61,14 +61,16 @@ dayStyle startOfWeek day =
     A.style $ H.toValue $ dayStyleValue startOfWeek day
 
 locStyle :: Time.DayOfWeek -> GridLoc -> H.Attribute
-locStyle startOfWeek GridLoc{dayOfWeek, rowStart, rowEnd} =
-    A.style $ H.toValue $
+locStyle startOfWeek GridLoc{dayOfWeek, rowStart, rowEnd} = mconcat
+    [ A.class_ "week-item"
+    , A.style $ H.toValue $
         dayStyleValue startOfWeek dayOfWeek <>
         "grid-row: " <>
             (if rowStart == rowEnd
                 then show rowStart
                 else show rowStart <> " / " <> show rowEnd
             )
+    ]
 
 viewItem :: Time.DayOfWeek -> Item -> H.Html
 viewItem startOfWeek (DayStart day) =
