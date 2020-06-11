@@ -173,19 +173,13 @@ unboundedOccurrences start ev recur =
 expandFreq :: Time.UTCTime -> VEvent -> Frequency -> [Occurrence VEvent]
 expandFreq viewStart ev freq =
     case freq of
-        Secondly -> expandNominalDiffTime id
-        Minutely -> expandNominalDiffTime (* 60)
-        Hourly   -> expandNominalDiffTime (* (60 * 60))
-        Daily    -> expandDays (* 1)
+        Secondly -> expandSeconds id
+        Minutely -> expandSeconds (* 60)
+        Hourly   -> expandSeconds (* (60 * 60))
+        Daily    -> expandDays id
         Weekly   -> expandDays (* 7)
-        Monthly -> expandIndex $ \i -> start
-            { octTime =
-                modifyLocalOCDay (Time.addGregorianMonthsClip $ fromIntegral i) (octTime start)
-            }
-        Yearly -> expandIndex $ \i -> start
-            { octTime =
-                modifyLocalOCDay (Time.addGregorianYearsClip $ fromIntegral i) (octTime start)
-            }
+        Monthly  -> expandModifyDay Time.addGregorianMonthsClip
+        Yearly   -> expandModifyDay Time.addGregorianYearsClip
   where
     start = getEventStartTime ev
     expandIndex atIdx =
@@ -198,7 +192,7 @@ expandFreq viewStart ev freq =
             }
         | n <- [startIdx..]
         ]
-    expandNominalDiffTime toSeconds =
+    expandSeconds toSeconds =
         let toNDF = toSeconds >>> fromIntegral >>> Time.secondsToNominalDiffTime in
         case octTime start of
             LocalOCAllDay _ ->
@@ -208,10 +202,10 @@ expandFreq viewStart ev freq =
                 expandIndex $ \i -> start
                     { octTime = LocalOCAtTime $ Time.addLocalTime (toNDF i) localTime
                     }
-    expandDays toNDays = expandIndex $ \i -> start
-        { octTime =
-            modifyLocalOCDay (Time.addDays (toNDays $ fromIntegral i)) (octTime start)
-        }
+    expandModifyDay modify = expandIndex $ \i -> start
+        { octTime = modifyLocalOCDay (modify $ fromIntegral i) (octTime start) }
+    expandDays toNDays =
+        expandModifyDay $ Time.addDays . toNDays
 
 -- | @findStartPoint p@ efficiently finds the first non-negative
 -- integer @i@ for which @p i == True@, where @p@ must be monotonically
