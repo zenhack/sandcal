@@ -1,5 +1,6 @@
 {-# LANGUAGE BangPatterns   #-}
 {-# LANGUAGE DeriveFunctor  #-}
+{-# LANGUAGE LambdaCase     #-}
 {-# LANGUAGE NamedFieldPuns #-}
 module Occurrences
     ( Occurrence(..)
@@ -30,6 +31,15 @@ data LocalOCTime
     = LocalOCAllDay Time.Day
     | LocalOCAtTime Time.LocalTime
     deriving(Show, Eq, Ord)
+
+modifyLocalOCDay :: (Time.Day -> Time.Day) -> LocalOCTime ->  LocalOCTime
+modifyLocalOCDay f = \case
+    LocalOCAllDay day ->
+        LocalOCAllDay (f day)
+    LocalOCAtTime localTime ->
+        LocalOCAtTime localTime
+            { Time.localDay = f (Time.localDay localTime)
+            }
 
 data ZonedOCTime = ZonedOCTime
     { octZone :: TZ
@@ -163,50 +173,45 @@ unboundedOccurrences start ev recur =
 expandFreq :: Time.UTCTime -> VEvent -> Frequency -> [Occurrence VEvent]
 expandFreq viewStart ev freq =
     case freq of
-        Secondly -> iterateNominalDiffTime id
-        Minutely -> iterateNominalDiffTime (* 60)
-        Hourly   -> iterateNominalDiffTime (* (60 * 60))
-        Daily    -> iterateDays (* 1)
-        Weekly   -> iterateDays (* 7)
-        _        -> [] -- TODO
+        Secondly -> expandNominalDiffTime id
+        Minutely -> expandNominalDiffTime (* 60)
+        Hourly   -> expandNominalDiffTime (* (60 * 60))
+        Daily    -> expandDays (* 1)
+        Weekly   -> expandDays (* 7)
+        Monthly -> expandIndex $ \i -> start
+            { octTime =
+                modifyLocalOCDay (Time.addGregorianMonthsClip $ fromIntegral i) (octTime start)
+            }
+        Yearly -> expandIndex $ \i -> start
+            { octTime =
+                modifyLocalOCDay (Time.addGregorianYearsClip $ fromIntegral i) (octTime start)
+            }
   where
     start = getEventStartTime ev
-    iterateNominalDiffTime toSeconds =
+    expandIndex atIdx =
+        let startIdx =
+                findStartPoint $ \i -> viewStart < zonedOCTimeToUTCFudge (atIdx i)
+        in
+        [ Occurrence
+            { ocItem = ev
+            , ocTimeStamp = atIdx n
+            }
+        | n <- [startIdx..]
+        ]
+    expandNominalDiffTime toSeconds =
         let toNDF = toSeconds >>> fromIntegral >>> Time.secondsToNominalDiffTime in
         case octTime start of
             LocalOCAllDay _ ->
                 -- Shouldn't see this on fractional parts of a day.
                 []
             LocalOCAtTime localTime ->
-                let atIdx i = start
-                        { octTime = LocalOCAtTime $ Time.addLocalTime (toNDF i) localTime
-                        }
-                    startIdx = findStartPoint $ \i ->
-                        viewStart < zonedOCTimeToUTCFudge (atIdx i)
-                in
-                [0..]
-                & map (\i -> Occurrence
-                    { ocItem = ev
-                    , ocTimeStamp = atIdx (startIdx + i)
+                expandIndex $ \i -> start
+                    { octTime = LocalOCAtTime $ Time.addLocalTime (toNDF i) localTime
                     }
-                )
-    iterateDays toNDays =
-            let octTime' n = case octTime start of
-                    LocalOCAllDay day ->
-                        LocalOCAllDay $ Time.addDays n day
-                    LocalOCAtTime localTime ->
-                        LocalOCAtTime localTime
-                            { Time.localDay = Time.addDays n (Time.localDay localTime)
-                            }
-                startIdx = findStartPoint $ \i ->
-                    viewStart < zonedOCTimeToUTCFudge (start { octTime = octTime' $ toNDays $ fromIntegral i })
-            in
-            [ Occurrence
-                { ocItem = ev
-                , ocTimeStamp = start { octTime = octTime' $ toNDays $ fromIntegral $ startIdx + n }
-                }
-            | n <- [0..]
-            ]
+    expandDays toNDays = expandIndex $ \i -> start
+        { octTime =
+            modifyLocalOCDay (Time.addDays (toNDays $ fromIntegral i)) (octTime start)
+        }
 
 -- | @findStartPoint p@ efficiently finds the first non-negative
 -- integer @i@ for which @p i == True@, where @p@ must be monotonically
