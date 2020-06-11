@@ -165,25 +165,10 @@ expandFreq viewStart ev freq =
     case freq of
         Secondly -> iterateNominalDiffTime id
         Minutely -> iterateNominalDiffTime (* 60)
-        Hourly -> iterateNominalDiffTime (* (60 * 60))
-        Weekly ->
-            let octTime' n = case octTime start of
-                    LocalOCAllDay day ->
-                        LocalOCAllDay $ Time.addDays n day
-                    LocalOCAtTime localTime ->
-                        LocalOCAtTime localTime
-                            { Time.localDay = Time.addDays n (Time.localDay localTime)
-                            }
-                startIdx = findStartPoint $ \i ->
-                    viewStart < zonedOCTimeToUTCFudge (start { octTime = octTime' (fromIntegral i * 7) })
-            in
-            [ Occurrence
-                { ocItem = ev
-                , ocTimeStamp = start { octTime = octTime' (fromIntegral (startIdx + n) * 7) }
-                }
-            | n <- [0..]
-            ]
-        _ -> [] -- TODO
+        Hourly   -> iterateNominalDiffTime (* (60 * 60))
+        Daily    -> iterateDays (* 1)
+        Weekly   -> iterateDays (* 7)
+        _        -> [] -- TODO
   where
     start = getEventStartTime ev
     iterateNominalDiffTime toSeconds =
@@ -205,6 +190,23 @@ expandFreq viewStart ev freq =
                     , ocTimeStamp = atIdx (startIdx + i)
                     }
                 )
+    iterateDays toNDays =
+            let octTime' n = case octTime start of
+                    LocalOCAllDay day ->
+                        LocalOCAllDay $ Time.addDays n day
+                    LocalOCAtTime localTime ->
+                        LocalOCAtTime localTime
+                            { Time.localDay = Time.addDays n (Time.localDay localTime)
+                            }
+                startIdx = findStartPoint $ \i ->
+                    viewStart < zonedOCTimeToUTCFudge (start { octTime = octTime' $ toNDays $ fromIntegral i })
+            in
+            [ Occurrence
+                { ocItem = ev
+                , ocTimeStamp = start { octTime = octTime' $ toNDays $ fromIntegral $ startIdx + n }
+                }
+            | n <- [0..]
+            ]
 
 -- | @findStartPoint p@ efficiently finds the first non-negative
 -- integer @i@ for which @p i == True@, where @p@ must be monotonically
