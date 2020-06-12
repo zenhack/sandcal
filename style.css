@@ -3,6 +3,9 @@ body {
 	 * we'll want to pick a better reading font for those, but right
 	 * now everything is headings and snippets. */
 	font-family: Helvetica, sans-serif;
+
+	color: black;
+	background-color: white;
 }
 
 nav ul {
@@ -30,6 +33,15 @@ nav ul > li {
 }
 .upcomingEvent {
 	font-size: 16pt;
+	border: 1px solid darkgrey;
+	padding: 0.5rem;
+}
+.upcomingEvent p {
+	margin: 0.25rem;
+}
+.upcomingEvent .eventTime {
+	font-size: 14pt;
+	color: darkgrey;
 }
 
 .mainContentContainer {

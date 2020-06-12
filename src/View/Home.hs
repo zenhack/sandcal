@@ -47,14 +47,18 @@ viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
     let title = eventSummary $ DB.eeVEvent ocItem
         timeStamp = case Oc.octTime zot of
             Oc.LocalOCAllDay _ ->
-                "All Day"
+                H.span ! A.class_ "eventTime" $ "All Day"
             Oc.LocalOCAtTime Time.LocalTime{Time.localTimeOfDay} ->
-                H.toHtml $ show localTimeOfDay
+                H.time ! A.class_ "eventTime"
+                    ! A.datetime (H.toValue $ show localTimeOfDay)
+                    $ H.toHtml $ Time.formatTime
+                        Time.defaultTimeLocale
+                        "%l:%M %p"
+                        localTimeOfDay
     in
     H.div ! A.class_ "upcomingEvent" $ do
-        timeStamp
-        " : "
-        H.a
+        H.p $ timeStamp
+        H.p $ H.a
             ! A.href (H.toValue $ Route.Event $ DB.eeId ocItem)
             $ title
 
