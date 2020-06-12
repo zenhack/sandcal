@@ -4,6 +4,7 @@ nav ul {
 	display: flex;
 	padding: 0.25rem;
 	justify-content: space-around;
+	flex-wrap: wrap;
 	list-style: none;
 }
 nav ul > li {
