@@ -43,7 +43,7 @@ occurRow' tz occur def f =
 
 occurRowStart :: TZ -> Oc.Occurrence DB.EventEntry -> Int
 occurRowStart tz occur =
-    occurRow' tz occur 1 $ \Time.TimeOfDay{todHour,todMin} ->
+    occurRow' tz occur 2 $ \Time.TimeOfDay{todHour,todMin} ->
         (todHour * 60 + todMin) `div` minutesPerCell
 
 occurRowEnd :: TZ -> Oc.Occurrence DB.EventEntry -> Int
