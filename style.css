@@ -6,11 +6,15 @@ nav ul {
 	justify-content: space-around;
 	flex-wrap: wrap;
 	list-style: none;
+	margin-left: 2rem;
+	margin-right: 2rem;
 }
 nav ul > li {
 	display: inline-block;
 	margin-left: 1rem;
 	margin-right: 1rem;
+	margin-top: 0.5rem;
+	margin-bottom: 0.5rem;
 }
 
 .mainContentContainer {
