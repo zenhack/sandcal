@@ -167,11 +167,11 @@ eventOccurrences start ev =
 
 unboundedOccurrences :: Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
 unboundedOccurrences start ev recur =
-    expandFreq start ev (recurFreq recur)
+    expandFreq start ev (recurFreq recur) (recurInterval recur)
 
 
-expandFreq :: Time.UTCTime -> VEvent -> Frequency -> [Occurrence VEvent]
-expandFreq viewStart ev freq =
+expandFreq :: Time.UTCTime -> VEvent -> Frequency -> Int -> [Occurrence VEvent]
+expandFreq viewStart ev freq interval =
     case freq of
         Secondly -> expandSeconds id
         Minutely -> expandSeconds (* 60)
@@ -188,9 +188,9 @@ expandFreq viewStart ev freq =
         in
         [ Occurrence
             { ocItem = ev
-            , ocTimeStamp = atIdx n
+            , ocTimeStamp = atIdx (startIdx + (n * interval))
             }
-        | n <- [startIdx..]
+        | n <- [0..]
         ]
     expandSeconds toSeconds =
         let toNDF = toSeconds >>> fromIntegral >>> Time.secondsToNominalDiffTime in
