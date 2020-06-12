@@ -28,8 +28,9 @@ settings uid =
     flip fmap (DB.getUserTimeZone uid) $ \userTz ->
         docToHtml $ Document
             { title = "User Settings"
-            , body =
+            , body = do
+                H.h1 "User Settings"
                 postForm mempty Route.SaveSettings $ do
-                    tzSelect "timezone" userTz
+                    labeledTzSelect "Time Zone" userTz
                     H.button ! A.type_ "submit" $ "Save Settings"
             }

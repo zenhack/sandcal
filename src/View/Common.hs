@@ -72,7 +72,8 @@ tzSelect label userTz =
         tzOption :: Tz.TZLabel -> H.Html
         tzOption tz = addSelected tz H.option ! A.value (name tz) $ (name tz)
     in
-    H.select ! A.name (H.toValue label) $ traverse_ tzOption [minBound..maxBound]
+    H.select ! A.id (H.toValue label) ! A.name (H.toValue label) $
+        traverse_ tzOption [minBound..maxBound]
 
 labeledTzSelect :: T.Text -> Maybe Tz.TZLabel -> H.Html
 labeledTzSelect name userTz =

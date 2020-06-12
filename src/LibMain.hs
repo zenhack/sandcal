@@ -250,7 +250,7 @@ decodeTZLabelOr400 timezone =
 
 setTimeZone db = do
     uid <- Sandstorm.getUserId
-    tzLabel <- param "timezone" >>= decodeTZLabelOr400
+    tzLabel <- param "Time Zone" >>= decodeTZLabelOr400
     liftIO $ DB.runQuery db $ DB.setUserTimeZone uid tzLabel
     Route.redirectGet Route.Home
 
