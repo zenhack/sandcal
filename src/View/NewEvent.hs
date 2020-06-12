@@ -25,5 +25,5 @@ newEvent userTz = docToHtml Document
                 labeledInput "Start Time" $ A.type_ "time"
                 labeledInput "End Time" $ A.type_ "time"
                 labeledTzSelect "Time Zone" userTz
-            H.button ! A.type_ "submit" $ "Create Event"
+            H.button ! A.type_ "submit" $ "Create"
     }
