@@ -39,7 +39,8 @@ docToHtml Document{title, body} = H.docTypeHtml $ do
     H.script ! A.src (H.toValue Route.SandstormJS) $ pure ()
     H.body $ do
         navigation
-        body
+        H.div ! A.class_ "mainContentContainer" $
+            H.div ! A.class_ "mainContent" $ body
 
 labeledInput :: T.Text -> H.Attribute -> H.Html
 labeledInput name attrs =

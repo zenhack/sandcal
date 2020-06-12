@@ -12,6 +12,12 @@ nav ul > li {
 	margin-right: 1rem;
 }
 
+.mainContentContainer {
+	/* Center the content of the page. */
+	display: flex;
+	justify-content: space-around;
+}
+
 .postForm {
 	display: table;
 }
