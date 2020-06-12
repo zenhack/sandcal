@@ -27,6 +27,8 @@ nav ul > li {
 	margin-bottom: 0.5rem;
 }
 
+h1 { text-align: center; }
+
 .upcomingDayHeading {
 	text-transform: uppercase;
 	font-size: 12pt;
