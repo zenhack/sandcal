@@ -19,10 +19,11 @@ newEvent userTz = docToHtml Document
     , body = do
         H.h1 $ "New Event"
         postForm mempty Route.PostNewEvent $ do
-            labeledInput "Summary" mempty
-            labeledInput "Date" $ A.type_ "date"
-            labeledInput "Start Time" $ A.type_ "time"
-            labeledInput "End Time" $ A.type_ "time"
-            labeledTzSelect "Time Zone" userTz
+            formBlock $ do
+                labeledInput "Summary" mempty
+                labeledInput "Date" $ A.type_ "date"
+                labeledInput "Start Time" $ A.type_ "time"
+                labeledInput "End Time" $ A.type_ "time"
+                labeledTzSelect "Time Zone" userTz
             H.button ! A.type_ "submit" $ "Create Event"
     }

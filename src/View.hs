@@ -31,6 +31,7 @@ settings uid =
             , body = do
                 H.h1 "User Settings"
                 postForm mempty Route.SaveSettings $ do
-                    labeledTzSelect "Time Zone" userTz
+                    formBlock $
+                        labeledTzSelect "Time Zone" userTz
                     H.button ! A.type_ "submit" $ "Save Settings"
             }

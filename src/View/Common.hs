@@ -5,6 +5,7 @@ module View.Common
     , labeledInput
     , navigation
     , postForm
+    , formBlock
     , tzSelect
     , labeledTzSelect
     , eventSummary
@@ -54,10 +55,15 @@ postForm :: H.Attribute -> Route.PostRoute -> H.Html -> H.Html
 postForm attrs rt contents =
     H.form
         ! attrs
-        ! A.class_ "postForm"
         ! A.method "post"
         ! A.action (H.toValue rt) $
             contents
+
+formBlock :: H.Html -> H.Html
+formBlock body = do
+    H.div
+        ! A.class_ "formBlock"
+        $ body
 
 tzSelect :: T.Text -> Maybe Tz.TZLabel -> H.Html
 tzSelect label userTz =

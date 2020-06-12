@@ -17,6 +17,7 @@ importICS = docToHtml $ Document
     , body = do
         H.h1 "Import Calendar"
         postForm (A.enctype "multipart/form-data") Route.PostImportICS $ do
-            labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
+            formBlock $
+                labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
             H.button ! A.type_ "submit" $ "Upload"
     }
