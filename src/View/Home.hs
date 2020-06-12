@@ -37,7 +37,7 @@ makeItems' day (o@Oc.Occurrence{Oc.ocTimeStamp}:os) =
 
 viewItem :: Item -> H.Html
 viewItem (DayHeading day) =
-    H.h2 $ H.toHtml (show day) -- TODO: nicer formatting
+    H.h2 ! A.class_ "upcomingDayHeading" $ H.toHtml (show day) -- TODO: nicer formatting
 viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
     let title = eventSummary $ DB.eeVEvent ocItem
         timeStamp = case Oc.octTime zot of
@@ -46,7 +46,7 @@ viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
             Oc.LocalOCAtTime Time.LocalTime{Time.localTimeOfDay} ->
                 H.toHtml $ show localTimeOfDay
     in
-    H.div $ do
+    H.div ! A.class_ "upcomingEvent" $ do
         timeStamp
         " : "
         H.a

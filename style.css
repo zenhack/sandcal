@@ -17,6 +17,13 @@ nav ul > li {
 	margin-bottom: 0.5rem;
 }
 
+.upcomingDayHeading {
+	font-size: 14pt;
+}
+.upcomingEvent {
+	font-size; 16pt;
+}
+
 .mainContentContainer {
 	/* Center the content of the page. */
 	display: flex;
