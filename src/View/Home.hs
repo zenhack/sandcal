@@ -42,6 +42,7 @@ viewItem (DayHeading day) =
             Time.defaultTimeLocale
             "%a %e %b %Y"
             day
+-- TODO: we should group events in a day into list elements.
 viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
     let title = eventSummary $ DB.eeVEvent ocItem
         timeStamp = case Oc.octTime zot of

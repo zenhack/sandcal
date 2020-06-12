@@ -1,3 +1,10 @@
+body {
+	/* When we have pages with long form text, (e.g. event descriptions)
+	 * we'll want to pick a better reading font for those, but right
+	 * now everything is headings and snippets. */
+	font-family: Helvetica, sans-serif;
+}
+
 nav ul {
 	border: 1px solid black;
 	border-radius: 0.5rem;
@@ -18,10 +25,11 @@ nav ul > li {
 }
 
 .upcomingDayHeading {
-	font-size: 14pt;
+	text-transform: uppercase;
+	font-size: 12pt;
 }
 .upcomingEvent {
-	font-size; 16pt;
+	font-size: 16pt;
 }
 
 .mainContentContainer {
