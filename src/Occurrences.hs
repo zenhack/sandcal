@@ -23,7 +23,6 @@ import qualified Data.Time.Zones.All as TZ
 
 import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Set                as Set
-import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LTE
 import qualified Data.Time               as Time
 
@@ -84,11 +83,6 @@ data Occurrence a = Occurrence
     }
     deriving(Functor, Show)
 
-data StartTimeError
-    = FloatingStartTime
-    | BadTimeZone LT.Text
-    deriving(Show)
-
 zonedOCTimeDay :: ZonedOCTime -> Time.Day
 zonedOCTimeDay zot = case octTime zot of
     LocalOCAllDay day       -> day
@@ -101,29 +95,37 @@ zonedOCTimeFromUTC utcTime = ZonedOCTime
         Time.utcToLocalTime Time.utc utcTime
     }
 
-getEventStartTime :: VEvent -> ZonedOCTime
-getEventStartTime ev = case eventDTStart ev of
-    Right t -> t
-    Left _  -> zonedOCTimeFromUTC $ dtStampValue (veDTStamp ev)
-
-eventDTStart :: VEvent -> Either StartTimeError ZonedOCTime
-eventDTStart ev =
+-- | @'zonedStartTime' defaultTz event@ is the start time of an event
+-- with a time zone.
+--
+-- It tries to extract a sensible time zone from the event itself,
+-- but if it is unable to do so, it assumes @defaultTz@.
+zonedStartTime :: TZ -> VEvent -> ZonedOCTime
+zonedStartTime defaultTz ev =
     case veDTStart ev of
         Nothing ->
-            Right $ zonedOCTimeFromUTC $ dtStampValue (veDTStamp ev)
-        Just (DTStartDate _ _) ->
-            Left FloatingStartTime
-        Just DTStartDateTime{dtStartDateTimeValue = FloatingDateTime _localTime} ->
-            Left FloatingStartTime
+            zonedOCTimeFromUTC $ dtStampValue (veDTStamp ev)
+        Just (DTStartDate (Date day) _) ->
+            ZonedOCTime
+                { octZone = defaultTz
+                , octTime = LocalOCAllDay day
+                }
+        Just DTStartDateTime{dtStartDateTimeValue = FloatingDateTime localTime} ->
+            ZonedOCTime
+                { octZone = defaultTz
+                , octTime = LocalOCAtTime localTime
+                }
         Just DTStartDateTime{dtStartDateTimeValue = UTCDateTime utcTime} ->
-            Right $ zonedOCTimeFromUTC utcTime
+            zonedOCTimeFromUTC utcTime
         Just DTStartDateTime{dtStartDateTimeValue = ZonedDateTime{dateTimeFloating, dateTimeZone}} ->
-            case TZ.tzByName $ LBS.toStrict $ LTE.encodeUtf8 dateTimeZone of
-                Nothing -> Left $ BadTimeZone dateTimeZone
-                Just tz -> Right $ ZonedOCTime
-                    { octZone = tz
-                    , octTime = LocalOCAtTime dateTimeFloating
-                    }
+            let tz = case TZ.tzByName $ LBS.toStrict $ LTE.encodeUtf8 dateTimeZone of
+                    Nothing   -> defaultTz
+                    Just zone -> zone
+            in
+            ZonedOCTime
+                { octZone = tz
+                , octTime = LocalOCAtTime dateTimeFloating
+                }
 
 merge :: [[Occurrence a]] -> [Occurrence a]
 merge = mergeManyOn (ocTimeStamp >>> zonedOCTimeToUTCFudge)
@@ -150,11 +152,13 @@ mergeOn f (x:xs) (y:ys)
     | f x < f y = x : mergeOn f xs (y:ys)
     | otherwise = y : mergeOn f (x:xs) ys
 
-eventOccurrences :: Time.UTCTime -> VEvent -> [Occurrence VEvent]
-eventOccurrences start ev =
+eventOccurrences :: TZ -> Time.UTCTime -> VEvent -> [Occurrence VEvent]
+eventOccurrences defaultTz start ev =
     let rules = map rRuleValue $ Set.toList (veRRule ev)
-        streams = map (ruleOccurrences start ev) rules
-        eventStartTime = getEventStartTime ev
+        -- TODO(cleanup): refactor to just pass eventStartTime into
+        -- ruleOccurrences, rather than re-computing it.
+        streams = map (ruleOccurrences defaultTz start ev) rules
+        eventStartTime = zonedStartTime defaultTz ev
         hd =
             [ Occurrence
                 { ocItem = ev
@@ -165,13 +169,13 @@ eventOccurrences start ev =
     in
     hd <> merge streams
 
-unboundedOccurrences :: Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
-unboundedOccurrences start ev recur =
-    expandFreq start ev (recurFreq recur) (recurInterval recur)
+unboundedOccurrences :: TZ -> Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
+unboundedOccurrences defaultTz start ev recur =
+    expandFreq defaultTz start ev (recurFreq recur) (recurInterval recur)
 
 
-expandFreq :: Time.UTCTime -> VEvent -> Frequency -> Int -> [Occurrence VEvent]
-expandFreq viewStart ev freq interval =
+expandFreq :: TZ -> Time.UTCTime -> VEvent -> Frequency -> Int -> [Occurrence VEvent]
+expandFreq defaultTz viewStart ev freq interval =
     case freq of
         Secondly -> expandSeconds id
         Minutely -> expandSeconds (* 60)
@@ -181,7 +185,7 @@ expandFreq viewStart ev freq interval =
         Monthly  -> expandModifyDay Time.addGregorianMonthsClip
         Yearly   -> expandModifyDay Time.addGregorianYearsClip
   where
-    start = getEventStartTime ev
+    start = zonedStartTime defaultTz ev
     expandIndex atIdx =
         let startIdx =
                 findStartPoint $ \i -> viewStart < zonedOCTimeToUTCFudge (atIdx i)
@@ -227,9 +231,9 @@ findStartPoint p = go 0 0 1 where
         | p i = i
         | otherwise = go i (i+stride) (stride*2)
 
-ruleOccurrences :: Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
-ruleOccurrences start vevent recur =
-    let unbounded = unboundedOccurrences start vevent recur in
+ruleOccurrences :: TZ -> Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
+ruleOccurrences defaultTz start vevent recur =
+    let unbounded = unboundedOccurrences defaultTz start vevent recur in
     case recurUntilCount recur of
         Nothing                      -> unbounded
         Just (Right count)           -> take count unbounded

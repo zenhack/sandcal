@@ -110,10 +110,15 @@ viewWeek db refDay = do
 
 getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
 getOccursSince db utc = do
+    uid <- Sandstorm.getUserId
     events <- DB.runQuery db DB.allEvents
+    maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
+    let tz = case maybeTzLabel of
+            Just lbl -> Tz.tzByLabel lbl
+            Nothing  -> Tz.utcTZ
     pure $ events
         & map (\ev ->
-            Occurrences.eventOccurrences utc (DB.eeVEvent ev)
+            Occurrences.eventOccurrences tz utc (DB.eeVEvent ev)
             & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
         )
         & Occurrences.merge
