@@ -1,4 +1,9 @@
 nav ul {
+	border: 1px solid black;
+	border-radius: 0.5rem;
+	display: flex;
+	padding: 0.25rem;
+	justify-content: space-around;
 	list-style: none;
 }
 nav ul > li {
