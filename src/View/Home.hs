@@ -67,5 +67,5 @@ home entries = docToHtml Document
     { title = "Upcoming Events"
     , body = do
         H.h1 "Upcoming Events"
-        H.ul $ traverse_ viewItem (makeItems entries)
+        traverse_ viewItem (makeItems entries)
     }
