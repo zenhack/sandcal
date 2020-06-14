@@ -6,6 +6,7 @@ import Zhp
 
 import View.Common
 
+import           ICal  (Frequency(..))
 import qualified Route
 
 import qualified Data.Time.Zones.All         as Tz
@@ -25,5 +26,10 @@ newEvent userTz = docToHtml Document
                 labeledInput "Start Time" $ A.type_ "time"
                 labeledInput "End Time" $ A.type_ "time"
                 labeledTzSelect "Time Zone" userTz
+                labeledSelect "Repeats" $
+                    ("Never", True)
+                    : map
+                        (\name -> (show name, False))
+                        [Daily, Weekly, Monthly, Yearly]
             H.button ! A.type_ "submit" $ "Create"
     }

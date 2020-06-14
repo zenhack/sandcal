@@ -71,7 +71,7 @@ form button {
 .labeledInput {
 	display: table-row;
 }
-.labeledInput > label, .labeledInput > input {
+.labeledInput > label, .labeledInput > input, .labeledInput > select {
 	padding-right: 3rem;
 	margin-bottom: 0.25rem;
 	display: table-cell;

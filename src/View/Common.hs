@@ -8,6 +8,7 @@ module View.Common
     , formBlock
     , tzSelect
     , labeledTzSelect
+    , labeledSelect
     , eventSummary
     ) where
 
@@ -86,6 +87,20 @@ labeledTzSelect name userTz =
     H.div ! A.class_ "labeledInput" $ do
         H.label ! A.for (H.toValue name) $ H.toHtml name
         tzSelect name userTz
+
+labeledSelect :: (H.ToMarkup a, H.ToValue a) => T.Text -> [(a, Bool)] -> H.Html
+labeledSelect selectName options =
+    H.div ! A.class_ "labeledInput" $ do
+        let selectNameVal = H.toValue selectName
+        H.label ! A.for selectNameVal $ H.toHtml selectName
+        H.select ! A.id selectNameVal ! A.name selectNameVal $ do
+            for_ options $ \(name, selected) ->
+                let opt' = H.option ! A.value (H.toValue name)
+                    opt'' = if selected
+                        then opt' ! A.selected ""
+                        else opt'
+                in
+                opt'' $ H.toHtml name
 
 navigation :: H.Html
 navigation = H.nav $ H.ul $ traverse_ navItem

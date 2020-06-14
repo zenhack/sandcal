@@ -16,6 +16,8 @@ import Text.Blaze.Html5              (Html)
 import Text.ICalendar.Parser         (parseICalendar)
 
 import qualified Data.ByteString.Lazy    as LBS
+import qualified Data.Map.Strict         as M
+import qualified Data.Set                as S
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.Time               as Time
@@ -156,12 +158,27 @@ viewSettings db = do
     result <- DB.runQuery db $ View.settings uid
     blaze result
 
+freqNames :: M.Map String ICal.Frequency
+freqNames =
+    [ ICal.Secondly
+    , ICal.Minutely
+    , ICal.Hourly
+    , ICal.Daily
+    , ICal.Weekly
+    , ICal.Monthly
+    , ICal.Yearly
+    ]
+    & map (\freq -> (show freq, freq))
+    & M.fromList
+
 postNewEvent db = do
     summary <- param "Summary"
     DP.Day day <- param "Date"
     DP.TimeOfDay startTime <- param "Start Time"
     DP.TimeOfDay endTime <- param "End Time"
     tzName <- param "Time Zone"
+    repeats <- param "Repeats"
+    let repeatsFreq = M.lookup repeats freqNames
     tzLabel <- decodeTZLabelOr400 tzName
     tz <- liftIO $ Tz.loadSystemTZ $ LT.unpack $ encodeTZLabel tzLabel
 
@@ -222,7 +239,29 @@ postNewEvent db = do
             , ICal.veTransp = def
             , ICal.veUrl = def
             , ICal.veRecurId = def
-            , ICal.veRRule = def
+            , ICal.veRRule =
+                case repeatsFreq of
+                    Nothing -> def
+                    Just freq -> S.singleton $ ICal.RRule
+                        { rRuleOther = def
+                        , rRuleValue = ICal.Recur
+                            { recurFreq = freq
+                            , recurUntilCount = def
+                            , recurInterval = 1
+                            , recurBySecond = def
+                            , recurByMinute = def
+                            , recurByHour = def
+                            , recurByDay = def
+                            , recurByMonthDay = def
+                            , recurByYearDay = def
+                            , recurByWeekNo = def
+                            , recurByMonth = def
+                            , recurBySetPos = def
+                            , recurWkSt = ICal.Sunday
+                              -- ^ Does this matter? Not for our current usage,
+                              -- but we should research what it means.
+                            }
+                        }
             , ICal.veAttach = def
             , ICal.veAttendee = def
             , ICal.veCategories = def
