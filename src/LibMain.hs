@@ -74,10 +74,6 @@ main = do
             Route.Post Route.PostImportICS -> importICS db
         notFound $ do404
 
-elmPage = do
-    setHeader "Content-Type" "text/html"
-    file "index.html"
-
 viewNewEvent db = do
     uid <- Sandstorm.getUserId
     maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
@@ -295,4 +291,4 @@ setTimeZone db = do
 
 do404 = do
     status status404
-    elmPage
+    text "404 - not found"

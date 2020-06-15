@@ -4,7 +4,6 @@
 # expect comments or ordering to be retained.
 etc/gai.conf
 etc/ld.so.cache
-index.html
 lib64
 proc/cpuinfo
 sandcal
