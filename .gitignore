@@ -27,3 +27,5 @@ cabal.project.local
 
 # Generated code:
 /ui/src/gen_tz.ml
+bundle.js
+bundle.min.js
