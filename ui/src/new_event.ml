@@ -3,23 +3,23 @@ open Tea.Html
 
 open Common
 
-type msg = unit
+type msg =
+  | InputChanged of string * string
+
+module StringMap = Map.Make(String)
 
 module FormValues = struct
-  type t = {
-    date: string;
-    start_time : string;
-    end_time : string;
-  }
+  type t = string StringMap.t
 
-  let init : t = {
-    date = "";
-    start_time = "";
-    end_time = "";
-  }
+  let init = StringMap.empty
+
+  let update (key: string) (value: string) (old: t): t =
+    match value with
+    | "" -> StringMap.remove key old
+    | _ -> StringMap.add key value old
 
   let valid (values: t) =
-    true
+    StringMap.mem "Summary" values
 end
 
 type model = {
@@ -36,16 +36,26 @@ let init user_tz =
   ; user_tz
   }
 
-let update model () = model
+let update model = function
+  | InputChanged (key, value) ->
+      { model
+        with form_values = FormValues.update key value model.form_values
+      }
 
 let view model =
+  let tracked_input ?typ key =
+    let event = onInput (fun value -> InputChanged(key, value)) in
+    match typ with
+    | None -> labeled_input key [ event ]
+    | Some typ -> labeled_input key [ type' typ; event ]
+  in
   form
     [ method' "post"; action "/event/new" ]
     [ form_block
-        [ labeled_input "Summary" []
-        ; labeled_input "Date" [ type' "date" ]
-        ; labeled_input "Start Time" [ type' "time" ]
-        ; labeled_input "End Time" [ type' "time" ]
+        [ tracked_input "Summary"
+        ; tracked_input "Date" ~typ:"date"
+        ; tracked_input "Start Time" ~typ:"time"
+        ; tracked_input "End Time" ~typ:"time"
         ; labeled_tz_select "Time Zone" model.user_tz
         ; labeled_select "Repeats"
               (("Never", true)
