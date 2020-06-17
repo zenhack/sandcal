@@ -105,6 +105,11 @@ executable sandcal
   build-depends: libsandcal
   hs-source-dirs: exe
 
+executable gen-caml
+  import: shared-opts
+  main-is: GenCaml.hs
+  hs-source-dirs: exe
+
 test-suite tests
   import: shared-opts
   type: exitcode-stdio-1.0

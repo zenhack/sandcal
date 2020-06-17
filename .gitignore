@@ -22,9 +22,8 @@ cabal.project.local
 # Used by the Makefile; see comments there.
 .build-hs
 
-elm-stuff
-ui.js
-
-
 # Sandstorm package:
 *.spk
+
+# Generated code:
+/ui/src/gen_tz.ml

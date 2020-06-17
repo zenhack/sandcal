@@ -72,6 +72,7 @@ main = do
             Route.Post Route.SaveSettings -> setTimeZone db
             Route.Post Route.PostNewEvent -> postNewEvent db
             Route.Post Route.PostImportICS -> importICS db
+        get "/bundle.min.js" $ file "ui/bundle.min.js"
         notFound $ do404
 
 viewNewEvent db = do

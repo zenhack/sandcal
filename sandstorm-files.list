@@ -12,6 +12,7 @@ sandstorm-http-bridge-config
 sandstorm-manifest
 sandstorm.js
 style.css
+ui/bundle.min.js
 usr/lib/ld-2.31.so
 usr/lib/ld-linux-x86-64.so.2
 usr/lib/libc-2.31.so

@@ -1,0 +1,21 @@
+{
+  "name": "ui",
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "bsb -clean-world",
+    "build": "bsb -make-world",
+    "watch": "bsb -make-world -w"
+  },
+  "keywords": [
+    "BuckleScript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "bs-platform": "^7.2.2",
+    "bucklescript-tea": "^0.15.0",
+    "rollup": "^2.16.1",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "uglify-js": "^3.9.4"
+  }
+}

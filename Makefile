@@ -1,6 +1,6 @@
-hs_src := $(shell find src -type f -name '*.hs')
+hs_src := $(shell find src exe -type f -name '*.hs')
 
-all: sandcal
+all: sandcal ui/bundle.min.js
 run: all
 	./sandcal
 dev: all
@@ -10,7 +10,7 @@ check:
 pack: sandcal.spk
 
 .build-hs: cabal.project $(wildcard *.cabal) $(hs_src)
-	cabal v2-build
+	cabal v2-build all
 	@# Create a sentinel file, so we can depend on this without
 	@# having to specify the path the binary, which is deep under
 	@# dist-newstyle.
@@ -21,4 +21,26 @@ sandcal: .build-hs
 sandcal.spk: all
 	spk pack $@
 
-.PHONY: all run dev pack check
+gen_ocaml_files := \
+	ui/src/gen_tz.ml
+
+# TODO: avoid listing gen_ocaml_files twice if they've already been generated.
+ocaml_files := $(shell find ui/src/ -type f -name '*.ml') $(gen_ocaml_files)
+bs_files := $(ocaml_files:.ml=.bs.js)
+
+clean:
+	cd ui && bsb -clean-world
+	rm -f ui/bundle.js
+	rm -f ui/bundle.min.js
+
+$(gen_ocaml_files): .build-hs
+	cabal v2-run gen-caml
+
+$(bs_files): $(ocaml_files)
+	cd ui && npx bsb -make-world
+ui/bundle.min.js: ui/bundle.js
+	(cd ui && npx uglifyjs --compress --mangle) < $< > $@
+ui/bundle.js: $(bs_files) ui/src/entry.js
+	cd ui && npx rollup --config
+
+.PHONY: all clean run dev pack check

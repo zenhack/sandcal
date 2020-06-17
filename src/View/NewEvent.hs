@@ -6,9 +6,7 @@ import Zhp
 
 import View.Common
 
-import           ICal  (Frequency(..))
-import qualified Route
-
+import qualified Data.ByteString.Char8       as BS8
 import qualified Data.Time.Zones.All         as Tz
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
@@ -18,18 +16,14 @@ newEvent :: Maybe Tz.TZLabel -> H.Html
 newEvent userTz = docToHtml Document
     { title = "New Event"
     , body = do
+        H.script ! A.src "/bundle.min.js" $ pure ()
         H.h1 $ "New Event"
-        postForm mempty Route.PostNewEvent $ do
-            formBlock $ do
-                labeledInput "Summary" mempty
-                labeledInput "Date" $ A.type_ "date"
-                labeledInput "Start Time" $ A.type_ "time"
-                labeledInput "End Time" $ A.type_ "time"
-                labeledTzSelect "Time Zone" userTz
-                labeledSelect "Repeats" $
-                    ("Never", True)
-                    : map
-                        (\name -> (show name, False))
-                        [Daily, Weekly, Monthly, Yearly]
-            H.button ! A.type_ "submit" $ "Create"
+        H.div
+            ! A.id "bs-form"
+            ! H.dataAttribute "sandcal-form-id" "new-event"
+            ! H.dataAttribute "sandcal-user-tz" (case userTz of
+                Nothing -> ""
+                Just tz -> H.toValue (BS8.unpack $ Tz.toTZName tz)
+              )
+            $ pure ()
     }
