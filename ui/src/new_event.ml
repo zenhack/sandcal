@@ -5,13 +5,36 @@ open Common
 
 type msg = unit
 
+module FormValues = struct
+  type t = {
+    date: string;
+    start_time : string;
+    end_time : string;
+  }
+
+  let init : t = {
+    date = "";
+    start_time = "";
+    end_time = "";
+  }
+
+  let valid (values: t) =
+    true
+end
+
 type model = {
   user_tz: string option;
+  form_values: FormValues.t;
 }
 
-let init = function
-  | "" -> { user_tz = None }
-  | tz -> { user_tz = Some tz }
+let init user_tz =
+  let user_tz = match user_tz with
+    | "" -> None
+    | tz -> Some tz
+  in
+  { form_values = FormValues.init
+  ; user_tz
+  }
 
 let update model () = model
 
@@ -30,7 +53,11 @@ let view model =
                  (fun name -> (name, false))
                  ["Daily"; "Weekly"; "Monthly"; "Yearly"])
         ]
-    ; button [ type' "submit" ] [ text "Create" ]
+    ; button
+        [ type' "submit"
+        ; Attributes.disabled (not (FormValues.valid model.form_values))
+        ]
+        [ text "Create" ]
     ]
 
 let main user_tz =
