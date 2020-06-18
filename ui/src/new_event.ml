@@ -20,6 +20,9 @@ module FormValues = struct
 
   let valid (values: t) =
     StringMap.mem "Summary" values
+      && StringMap.mem "Date" values
+      && StringMap.mem "Start Time" values
+      && StringMap.mem "End Time" values
 end
 
 type model = {
