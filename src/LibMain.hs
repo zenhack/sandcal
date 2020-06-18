@@ -80,9 +80,16 @@ viewNewEvent db = do
     maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
     blaze $ View.newEvent maybeTzLabel
 
+occursBefore :: Occurrences.Occurrence a -> Time.UTCTime -> Bool
+occursBefore occur end =
+    Occurrences.zonedOCTimeToUTCFudge (Occurrences.ocTimeStamp occur) <= end
+
 viewHome db = do
     utcNow <- liftIO $ Time.getCurrentTime
-    occurs <- take 100 <$> getOccursSince db utcNow
+    let utcEnd = Time.addUTCTime (Time.nominalDay * 45) utcNow
+    occurs <- getOccursSince db utcNow
+        & fmap (takeWhile (`occursBefore` utcEnd))
+        & fmap (take 20)
     blaze $ View.home occurs
 
 viewWeek db refDay = do
@@ -100,10 +107,7 @@ viewWeek db refDay = do
             { octZone = tz
             , octTime = Occurrences.LocalOCAllDay refDay
             }
-    occurs <- takeWhile
-            (\o ->
-                Occurrences.zonedOCTimeToUTCFudge (Occurrences.ocTimeStamp o) <= utcEnd
-            )
+    occurs <- takeWhile (`occursBefore` utcEnd)
         <$> getOccursSince db utcStart
     blaze $ View.week firstDayOfWeek zonedOCTime occurs
 
