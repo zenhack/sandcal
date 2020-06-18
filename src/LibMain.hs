@@ -169,40 +169,72 @@ freqNames =
     & M.fromList
 
 postNewEvent db = do
+    utcNow <- liftIO $ Time.getCurrentTime
     summary <- param "Summary"
     DP.Day day <- param "Date"
-    DP.TimeOfDay startTime <- param "Start Time"
-    DP.TimeOfDay endTime <- param "End Time"
-    tzName <- param "Time Zone"
+    isAllDay <- rescue
+        (True <$ (param "All Day" :: ActionM String))
+        $ \_ -> pure False
+    timeData <-
+            if isAllDay then
+                pure $ Left ()
+            else (do
+                DP.TimeOfDay startTime <- param "Start Time"
+                DP.TimeOfDay endTime <- param "End Time"
+                tzName <- param "Time Zone"
+                tzLabel <- decodeTZLabelOr400 tzName
+                pure $ Right (startTime, endTime, tzLabel)
+            )
     repeats <- param "Repeats"
     let repeatsFreq = M.lookup repeats freqNames
-    tzLabel <- decodeTZLabelOr400 tzName
-    tz <- liftIO $ Tz.loadSystemTZ $ LT.unpack $ encodeTZLabel tzLabel
 
     uuid <- liftIO $ UUID.nextRandom
 
-    let floatingStart = Time.LocalTime
-            { Time.localDay = day
-            , Time.localTimeOfDay = startTime
-            }
-        floatingEnd = floatingStart
-            { Time.localTimeOfDay = endTime
-            }
-        dtStart = ICal.ZonedDateTime
-            { ICal.dateTimeFloating = floatingStart
-            , ICal.dateTimeZone = encodeTZLabel tzLabel
-            }
-        dtEnd = dtStart { ICal.dateTimeFloating = floatingEnd }
-
-        !utcStart = Tz.localTimeToUTCTZ tz floatingStart
-
+    let (start, end) = case timeData of
+            Left () ->
+                ( ICal.DTStartDate
+                    { ICal.dtStartOther = def
+                    , ICal.dtStartDateValue = ICal.Date day
+                    }
+                , ICal.DTEndDate
+                    { ICal.dtEndDateValue = ICal.Date day -- TODO/FIXME: should this be exclusive?
+                    , ICal.dtEndOther = def
+                    }
+                )
+            Right (startTime, endTime, tzLabel) ->
+                let floatingStart = Time.LocalTime
+                        { Time.localDay = day
+                        , Time.localTimeOfDay = startTime
+                        }
+                    floatingEnd = floatingStart
+                        { Time.localTimeOfDay = endTime
+                        }
+                    dtStart = ICal.ZonedDateTime
+                        { ICal.dateTimeFloating = floatingStart
+                        , ICal.dateTimeZone = encodeTZLabel tzLabel
+                        }
+                    dtEnd = dtStart { ICal.dateTimeFloating = floatingEnd }
+                in
+                ( ICal.DTStartDateTime
+                    { ICal.dtStartOther = def
+                    , ICal.dtStartDateTimeValue =
+                        ICal.ZonedDateTime
+                            { ICal.dateTimeFloating = floatingStart
+                            , ICal.dateTimeZone = encodeTZLabel tzLabel
+                            }
+                    }
+                , ICal.DTEndDateTime
+                    { ICal.dtEndDateTimeValue = dtEnd
+                    , ICal.dtEndOther = def
+                    }
+                )
         vEvent = ICal.VEvent
             { ICal.veUID = ICal.UID
                 { ICal.uidValue = LT.fromStrict $ UUID.toText uuid
                 , ICal.uidOther = def
                 }
             , ICal.veDTStamp = ICal.DTStamp
-                { ICal.dtStampValue = utcStart
+                { ICal.dtStampValue = utcNow
                 , ICal.dtStampOther = def
                 }
             , ICal.veSummary = Just ICal.Summary
@@ -211,15 +243,8 @@ postNewEvent db = do
                 , ICal.summaryLanguage = def
                 , ICal.summaryOther = def
                 }
-            , ICal.veDTStart = Just ICal.DTStartDateTime
-                { ICal.dtStartDateTimeValue = dtStart
-                , ICal.dtStartOther = def
-                }
-            , ICal.veDTEndDuration = Just $ Left ICal.DTEndDateTime
-                { ICal.dtEndDateTimeValue = dtEnd
-                , ICal.dtEndOther = def
-                }
-
+            , ICal.veDTStart = Just start
+            , ICal.veDTEndDuration = Just $ Left end
             -- TODO: fill these in with the current time:
             , ICal.veCreated = Nothing
             , ICal.veLastMod = Nothing
