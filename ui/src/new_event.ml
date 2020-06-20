@@ -12,12 +12,19 @@ module StringMap = Map.Make(String)
 module FormValues = struct
   type t = string StringMap.t
 
-  let init = StringMap.empty
-
   let update (key: string) (value: string) (old: t): t =
     match value with
     | "" -> StringMap.remove key old
     | _ -> StringMap.add key value old
+
+  let init date_prefill =
+    [ "Date", date_prefill
+    ; "Start Time", "12:00"
+    ; "End Time", "13:00"
+    ]
+    |> List.fold_left
+         (fun m (k, v) -> update k v m)
+         StringMap.empty
 
   let all_day (values: t) =
     StringMap.mem "All Day" values
@@ -35,6 +42,7 @@ end
 
 type model = {
   user_tz: string option;
+  date_prefill: string;
   form_values: FormValues.t;
 }
 
@@ -43,13 +51,29 @@ let init user_tz =
     | "" -> None
     | tz -> Some tz
   in
-  { form_values = FormValues.init
+  let date_prefill = Js.Date.(
+        let now = make () in
+        let str n =
+          let ret = string_of_int (int_of_float n) in
+          if n < 10. then
+            ("0" ^ ret)
+          else
+            ret
+        in
+        str (getFullYear now)
+          ^ "-"
+          ^ str (getMonth now +. 1.)
+          ^ "-"
+          ^ str (getDate now)
+      )
+  in
+  { form_values = FormValues.init date_prefill
+  ; date_prefill
   ; user_tz
   }
 
 let update model = function
   | InputChanged (key, value) ->
-      Js.log ("key = " ^ key ^ ", value = " ^ value);
       { model
         with form_values = FormValues.update key value model.form_values
       }
@@ -63,17 +87,15 @@ let update model = function
       }
 
 let view model =
-  let tracked_input ?typ key =
+  let tracked_input key attrs =
     let event = onInput (fun value -> InputChanged(key, value)) in
-    match typ with
-    | None -> labeled_input key [ event ]
-    | Some typ -> labeled_input key [ type' typ; event ]
+    labeled_input key (event :: attrs)
   in
   form
     [ method' "post"; action "/event/new" ]
     [ form_block (
-        [ tracked_input "Summary"
-        ; tracked_input "Date" ~typ:"date"
+        [ tracked_input "Summary" []
+        ; tracked_input "Date" [ type' "date"; value model.date_prefill ]
         ; labeled_input "All Day"
             [ onCheck (fun value -> SetAllDay(value))
             ; type' "checkbox"
@@ -82,8 +104,8 @@ let view model =
         (if FormValues.all_day model.form_values then
           []
         else
-          [ tracked_input "Start Time" ~typ:"time"
-          ; tracked_input "End Time" ~typ:"time"
+          [ tracked_input "Start Time" [ type' "time"; value "12:00" ]
+          ; tracked_input "End Time" [ type' "time"; value "13:00" ]
           ; labeled_tz_select "Time Zone" model.user_tz
           ]
         )
