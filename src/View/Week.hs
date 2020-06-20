@@ -127,8 +127,14 @@ week startOfWeek now occurs =
                             }
                     )
                 )
-            & M.toList
-            & map (\(d, os) -> DayStart (toEnum d) : os)
+            & (\m ->
+                map (\d -> case M.lookup (fromEnum d) m of
+                    Nothing -> (d, [])
+                    Just os -> (d, os)
+                )
+                (take 7 [startOfWeek ..])
+              )
+            & map (\(d, os) -> DayStart d : os)
             & mconcat
     in
     docToHtml $ Document
