@@ -7,7 +7,7 @@ module LibMain (main) where
 
 import Data.Default                  (def)
 import Data.Text.Encoding.Error      (lenientDecode)
-import Data.Time.Zones.All           (TZLabel, fromTZName, toTZName)
+import Data.Time.Zones.All           (TZLabel, toTZName)
 import Network.HTTP.Types.Status     (status400, status404)
 import Network.Wai.Parse             (FileInfo(..))
 import SandCal.Config                (cfgDBPath, getConfig)
@@ -15,8 +15,11 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5              (Html)
 import Text.ICalendar.Parser         (parseICalendar)
 
+
+import qualified Forms.NewEvent
+import qualified Forms.Settings
+
 import qualified Data.ByteString.Lazy    as LBS
-import qualified Data.Map.Strict         as M
 import qualified Data.Set                as S
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
@@ -33,7 +36,6 @@ import qualified Util.Time               as UT
 import qualified View
 import qualified View.Import
 
-import qualified DateParsers as DP
 import qualified Occurrences
 
 
@@ -48,9 +50,6 @@ encodeTZLabel =
     toTZName
     >>> LBS.fromStrict
     >>> LT.decodeUtf8With lenientDecode
-
-decodeTZLabel :: LBS.ByteString -> Maybe TZLabel
-decodeTZLabel = LBS.toStrict >>> fromTZName
 
 main :: IO ()
 main = do
@@ -69,9 +68,15 @@ main = do
             Route.Get (Route.Event eid) -> getEvent db eid
             Route.Get Route.ImportICS -> blaze $ View.Import.importICS
 
-            Route.Post Route.SaveSettings -> setTimeZone db
             Route.Post Route.PostNewEvent -> postNewEvent db
             Route.Post Route.PostImportICS -> importICS db
+
+            Route.Post Route.SaveSettings -> do
+                uid <- Sandstorm.getUserId
+                Forms.Settings.Settings{timeZone} <- Forms.Settings.getForm
+                liftIO $ DB.runQuery db $ DB.setUserTimeZone uid timeZone
+                Route.redirectGet Route.Home
+
         get "/bundle.min.js" $ file "ui/bundle.min.js"
         notFound $ do404
 
@@ -159,55 +164,26 @@ viewSettings db = do
     result <- DB.runQuery db $ View.settings uid
     blaze result
 
-freqNames :: M.Map String ICal.Frequency
-freqNames =
-    [ ICal.Secondly
-    , ICal.Minutely
-    , ICal.Hourly
-    , ICal.Daily
-    , ICal.Weekly
-    , ICal.Monthly
-    , ICal.Yearly
-    ]
-    & map (\freq -> (show freq, freq))
-    & M.fromList
-
 postNewEvent db = do
     utcNow <- liftIO $ Time.getCurrentTime
-    summary <- param "Summary"
-    DP.Day day <- param "Date"
-    isAllDay <- rescue
-        (True <$ (param "All Day" :: ActionM String))
-        $ \_ -> pure False
-    timeData <-
-            if isAllDay then
-                pure $ Left ()
-            else (do
-                DP.TimeOfDay startTime <- param "Start Time"
-                DP.TimeOfDay endTime <- param "End Time"
-                tzName <- param "Time Zone"
-                tzLabel <- decodeTZLabelOr400 tzName
-                pure $ Right (startTime, endTime, tzLabel)
-            )
-    repeats <- param "Repeats"
-    let repeatsFreq = M.lookup repeats freqNames
+    Forms.NewEvent.NewEvent{ summary, date, time, repeats } <- Forms.NewEvent.getForm
 
     uuid <- liftIO $ UUID.nextRandom
 
-    let (start, end) = case timeData of
-            Left () ->
+    let (start, end) = case time of
+            Forms.NewEvent.AllDay ->
                 ( ICal.DTStartDate
                     { ICal.dtStartOther = def
-                    , ICal.dtStartDateValue = ICal.Date day
+                    , ICal.dtStartDateValue = ICal.Date date
                     }
                 , ICal.DTEndDate
-                    { ICal.dtEndDateValue = ICal.Date day -- TODO/FIXME: should this be exclusive?
+                    { ICal.dtEndDateValue = ICal.Date date -- TODO/FIXME: should this be exclusive?
                     , ICal.dtEndOther = def
                     }
                 )
-            Right (startTime, endTime, tzLabel) ->
+            Forms.NewEvent.StartEnd { startTime, endTime, timeZone } ->
                 let floatingStart = Time.LocalTime
-                        { Time.localDay = day
+                        { Time.localDay = date
                         , Time.localTimeOfDay = startTime
                         }
                     floatingEnd = floatingStart
@@ -215,7 +191,7 @@ postNewEvent db = do
                         }
                     dtStart = ICal.ZonedDateTime
                         { ICal.dateTimeFloating = floatingStart
-                        , ICal.dateTimeZone = encodeTZLabel tzLabel
+                        , ICal.dateTimeZone = encodeTZLabel timeZone
                         }
                     dtEnd = dtStart { ICal.dateTimeFloating = floatingEnd }
                 in
@@ -224,7 +200,7 @@ postNewEvent db = do
                     , ICal.dtStartDateTimeValue =
                         ICal.ZonedDateTime
                             { ICal.dateTimeFloating = floatingStart
-                            , ICal.dateTimeZone = encodeTZLabel tzLabel
+                            , ICal.dateTimeZone = encodeTZLabel timeZone
                             }
                     }
                 , ICal.DTEndDateTime
@@ -266,7 +242,7 @@ postNewEvent db = do
             , ICal.veUrl = def
             , ICal.veRecurId = def
             , ICal.veRRule =
-                case repeatsFreq of
+                case repeats of
                     Nothing -> def
                     Just freq -> S.singleton $ ICal.RRule
                         { rRuleOther = def
@@ -303,21 +279,6 @@ postNewEvent db = do
             }
     evId <- DB.runQuery db $ DB.addEvent vEvent
     Route.redirectGet $ Route.Event $ DB.unEventID evId
-
-decodeTZLabelOr400 :: LBS.ByteString -> ActionM TZLabel
-decodeTZLabelOr400 timezone =
-    case decodeTZLabel timezone of
-        Just tzLabel -> pure tzLabel
-        Nothing -> do
-            status status400
-            text "Invalid time zone."
-            finish
-
-setTimeZone db = do
-    uid <- Sandstorm.getUserId
-    tzLabel <- param "Time Zone" >>= decodeTZLabelOr400
-    liftIO $ DB.runQuery db $ DB.setUserTimeZone uid tzLabel
-    Route.redirectGet Route.Home
 
 do404 = do
     status status404

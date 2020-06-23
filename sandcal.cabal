@@ -84,6 +84,9 @@ library libsandcal
       LibMain
     , SandCal.DB
     , SandCal.Config
+    , Forms.Common
+    , Forms.NewEvent
+    , Forms.Settings
     , View
     , View.Common
     , View.Event
