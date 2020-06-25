@@ -9,11 +9,12 @@ import qualified Occurrences as Oc
 import qualified SandCal.DB  as DB
 import           View.Common
 
-import qualified Data.Map.Strict  as M
-import qualified Data.Time        as Time
-import           Data.Time.Zones  (TZ)
-import qualified Data.Time.Zones  as Tz
-import qualified Text.Blaze.Html5 as H
+import qualified Data.Map.Strict     as M
+import qualified Data.Time           as Time
+import           Data.Time.Zones     (TZ)
+import qualified Data.Time.Zones     as Tz
+import qualified Data.Time.Zones.All as Tz
+import qualified Text.Blaze.Html5    as H
 -- import qualified Util.Time           as UT
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5.Attributes as A
@@ -91,16 +92,16 @@ ocDay :: TZ -> Oc.ZonedOCTime -> Time.Day
 ocDay tz zot = case Oc.octTime zot of
     Oc.LocalOCAllDay day -> day
     Oc.LocalOCAtTime localTime ->
-        Tz.localTimeToUTCTZ (Oc.octZone zot) localTime
+        Tz.localTimeToUTCTZ (Tz.tzByLabel $ Oc.octZone zot) localTime
             & Tz.utcToLocalTimeTZ tz
             & Time.localDay
 
 
 week :: Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
 week startOfWeek now occurs =
-    let tz = Oc.octZone now
+    let tz = Tz.tzByLabel $ Oc.octZone now
         items = occurs
-            & map (\o -> (ocDay (Oc.octZone now) (Oc.ocTimeStamp o), o))
+            & map (\o -> (ocDay (Tz.tzByLabel $ Oc.octZone now) (Oc.ocTimeStamp o), o))
             & foldl' (\m (d, o) ->
                     M.alter
                         (\case

@@ -103,13 +103,14 @@ viewWeek db refDay = do
         (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
     uid <- Sandstorm.getUserId
     maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
-    let !tz = case maybeTzLabel of
-            Just label -> Tz.tzByLabel label
+    let !tzLabel = case maybeTzLabel of
+            Just label -> label
             Nothing    -> error "TODO: deal with no timezone."
+        tz = Tz.tzByLabel tzLabel
         utcStart = Tz.localTimeToUTCTZ tz (UT.startOfDay startDay)
         utcEnd   = Tz.localTimeToUTCTZ tz (UT.endOfDay endDay)
         zonedOCTime = Occurrences.ZonedOCTime
-            { octZone = tz
+            { octZone = tzLabel
             , octTime = Occurrences.LocalOCAllDay refDay
             }
     occurs <- takeWhile (`occursBefore` utcEnd)
@@ -121,12 +122,12 @@ getOccursSince db utc = do
     uid <- Sandstorm.getUserId
     events <- DB.runQuery db DB.allEvents
     maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
-    let tz = case maybeTzLabel of
-            Just lbl -> Tz.tzByLabel lbl
-            Nothing  -> Tz.utcTZ
+    let tzLabel = case maybeTzLabel of
+            Just lbl -> lbl
+            Nothing  -> Tz.Etc__UTC
     pure $ events
         & map (\ev ->
-            Occurrences.eventOccurrences tz utc (DB.eeVEvent ev)
+            Occurrences.eventOccurrences tzLabel utc (DB.eeVEvent ev)
             & map (fmap (\vEv -> ev { DB.eeVEvent = vEv }))
         )
         & Occurrences.merge
