@@ -85,6 +85,9 @@ form button {
 
 .week-day-heading {
 	grid-row: 1;
+	text-align: center;
+	padding-right: 2rem;
+	padding-left: 2rem;
 }
 
 .week-item {
