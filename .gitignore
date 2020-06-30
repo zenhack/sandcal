@@ -21,6 +21,7 @@ cabal.project.local
 /sandcal
 # Used by the Makefile; see comments there.
 .build-hs
+.build-ml
 
 # Sandstorm package:
 *.spk

@@ -32,15 +32,20 @@ clean:
 	cd ui && bsb -clean-world
 	rm -f ui/bundle.js
 	rm -f ui/bundle.min.js
+	rm -f .build-ml
 
 $(gen_ocaml_files): .build-hs
 	cabal v2-run gen-caml
 
-$(bs_files): $(ocaml_files)
+.build-ml: $(ocaml_files)
 	cd ui && npx bsb -make-world
+	@# Conceptually the output here is $(bs_files), but specifying that
+	@# reuslts in this rule being run multiple times for reasons I(zenhack)
+	@# don't fully understand, so we use a sentinel file instead:
+	touch .build-ml
 ui/bundle.min.js: ui/bundle.js
 	(cd ui && npx uglifyjs --compress --mangle) < $< > $@
-ui/bundle.js: $(bs_files) ui/src/entry.js
+ui/bundle.js: .build-ml ui/src/entry.js
 	cd ui && npx rollup --config
 
 .PHONY: all clean run dev pack check
