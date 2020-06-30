@@ -44,7 +44,7 @@ data ZonedOCTime = ZonedOCTime
     { octZone :: TZ.TZLabel
     , octTime :: LocalOCTime
     }
-    deriving(Show)
+    deriving(Show, Eq)
 
 -- | Convert a ZonedOCTime to a LocalOCTime in the specified timezone.
 --
@@ -81,7 +81,7 @@ data Occurrence a = Occurrence
     { ocItem      :: a
     , ocTimeStamp :: ZonedOCTime
     }
-    deriving(Functor, Show)
+    deriving(Functor, Show, Eq)
 
 zonedOCTimeDay :: ZonedOCTime -> Time.Day
 zonedOCTimeDay zot = case octTime zot of
@@ -152,6 +152,14 @@ mergeOn f (x:xs) (y:ys)
     | f x < f y = x : mergeOn f xs (y:ys)
     | otherwise = y : mergeOn f (x:xs) ys
 
+-- | De-duplicate duplicate occurrences. Assumes duplicates will already
+-- be adjacent.
+dedup :: Eq a => [Occurrence a] -> [Occurrence a]
+dedup (x:y:zs)
+    | x == y = dedup (y:zs)
+    | otherwise = x : dedup (y:zs)
+dedup xs = xs
+
 eventOccurrences :: TZ.TZLabel -> Time.UTCTime -> VEvent -> [Occurrence VEvent]
 eventOccurrences defaultTz start ev =
     let rules = map rRuleValue $ Set.toList (veRRule ev)
@@ -167,7 +175,7 @@ eventOccurrences defaultTz start ev =
             | zonedOCTimeToUTCFudge eventStartTime >= start
             ]
     in
-    hd <> merge streams
+    dedup $ hd <> merge streams
 
 unboundedOccurrences :: TZ.TZLabel -> Time.UTCTime -> VEvent -> Recur -> [Occurrence VEvent]
 unboundedOccurrences defaultTz start ev recur =
