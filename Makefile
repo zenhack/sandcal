@@ -45,7 +45,7 @@ $(gen_ocaml_files): .build-hs
 	touch .build-ml
 ui/bundle.min.js: ui/bundle.js
 	(cd ui && npx uglifyjs --compress --mangle) < $< > $@
-ui/bundle.js: .build-ml ui/src/entry.js
+ui/bundle.js: .build-ml ui/src/entry.js ui/package.json ui/rollup.config.js
 	cd ui && npx rollup --config
 
 .PHONY: all clean run dev pack check

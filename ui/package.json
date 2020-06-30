@@ -11,6 +11,7 @@
   ],
   "author": "",
   "license": "MIT",
+  "main": "src/entry.js",
   "devDependencies": {
     "bs-platform": "^7.2.2",
     "bucklescript-tea": "^0.15.0",

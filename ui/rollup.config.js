@@ -8,6 +8,6 @@ export default {
 		name: 'spread',
 	},
 	plugins: [
-		node_resolve({module: true, browser: true}),
+		node_resolve({browser: true}),
 	],
 }
