@@ -1,4 +1,3 @@
-open Tea.App
 open Tea.Html
 
 let labeled_input label_name attrs =
