@@ -194,7 +194,7 @@ expandFreq defaultTz viewStart ev freq interval =
             { ocItem = ev
             , ocTimeStamp = atIdx (startIdx + (n * interval))
             }
-        | n <- [1..]
+        | n <- [0..]
         ]
     expandSeconds toSeconds =
         let toNDF = toSeconds >>> fromIntegral >>> Time.secondsToNominalDiffTime in
