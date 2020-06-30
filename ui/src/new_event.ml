@@ -44,9 +44,10 @@ type model = {
   user_tz: string option;
   date_prefill: string;
   form_values: FormValues.t;
+  action_: string;
 }
 
-let init user_tz =
+let init user_tz action_ =
   let user_tz = match user_tz with
     | "" -> None
     | tz -> Some tz
@@ -70,6 +71,7 @@ let init user_tz =
   { form_values = FormValues.init date_prefill
   ; date_prefill
   ; user_tz
+  ; action_
   }
 
 let update model = function
@@ -92,7 +94,7 @@ let view model =
     labeled_input key (event :: attrs)
   in
   form
-    [ method' "post"; action "/event/new" ]
+    [ method' "post"; action model.action_ ]
     [ form_block (
         [ tracked_input "Summary" []
         ; tracked_input "Date" [ type' "date"; value model.date_prefill ]
@@ -124,9 +126,9 @@ let view model =
         [ text "Create" ]
     ]
 
-let main user_tz =
+let main user_tz action_ =
   beginnerProgram {
-    model = init user_tz;
+    model = init user_tz action_;
     update;
     view;
   }

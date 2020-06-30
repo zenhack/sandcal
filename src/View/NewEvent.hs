@@ -6,6 +6,8 @@ import Zhp
 
 import View.Common
 
+import qualified Route
+
 import qualified Data.ByteString.Char8       as BS8
 import qualified Data.Time.Zones.All         as Tz
 import           Text.Blaze.Html5            ((!))
@@ -20,7 +22,7 @@ newEvent userTz = docToHtml Document
         H.h1 $ "New Event"
         H.div
             ! A.id "bs-form"
-            ! H.dataAttribute "sandcal-form-id" "new-event"
+            ! H.dataAttribute "sandcal-action" (H.toValue $ Route.Post Route.PostNewEvent)
             ! H.dataAttribute "sandcal-user-tz" (case userTz of
                 Nothing -> ""
                 Just tz -> H.toValue (BS8.unpack $ Tz.toTZName tz)
