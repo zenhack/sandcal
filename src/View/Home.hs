@@ -59,7 +59,7 @@ viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
     H.div ! A.class_ "upcomingEvent" $ do
         H.p $ timeStamp
         H.p $ H.a
-            ! A.href (H.toValue $ Route.Event $ DB.eeId ocItem)
+            ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
             $ title
 
 home :: [Oc.Occurrence DB.EventEntry] -> H.Html

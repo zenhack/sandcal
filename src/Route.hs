@@ -8,11 +8,16 @@ module Route
 
 import Zhp
 
+import Text.Read (readMaybe)
+
 import Network.HTTP.Types.Status (status303)
 import Text.Blaze                (ToValue(toValue))
 import Web.Scotty
 
-import qualified Data.Time as Time
+import qualified Data.Time   as Time
+import qualified Network.URI as URI
+
+import qualified Occurrences as Oc
 
 data Route
     = Get GetRoute
@@ -22,7 +27,7 @@ data GetRoute
     = Home
     | Week Time.Day
     | Settings
-    | Event Int64
+    | Event Int64 (Maybe Oc.ZonedOCTime)
     | NewEvent
     | StyleCss
     | SandstormJS
@@ -51,7 +56,12 @@ renderGet (Week day) =
     let (y, m, d) = Time.toGregorian day in
     fromString $ "/week/" <> show y <> "/" <> show m <> "/" <> show d
 renderGet Settings    = "/settings"
-renderGet (Event eid) = fromString $ "/event/" <> show eid
+renderGet (Event eid zot) = fromString $ mconcat
+    [ "/event/"
+    , show eid
+    , "?occurrence="
+    , URI.escapeURIString URI.isAllowedInURI (show zot)
+    ]
 renderGet NewEvent    = "/event/new"
 renderGet StyleCss    = "/style.css"
 renderGet SandstormJS = "/sandstorm.js"
@@ -77,7 +87,8 @@ scottyM route = do
         route $ Get NewEvent
     get "/event/:eid" $ do
         eid <- param "eid"
-        route $ Get $ Event eid
+        occurStr <- param "occurrence"
+        route $ Get $ Event eid (readMaybe (URI.unEscapeString occurStr))
     get "/style.css" $
         route $ Get StyleCss
     get "/sandstorm.js" $

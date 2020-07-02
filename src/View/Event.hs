@@ -10,10 +10,11 @@ import View.Common
 import qualified Data.Set         as S
 import qualified Data.Text.Lazy   as LT
 import qualified ICal
+import qualified Occurrences      as Oc
 import qualified Text.Blaze.Html5 as H
 
-event :: ICal.VEvent -> H.Html
-event ev =
+event :: ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
+event ev _zot =
     let title = case ICal.veSummary ev of
             Nothing                               -> "Untitled Event"
             Just ICal.Summary {ICal.summaryValue} -> summaryValue

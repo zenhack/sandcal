@@ -29,7 +29,7 @@ import qualified Data.Time               as Time
 data LocalOCTime
     = LocalOCAllDay Time.Day
     | LocalOCAtTime Time.LocalTime
-    deriving(Show, Eq, Ord)
+    deriving(Show, Read, Eq, Ord)
 
 modifyLocalOCDay :: (Time.Day -> Time.Day) -> LocalOCTime ->  LocalOCTime
 modifyLocalOCDay f = \case
@@ -44,7 +44,7 @@ data ZonedOCTime = ZonedOCTime
     { octZone :: TZ.TZLabel
     , octTime :: LocalOCTime
     }
-    deriving(Show, Eq)
+    deriving(Show, Read, Eq)
 
 -- | Convert a ZonedOCTime to a LocalOCTime in the specified timezone.
 --

@@ -65,7 +65,7 @@ main = do
             Route.Get (Route.Week refDay) -> viewWeek db refDay
             Route.Get Route.Settings -> viewSettings db
             Route.Get Route.NewEvent -> viewNewEvent db
-            Route.Get (Route.Event eid) -> getEvent db eid
+            Route.Get (Route.Event eid zot) -> getEvent db eid zot
             Route.Get Route.ImportICS -> blaze $ View.Import.importICS
 
             Route.Post Route.PostNewEvent -> postNewEvent db
@@ -132,11 +132,11 @@ getOccursSince db utc = do
         )
         & Occurrences.merge
 
-getEvent db eid = do
+getEvent db eid zot = do
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))
     case res of
         Nothing -> do404
-        Just e  -> blaze $ View.event e
+        Just e  -> blaze $ View.event e zot
 
 importICS db = do
     fs <- files
@@ -279,7 +279,7 @@ postNewEvent db = do
             , ICal.veOther = def
             }
     evId <- DB.runQuery db $ DB.addEvent vEvent
-    Route.redirectGet $ Route.Event $ DB.unEventID evId
+    Route.redirectGet $ Route.Event (DB.unEventID evId) Nothing
 
 do404 = do
     status status404
