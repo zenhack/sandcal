@@ -206,11 +206,7 @@ postNewEvent db = do
                 in
                 ( ICal.DTStartDateTime
                     { ICal.dtStartOther = def
-                    , ICal.dtStartDateTimeValue =
-                        ICal.ZonedDateTime
-                            { ICal.dateTimeFloating = floatingStart
-                            , ICal.dateTimeZone = encodeTZLabel timeZone
-                            }
+                    , ICal.dtStartDateTimeValue = dtStart
                     }
                 , ICal.DTEndDateTime
                     { ICal.dtEndDateTimeValue = dtEnd
