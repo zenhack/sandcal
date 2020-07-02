@@ -96,6 +96,7 @@ library libsandcal
     , View.Week
     , Route
     , ICal
+    , ICal.Util
     , Sandstorm
     , DateParsers
     , Occurrences

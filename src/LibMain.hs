@@ -28,6 +28,7 @@ import qualified Data.Time.Zones.All     as Tz
 import qualified Data.UUID               as UUID
 import qualified Data.UUID.V4            as UUID
 import qualified ICal
+import qualified ICal.Util
 import qualified Route
 import qualified SandCal.DB              as DB
 import qualified Sandstorm
@@ -140,11 +141,17 @@ mustGetUserTZ db = do
             Nothing    -> error "TODO: deal with no timezone."
 
 getEvent db eid zot = do
-    tzLabel <- mustGetUserTZ db
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))
     case res of
         Nothing -> do404
-        Just e  -> blaze $ View.event tzLabel e zot
+        Just e  -> do
+            maybeTzLabel <- getUserTZ db
+            let Just tzLabel = asum
+                    [ maybeTzLabel
+                    , ICal.Util.veventTZLabel e
+                    , Just Tz.Etc__UTC
+                    ]
+            blaze $ View.event tzLabel e zot
 
 importICS db = do
     fs <- files
