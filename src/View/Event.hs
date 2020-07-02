@@ -29,7 +29,8 @@ event tzLabel ev zot =
         , body = do
             H.h1 $ H.toHtml title
             H.toHtml $ viewLocalOCTime (Oc.octTime zot')
-            for_ (ICal.veDescription ev) $ \de ->
+            for_ (ICal.veDescription ev) $ \de -> do
+                H.h2 "Description"
                 -- TODO: try to be smarter about formatting, e.g. insert paragraphs
                 -- and such instead of just throwing a <pre> at it.
                 H.pre $ H.toHtml $ ICal.descriptionValue de
