@@ -6,6 +6,7 @@ module Occurrences
     ( Occurrence(..)
     , LocalOCTime(..)
     , ZonedOCTime(..)
+    , firstOccurrence
     , eventOccurrences
     , zonedOCTimeDay
     , zonedOCTimeToUTCFudge
@@ -159,6 +160,19 @@ dedup (x:y:zs)
     | x == y = dedup (y:zs)
     | otherwise = x : dedup (y:zs)
 dedup xs = xs
+
+firstOccurrence :: TZ.TZLabel -> VEvent -> Maybe (Occurrence VEvent)
+firstOccurrence lbl ev =
+    -- Pick a starting point that is a very long time ago, so reasonable
+    -- use cases will never involve events from before this:
+    let startPoint =
+            Time.UTCTime
+                (Time.fromGregorian 1 1 1)
+                (toEnum 0 :: Time.DiffTime)
+    in
+    case eventOccurrences lbl startPoint ev of
+        []     -> Nothing
+        (oc:_) -> Just oc
 
 eventOccurrences :: TZ.TZLabel -> Time.UTCTime -> VEvent -> [Occurrence VEvent]
 eventOccurrences defaultTz start ev =

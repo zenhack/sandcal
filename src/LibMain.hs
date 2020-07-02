@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
@@ -101,12 +100,8 @@ viewWeek db refDay = do
     -- TODO: allow the user to configure the start of the week.
     let firstDayOfWeek = Time.Sunday
         (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
-    uid <- Sandstorm.getUserId
-    maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
-    let !tzLabel = case maybeTzLabel of
-            Just label -> label
-            Nothing    -> error "TODO: deal with no timezone."
-        tz = Tz.tzByLabel tzLabel
+    tzLabel <- mustGetUserTZ db
+    let tz = Tz.tzByLabel tzLabel
         utcStart = Tz.localTimeToUTCTZ tz (UT.startOfDay startDay)
         utcEnd   = Tz.localTimeToUTCTZ tz (UT.endOfDay endDay)
         zonedOCTime = Occurrences.ZonedOCTime
@@ -132,11 +127,24 @@ getOccursSince db utc = do
         )
         & Occurrences.merge
 
+getUserTZ :: DB.Conn -> ActionM (Maybe TZLabel)
+getUserTZ db = do
+    uid <- Sandstorm.getUserId
+    DB.runQuery db $ DB.getUserTimeZone uid
+
+mustGetUserTZ :: DB.Conn -> ActionM TZLabel
+mustGetUserTZ db = do
+    maybeTzLabel <- getUserTZ db
+    case maybeTzLabel of
+            Just label -> pure label
+            Nothing    -> error "TODO: deal with no timezone."
+
 getEvent db eid zot = do
+    tzLabel <- mustGetUserTZ db
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))
     case res of
         Nothing -> do404
-        Just e  -> blaze $ View.event e zot
+        Just e  -> blaze $ View.event tzLabel e zot
 
 importICS db = do
     fs <- files
