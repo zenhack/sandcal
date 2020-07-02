@@ -22,6 +22,7 @@ import qualified Occurrences as Oc
 data Route
     = Get GetRoute
     | Post PostRoute
+    deriving(Show)
 
 data GetRoute
     = Home
@@ -32,11 +33,13 @@ data GetRoute
     | StyleCss
     | SandstormJS
     | ImportICS
+    deriving(Show)
 
 data PostRoute
     = PostNewEvent
     | SaveSettings
     | PostImportICS
+    deriving(Show)
 
 instance ToValue Route where
     toValue (Get r)  = toValue r
@@ -59,8 +62,12 @@ renderGet Settings    = "/settings"
 renderGet (Event eid zot) = fromString $ mconcat
     [ "/event/"
     , show eid
-    , "?occurrence="
-    , URI.escapeURIString URI.isAllowedInURI (show zot)
+    , case zot of
+            Nothing -> ""
+            Just z -> mconcat
+                [ "?occurrence="
+                , URI.escapeURIString URI.isAllowedInURI (show z)
+                ]
     ]
 renderGet NewEvent    = "/event/new"
 renderGet StyleCss    = "/style.css"
@@ -87,8 +94,8 @@ scottyM route = do
         route $ Get NewEvent
     get "/event/:eid" $ do
         eid <- param "eid"
-        occurStr <- param "occurrence"
-        route $ Get $ Event eid (readMaybe (URI.unEscapeString occurStr))
+        occurStr <- (fmap Just (param "occurrence")) `rescue` (const $ pure Nothing)
+        route $ Get $ Event eid (occurStr >>= readMaybe . URI.unEscapeString)
     get "/style.css" $
         route $ Get StyleCss
     get "/sandstorm.js" $
