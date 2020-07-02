@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase     #-}
 {-# LANGUAGE NamedFieldPuns #-}
 module View.Common
     ( Document(..)
@@ -10,9 +11,12 @@ module View.Common
     , labeledTzSelect
     , labeledSelect
     , eventSummary
+    , maybeLink
     ) where
 
 import Zhp
+
+import Network.URI (URI)
 
 import qualified Route
 
@@ -112,3 +116,12 @@ navigation = H.nav $ H.ul $ traverse_ navItem
   where
     navItem (rt, label) =
         H.li $ H.a ! A.href (H.toValue rt) $ label
+
+maybeLink :: H.ToMarkup a => a -> Maybe URI -> H.Html
+maybeLink content = \case
+    Nothing -> H.toHtml content
+    Just url ->
+        H.a
+            ! A.href (H.toValue $ show url)
+            ! A.rel "noreferrer noopener"
+            $ H.toHtml content
