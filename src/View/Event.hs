@@ -34,6 +34,18 @@ event tzLabel ev zot =
                 -- TODO: try to be smarter about formatting, e.g. insert paragraphs
                 -- and such instead of just throwing a <pre> at it.
                 H.pre $ H.toHtml $ ICal.descriptionValue de
+            let rrules = ICal.veRRule ev
+            case S.size rrules of
+                0 -> pure ()
+                1 -> do
+                    H.p $ do
+                        "Repeats "
+                        for_ rrules viewRRule
+                _ -> do
+                    H.h2 "Repeats"
+                    H.ul $ do
+                        for_ rrules $ \r ->
+                            H.li $ viewRRule r
             let participants = ICal.veAttendee ev
             unless (S.null participants) $ do
                 H.h2 "Participants"
@@ -44,6 +56,20 @@ event tzLabel ev zot =
                 H.h2 "Location"
                 H.p $ H.toHtml $ ICal.locationValue loc
         }
+
+viewRRule :: ICal.RRule -> H.Html
+viewRRule rr =
+    let recur = ICal.rRuleValue rr
+        freq = show (ICal.recurFreq recur)
+            & map toLower
+            -- Chop the -ly off the end:
+            & reverse
+            & drop 2
+            & reverse
+    in
+    H.toHtml $ case ICal.recurInterval recur of
+        1        -> "every " <> freq
+        interval -> "every " <> show interval <> " " <> freq <> "s"
 
 viewLocalOCTime :: Oc.LocalOCTime-> H.Html
 viewLocalOCTime = \case
