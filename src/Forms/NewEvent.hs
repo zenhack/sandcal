@@ -94,21 +94,21 @@ freqNames =
     & M.fromList
 
 toVEvent :: Time.UTCTime -> UUID.UUID -> NewEvent -> ICal.VEvent
-toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, location, date, time, repeats } =
-    let (start, end) = case time of
+toVEvent utcNow uuid form =
+    let (start, end) = case time form of
             Forms.NewEvent.AllDay ->
                 ( ICal.DTStartDate
                     { ICal.dtStartOther = def
-                    , ICal.dtStartDateValue = ICal.Date date
+                    , ICal.dtStartDateValue = ICal.Date (date form)
                     }
                 , ICal.DTEndDate
-                    { ICal.dtEndDateValue = ICal.Date date -- TODO/FIXME: should this be exclusive?
+                    { ICal.dtEndDateValue = ICal.Date (date form) -- TODO/FIXME: should this be exclusive?
                     , ICal.dtEndOther = def
                     }
                 )
             Forms.NewEvent.StartEnd { startTime, endTime, timeZone } ->
                 let floatingStart = Time.LocalTime
-                        { Time.localDay = date
+                        { Time.localDay = date form
                         , Time.localTimeOfDay = startTime
                         }
                     floatingEnd = floatingStart
@@ -140,7 +140,7 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, location, da
             , dtStampOther = def
             }
         , veSummary = Just ICal.Summary
-            { summaryValue = summary
+            { summaryValue = summary form
             , summaryAltRep = def
             , summaryLanguage = def
             , summaryOther = def
@@ -156,17 +156,17 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, location, da
             , lastModifiedOther = def
             }
         , veDescription =
-            if LT.null description then
+            if LT.null $ description form then
                 Nothing
             else
                 Just ICal.Description
-                    { descriptionValue = description
+                    { descriptionValue = description form
                     , descriptionAltRep = def
                     , descriptionLanguage = def
                     , descriptionOther = def
                     }
         , veRRule =
-            case repeats of
+            case repeats form of
                 Nothing -> def
                 Just freq -> S.singleton $ ICal.RRule
                     { rRuleOther = def
@@ -189,11 +189,11 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, location, da
                         }
                     }
         , veLocation =
-            if LT.null location then
+            if LT.null $ location form then
                 Nothing
             else
                 Just ICal.Location
-                    { locationValue = location
+                    { locationValue = location form
                     , locationAltRep = def
                     , locationLanguage = def
                     , locationOther = def
