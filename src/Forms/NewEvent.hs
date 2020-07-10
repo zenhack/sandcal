@@ -93,43 +93,45 @@ freqNames =
     & map (\freq -> (show freq, freq))
     & M.fromList
 
+getStartEnd :: NewEvent -> (ICal.DTStart, ICal.DTEnd)
+getStartEnd form = case time form of
+    AllDay ->
+        ( ICal.DTStartDate
+            { ICal.dtStartOther = def
+            , ICal.dtStartDateValue = ICal.Date (date form)
+            }
+        , ICal.DTEndDate
+            { ICal.dtEndDateValue = ICal.Date (date form) -- TODO/FIXME: should this be exclusive?
+            , ICal.dtEndOther = def
+            }
+        )
+    StartEnd { startTime, endTime, timeZone } ->
+        let floatingStart = Time.LocalTime
+                { Time.localDay = date form
+                , Time.localTimeOfDay = startTime
+                }
+            floatingEnd = floatingStart
+                { Time.localTimeOfDay = endTime
+                }
+            dtStart = ICal.ZonedDateTime
+                { ICal.dateTimeFloating = floatingStart
+                , ICal.dateTimeZone = encodeTZLabel timeZone
+                }
+            dtEnd = dtStart { ICal.dateTimeFloating = floatingEnd }
+        in
+        ( ICal.DTStartDateTime
+            { ICal.dtStartOther = def
+            , ICal.dtStartDateTimeValue = dtStart
+            }
+        , ICal.DTEndDateTime
+            { ICal.dtEndDateTimeValue = dtEnd
+            , ICal.dtEndOther = def
+            }
+        )
+
 toVEvent :: Time.UTCTime -> UUID.UUID -> NewEvent -> ICal.VEvent
 toVEvent utcNow uuid form =
-    let (start, end) = case time form of
-            Forms.NewEvent.AllDay ->
-                ( ICal.DTStartDate
-                    { ICal.dtStartOther = def
-                    , ICal.dtStartDateValue = ICal.Date (date form)
-                    }
-                , ICal.DTEndDate
-                    { ICal.dtEndDateValue = ICal.Date (date form) -- TODO/FIXME: should this be exclusive?
-                    , ICal.dtEndOther = def
-                    }
-                )
-            Forms.NewEvent.StartEnd { startTime, endTime, timeZone } ->
-                let floatingStart = Time.LocalTime
-                        { Time.localDay = date form
-                        , Time.localTimeOfDay = startTime
-                        }
-                    floatingEnd = floatingStart
-                        { Time.localTimeOfDay = endTime
-                        }
-                    dtStart = ICal.ZonedDateTime
-                        { ICal.dateTimeFloating = floatingStart
-                        , ICal.dateTimeZone = encodeTZLabel timeZone
-                        }
-                    dtEnd = dtStart { ICal.dateTimeFloating = floatingEnd }
-                in
-                ( ICal.DTStartDateTime
-                    { ICal.dtStartOther = def
-                    , ICal.dtStartDateTimeValue = dtStart
-                    }
-                , ICal.DTEndDateTime
-                    { ICal.dtEndDateTimeValue = dtEnd
-                    , ICal.dtEndOther = def
-                    }
-                )
-    in
+    let (start, end) = getStartEnd form in
     ICal.VEvent
         { veUID = ICal.UID
             { uidValue = LT.fromStrict $ UUID.toText uuid
