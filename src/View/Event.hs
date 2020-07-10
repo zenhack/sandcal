@@ -8,16 +8,19 @@ import Zhp
 
 import View.Common
 
-import qualified Data.Set            as S
-import qualified Data.Text.Lazy      as LT
-import qualified Data.Time           as Time
-import qualified Data.Time.Zones.All as TZ
+import qualified Data.Set                    as S
+import qualified Data.Text.Lazy              as LT
+import qualified Data.Time                   as Time
+import qualified Data.Time.Zones.All         as TZ
 import qualified ICal
-import qualified Occurrences         as Oc
-import qualified Text.Blaze.Html5    as H
+import qualified Occurrences                 as Oc
+import qualified Route
+import           Text.Blaze.Html5            ((!))
+import qualified Text.Blaze.Html5            as H
+import qualified Text.Blaze.Html5.Attributes as A
 
-event :: TZ.TZLabel -> ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
-event tzLabel ev zot =
+event :: Int64 -> TZ.TZLabel -> ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
+event eid tzLabel ev zot =
     let title = case ICal.veSummary ev of
             Nothing                               -> "Untitled Event"
             Just ICal.Summary {ICal.summaryValue} -> summaryValue
@@ -28,6 +31,8 @@ event tzLabel ev zot =
         { title = "Event - " <> LT.toStrict title
         , body = do
             H.h1 $ H.toHtml title
+            H.nav $ H.ul $
+                H.li $ H.a ! A.href (H.toValue $ Route.Get $ Route.EditEvent eid) $ "Edit"
             H.toHtml $ viewLocalOCTime (Oc.octTime zot')
             for_ (ICal.veDescription ev) $ \de -> do
                 H.h2 "Description"

@@ -54,6 +54,7 @@ main = do
             Route.Get Route.Settings -> viewSettings db
             Route.Get Route.NewEvent -> viewNewEvent db
             Route.Get (Route.Event eid zot) -> getEvent db eid zot
+            Route.Get (Route.EditEvent eid) -> editEvent db eid
             Route.Get Route.ImportICS -> blaze $ View.Import.importICS
 
             Route.Post Route.PostNewEvent -> postNewEvent db
@@ -139,7 +140,10 @@ getEvent db eid zot = do
                     , ICal.Util.veventTZLabel e
                     , Just Tz.Etc__UTC
                     ]
-            blaze $ View.event tzLabel e zot
+            blaze $ View.event eid tzLabel e zot
+
+editEvent _db _eid =
+    text "TODO"
 
 importICS db = do
     fs <- files

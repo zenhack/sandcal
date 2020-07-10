@@ -30,6 +30,7 @@ data GetRoute
     | Settings
     | Event Int64 (Maybe Oc.ZonedOCTime)
     | NewEvent
+    | EditEvent Int64
     | StyleCss
     | SandstormJS
     | ImportICS
@@ -69,6 +70,7 @@ renderGet (Event eid zot) = fromString $ mconcat
                 , URI.escapeURIString URI.isAllowedInURI (show z)
                 ]
     ]
+renderGet (EditEvent eid) = fromString $ "/event/" <> show eid <> "/edit"
 renderGet NewEvent    = "/event/new"
 renderGet StyleCss    = "/style.css"
 renderGet SandstormJS = "/sandstorm.js"
@@ -96,6 +98,9 @@ scottyM route = do
         eid <- param "eid"
         occurStr <- (fmap Just (param "occurrence")) `rescue` (const $ pure Nothing)
         route $ Get $ Event eid (occurStr >>= readMaybe . URI.unEscapeString)
+    get "/event/:eid/edit" $ do
+        eid <- param "eid"
+        route $ Get $ EditEvent eid
     get "/style.css" $
         route $ Get StyleCss
     get "/sandstorm.js" $
