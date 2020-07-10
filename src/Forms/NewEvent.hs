@@ -144,9 +144,14 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, date, time, 
             }
         , veDTStart = Just start
         , veDTEndDuration = Just $ Left end
-        -- TODO: fill these in with the current time:
-        , veCreated = Nothing
-        , veLastMod = Nothing
+        , veCreated = Just ICal.Created
+            { createdValue = utcNow
+            , createdOther = def
+            }
+        , veLastMod = Just ICal.LastModified
+            { lastModifiedValue = utcNow
+            , lastModifiedOther = def
+            }
 
         , veDescription =
             case description of
