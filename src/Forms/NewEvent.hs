@@ -155,19 +155,16 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, location, da
             { lastModifiedValue = utcNow
             , lastModifiedOther = def
             }
-
         , veDescription =
-            case description of
-                "" ->
-                    Nothing
-
-                _ ->
-                    Just ICal.Description
-                        { descriptionValue = description
-                        , descriptionAltRep = def
-                        , descriptionLanguage = def
-                        , descriptionOther = def
-                        }
+            if LT.null description then
+                Nothing
+            else
+                Just ICal.Description
+                    { descriptionValue = description
+                    , descriptionAltRep = def
+                    , descriptionLanguage = def
+                    , descriptionOther = def
+                    }
         , veRRule =
             case repeats of
                 Nothing -> def
