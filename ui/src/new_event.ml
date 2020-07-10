@@ -45,9 +45,10 @@ type model = {
   date_prefill: string;
   form_values: FormValues.t;
   action_: string;
+  submit_text: string;
 }
 
-let init user_tz action_ =
+let init user_tz action_ submit_text =
   let user_tz = match user_tz with
     | "" -> None
     | tz -> Some tz
@@ -72,6 +73,7 @@ let init user_tz action_ =
   ; date_prefill
   ; user_tz
   ; action_
+  ; submit_text
   }
 
 let update model = function
@@ -129,12 +131,12 @@ let view model =
         [ type' "submit"
         ; Attributes.disabled (not (FormValues.valid model.form_values))
         ]
-        [ text "Create" ]
+        [ text model.submit_text ]
     ]
 
-let main user_tz action_ =
+let main user_tz action_ submit_text =
   beginnerProgram {
-    model = init user_tz action_;
+    model = init user_tz action_ submit_text;
     update;
     view;
   }

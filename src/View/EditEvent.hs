@@ -18,9 +18,10 @@ import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
 
 data EditTemplate = EditTemplate
-    { title  :: T.Text
-    , userTz :: Maybe Tz.TZLabel
-    , action :: Route.PostRoute
+    { title      :: T.Text
+    , submitText :: T.Text
+    , userTz     :: Maybe Tz.TZLabel
+    , action     :: Route.PostRoute
     }
 
 editEvent :: EditTemplate -> H.Html
@@ -32,6 +33,7 @@ editEvent tpl = VC.docToHtml VC.Document
         H.div
             ! A.id "bs-form"
             ! H.dataAttribute "sandcal-action" (H.toValue $ Route.Post $ action tpl)
+            ! H.dataAttribute "sandcal-submit-text" (H.toValue $ submitText tpl)
             ! H.dataAttribute "sandcal-user-tz" (case userTz tpl of
                 Nothing -> ""
                 Just tz -> H.toValue (BS8.unpack $ Tz.toTZName tz)

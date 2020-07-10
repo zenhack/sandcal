@@ -41,6 +41,7 @@ settings uid =
 
 editEvent userTz eid = EditEvent.editEvent EditEvent.EditTemplate
     { title = "Edit Event"
+    , submitText = "Update"
     , action = Route.PostEditEvent eid
     , userTz
     }
