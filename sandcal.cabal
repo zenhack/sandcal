@@ -93,6 +93,7 @@ library libsandcal
     , View.Home
     , View.Import
     , View.NewEvent
+    , View.EditEvent
     , View.Week
     , Route
     , ICal
