@@ -165,18 +165,6 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, date, time, 
                         , descriptionLanguage = def
                         , descriptionOther = def
                         }
-
-        -- Not used for now:
-        , veClass = def
-        , veGeo = def
-        , veLocation = def
-        , veOrganizer = def
-        , vePriority = def
-        , veSeq = def
-        , veStatus = def
-        , veTransp = def
-        , veUrl = def
-        , veRecurId = def
         , veRRule =
             case repeats of
                 Nothing -> def
@@ -200,6 +188,18 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, date, time, 
                           -- but we should research what it means.
                         }
                     }
+
+        -- Not used for now:
+        , veClass = def
+        , veGeo = def
+        , veLocation = def
+        , veOrganizer = def
+        , vePriority = def
+        , veSeq = def
+        , veStatus = def
+        , veTransp = def
+        , veUrl = def
+        , veRecurId = def
         , veAttach = def
         , veAttendee = def
         , veCategories = def
