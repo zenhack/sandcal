@@ -128,51 +128,51 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, date, time, 
                 )
     in
     ICal.VEvent
-        { ICal.veUID = ICal.UID
-            { ICal.uidValue = LT.fromStrict $ UUID.toText uuid
-            , ICal.uidOther = def
+        { veUID = ICal.UID
+            { uidValue = LT.fromStrict $ UUID.toText uuid
+            , uidOther = def
             }
-        , ICal.veDTStamp = ICal.DTStamp
-            { ICal.dtStampValue = utcNow
-            , ICal.dtStampOther = def
+        , veDTStamp = ICal.DTStamp
+            { dtStampValue = utcNow
+            , dtStampOther = def
             }
-        , ICal.veSummary = Just ICal.Summary
-            { ICal.summaryValue = summary
-            , ICal.summaryAltRep = def
-            , ICal.summaryLanguage = def
-            , ICal.summaryOther = def
+        , veSummary = Just ICal.Summary
+            { summaryValue = summary
+            , summaryAltRep = def
+            , summaryLanguage = def
+            , summaryOther = def
             }
-        , ICal.veDTStart = Just start
-        , ICal.veDTEndDuration = Just $ Left end
+        , veDTStart = Just start
+        , veDTEndDuration = Just $ Left end
         -- TODO: fill these in with the current time:
-        , ICal.veCreated = Nothing
-        , ICal.veLastMod = Nothing
+        , veCreated = Nothing
+        , veLastMod = Nothing
 
-        , ICal.veDescription =
+        , veDescription =
             case description of
                 "" ->
                     Nothing
 
                 _ ->
                     Just ICal.Description
-                        { ICal.descriptionValue = description
-                        , ICal.descriptionAltRep = def
-                        , ICal.descriptionLanguage = def
-                        , ICal.descriptionOther = def
+                        { descriptionValue = description
+                        , descriptionAltRep = def
+                        , descriptionLanguage = def
+                        , descriptionOther = def
                         }
 
         -- Not used for now:
-        , ICal.veClass = def
-        , ICal.veGeo = def
-        , ICal.veLocation = def
-        , ICal.veOrganizer = def
-        , ICal.vePriority = def
-        , ICal.veSeq = def
-        , ICal.veStatus = def
-        , ICal.veTransp = def
-        , ICal.veUrl = def
-        , ICal.veRecurId = def
-        , ICal.veRRule =
+        , veClass = def
+        , veGeo = def
+        , veLocation = def
+        , veOrganizer = def
+        , vePriority = def
+        , veSeq = def
+        , veStatus = def
+        , veTransp = def
+        , veUrl = def
+        , veRecurId = def
+        , veRRule =
             case repeats of
                 Nothing -> def
                 Just freq -> S.singleton $ ICal.RRule
@@ -195,18 +195,18 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, date, time, 
                           -- but we should research what it means.
                         }
                     }
-        , ICal.veAttach = def
-        , ICal.veAttendee = def
-        , ICal.veCategories = def
-        , ICal.veComment = def
-        , ICal.veContact = def
-        , ICal.veExDate = def
-        , ICal.veRStatus  = def
-        , ICal.veRelated = def
-        , ICal.veResources = def
-        , ICal.veRDate = def
-        , ICal.veAlarms = def
-        , ICal.veOther = def
+        , veAttach = def
+        , veAttendee = def
+        , veCategories = def
+        , veComment = def
+        , veContact = def
+        , veExDate = def
+        , veRStatus  = def
+        , veRelated = def
+        , veResources = def
+        , veRDate = def
+        , veAlarms = def
+        , veOther = def
         }
 
 encodeTZLabel :: Tz.TZLabel -> LT.Text
