@@ -31,6 +31,7 @@ import qualified ICal
 data NewEvent = NewEvent
     { summary     :: LT.Text
     , description :: LT.Text
+    , location    :: LT.Text
     , date        :: Time.Day
     , time        :: NewEventTime
     , repeats     :: Maybe ICal.Frequency
@@ -49,6 +50,7 @@ getForm :: ActionM NewEvent
 getForm = do
     summary <- param "Summary"
     description <- param "Description"
+    location <- param "Location"
     DP.Day date <- param "Date"
     time <- getTime
     repeats <- param "Repeats"
@@ -56,6 +58,7 @@ getForm = do
     pure NewEvent
         { summary
         , description
+        , location
         , date
         , time
         , repeats = repeatsFreq
@@ -91,7 +94,7 @@ freqNames =
     & M.fromList
 
 toVEvent :: Time.UTCTime -> UUID.UUID -> NewEvent -> ICal.VEvent
-toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, date, time, repeats } =
+toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, location, date, time, repeats } =
     let (start, end) = case time of
             Forms.NewEvent.AllDay ->
                 ( ICal.DTStartDate
@@ -188,11 +191,20 @@ toVEvent utcNow uuid Forms.NewEvent.NewEvent{ summary, description, date, time, 
                           -- but we should research what it means.
                         }
                     }
+        , veLocation =
+            if LT.null location then
+                Nothing
+            else
+                Just ICal.Location
+                    { locationValue = location
+                    , locationAltRep = def
+                    , locationLanguage = def
+                    , locationOther = def
+                    }
 
         -- Not used for now:
         , veClass = def
         , veGeo = def
-        , veLocation = def
         , veOrganizer = def
         , vePriority = def
         , veSeq = def

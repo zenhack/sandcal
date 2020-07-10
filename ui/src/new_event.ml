@@ -121,6 +121,7 @@ let view model =
                :: List.map
                  (fun name -> (name, false))
                  ["Daily"; "Weekly"; "Monthly"; "Yearly"])
+        ; tracked_input "Location" []
         ; tracked_textarea "Description"
         ]
       )
