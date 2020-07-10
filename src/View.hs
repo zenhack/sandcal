@@ -1,7 +1,9 @@
-{-# LANGUAGE LambdaCase     #-}
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 module View
     ( settings
+    , editEvent
     , View.Event.event
     , View.Home.home
     , View.NewEvent.newEvent
@@ -18,6 +20,7 @@ import qualified Sandstorm                   as Sandstorm
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
+import qualified View.EditEvent              as EditEvent
 import qualified View.Event
 import qualified View.Home
 import qualified View.NewEvent
@@ -35,3 +38,9 @@ settings uid =
                         labeledTzSelect "Time Zone" userTz
                     H.button ! A.type_ "submit" $ "Save"
             }
+
+editEvent userTz eid = EditEvent.editEvent EditEvent.EditTemplate
+    { title = "Edit Event"
+    , action = Route.PostEditEvent eid
+    , userTz
+    }

@@ -57,6 +57,7 @@ main = do
             Route.Get (Route.EditEvent eid) -> editEvent db eid
             Route.Get Route.ImportICS -> blaze $ View.Import.importICS
 
+            Route.Post (Route.PostEditEvent eid) -> postEditEvent db eid
             Route.Post Route.PostNewEvent -> postNewEvent db
             Route.Post Route.PostImportICS -> importICS db
 
@@ -129,21 +130,29 @@ mustGetUserTZ db = do
             Just label -> pure label
             Nothing    -> error "TODO: deal with no timezone."
 
-getEvent db eid zot = do
+eventOr404 db eid = do
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))
     case res of
         Nothing -> do404
-        Just e  -> do
-            maybeTzLabel <- getUserTZ db
-            let Just tzLabel = asum
-                    [ maybeTzLabel
-                    , ICal.Util.veventTZLabel e
-                    , Just Tz.Etc__UTC
-                    ]
-            blaze $ View.event eid tzLabel e zot
+        Just e  -> pure e
 
-editEvent _db _eid =
-    text "TODO"
+getEvent db eid zot = do
+    e <- eventOr404 db eid
+    tzLabel <- bestUserTZ db e
+    blaze $ View.event eid tzLabel e zot
+
+bestUserTZ db e = do
+    maybeTzLabel <- getUserTZ db
+    let Just tzLabel = asum
+            [ maybeTzLabel
+            , ICal.Util.veventTZLabel e
+            , Just Tz.Etc__UTC
+            ]
+    pure tzLabel
+
+editEvent db eid = do
+    userTz <- getUserTZ db
+    blaze $ View.editEvent userTz eid
 
 importICS db = do
     fs <- files
@@ -180,6 +189,16 @@ postNewEvent db = do
     evId <- DB.runQuery db $ DB.addEvent vEvent
     Route.redirectGet $ Route.Event (DB.unEventID evId) Nothing
 
+postEditEvent db eid = do
+    utcNow <- liftIO $ Time.getCurrentTime
+    form <- Forms.NewEvent.getForm
+    maybeEv <- DB.runQuery db $
+        DB.updateEvent (DB.eventID eid) $ Forms.NewEvent.patchVEvent utcNow form
+    case maybeEv of
+        Nothing -> do404
+        Just () -> Route.redirectGet $ Route.Event eid Nothing
+
 do404 = do
     status status404
     text "404 - not found"
+    finish

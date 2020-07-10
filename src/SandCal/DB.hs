@@ -19,6 +19,7 @@ module SandCal.DB
     , addEvent
     , addCalendar
     , getEvent
+    , updateEvent
     , getUserTimeZone
     , setUserTimeZone
     ) where
@@ -138,6 +139,17 @@ getEvent (ID ident) = Query $ \conn -> do
     case rs of
         []            -> pure Nothing
         (DB.Only r:_) -> pure $! Just $! mustDecode r
+
+updateEvent :: ID ICal.VEvent -> (ICal.VEvent -> ICal.VEvent) -> Query (Maybe ())
+updateEvent eid f = do
+    maybeEv <- getEvent eid
+    for maybeEv $ \ev ->
+        Query $ \conn ->
+            DB.executeNamed conn
+                "UPDATE events SET vevent = :event WHERE id = :ident"
+                [ ":event" := Aeson.encode (f ev)
+                , ":ident" := unEventID eid
+                ]
 
 setUserTimeZone :: Sandstorm.UserId -> TZLabel -> Query ()
 setUserTimeZone userId timezoneName = Query $ \conn -> do

@@ -38,6 +38,7 @@ data GetRoute
 
 data PostRoute
     = PostNewEvent
+    | PostEditEvent Int64
     | SaveSettings
     | PostImportICS
     deriving(Show)
@@ -47,6 +48,7 @@ instance ToValue Route where
     toValue (Post r) = toValue r
 
 instance ToValue PostRoute where
+    toValue (PostEditEvent eid) = fromString $ "/event/" <> show eid <> "/edit"
     toValue PostNewEvent  = "/event/new"
     toValue SaveSettings  = "/settings"
     toValue PostImportICS = "/import.ics"
@@ -101,6 +103,9 @@ scottyM route = do
     get "/event/:eid/edit" $ do
         eid <- param "eid"
         route $ Get $ EditEvent eid
+    post "/event/:eid/edit" $ do
+        eid <- param "eid"
+        route $ Post $ PostEditEvent eid
     get "/style.css" $
         route $ Get StyleCss
     get "/sandstorm.js" $
