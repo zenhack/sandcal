@@ -21,6 +21,7 @@ import Forms.Common
 import Data.Default             (def)
 import Data.Text.Encoding.Error (lenientDecode)
 
+import qualified Data.Aeson              as Aeson
 import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Map.Strict         as M
 import qualified Data.Set                as S
@@ -68,6 +69,31 @@ getForm = do
         , time
         , repeats = repeatsFreq
         }
+
+instance Aeson.ToJSON NewEvent where
+    toJSON form = Aeson.toJSON $ M.fromList $ toFields form
+
+toFields :: NewEvent -> [(LT.Text, LT.Text)]
+toFields form =
+    -- TODO/FIXME: make sure the time format strings are right
+    [ ("Summary", summary form)
+    , ("Description", description form)
+    , ("Location", location form)
+    , ("Date", formatTime "%Y-%m-%d" (date form))
+    , ("Repeats", case repeats form of
+            Nothing   -> "Never"
+            Just freq -> fromString $ show freq
+      )
+    ]
+    <> case time form of
+        AllDay -> [("All Day", "on")]
+        StartEnd {startTime, endTime, timeZone} ->
+            [ ("Start Time", formatTime "%H:%M" startTime)
+            , ("End Time", formatTime "%H:%M" endTime)
+            , ("Time Zone", encodeTZLabel timeZone)
+            ]
+  where
+    formatTime fmt val = fromString $ Time.formatTime Time.defaultTimeLocale fmt val
 
 getTime :: ActionM NewEventTime
 getTime =
