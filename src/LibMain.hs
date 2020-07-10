@@ -182,7 +182,7 @@ viewSettings db = do
 
 postNewEvent db = do
     utcNow <- liftIO $ Time.getCurrentTime
-    Forms.NewEvent.NewEvent{ summary, date, time, repeats } <- Forms.NewEvent.getForm
+    Forms.NewEvent.NewEvent{ summary, description, date, time, repeats } <- Forms.NewEvent.getForm
 
     uuid <- liftIO $ UUID.nextRandom
 
@@ -241,9 +241,21 @@ postNewEvent db = do
             , ICal.veCreated = Nothing
             , ICal.veLastMod = Nothing
 
+            , ICal.veDescription =
+                case description of
+                    "" ->
+                        Nothing
+
+                    _ ->
+                        Just ICal.Description
+                            { ICal.descriptionValue = description
+                            , ICal.descriptionAltRep = def
+                            , ICal.descriptionLanguage = def
+                            , ICal.descriptionOther = def
+                            }
+
             -- Not used for now:
             , ICal.veClass = def
-            , ICal.veDescription = def
             , ICal.veGeo = def
             , ICal.veLocation = def
             , ICal.veOrganizer = def

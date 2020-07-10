@@ -37,6 +37,10 @@ form button {
 	margin: 0.5rem;
 }
 
+textarea {
+	width: 100%;
+}
+
 .upcomingDayHeading {
 	text-transform: uppercase;
 	font-size: 12pt;

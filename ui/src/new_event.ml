@@ -89,6 +89,10 @@ let update model = function
       }
 
 let view model =
+  let tracked_textarea key =
+    let event = onInput (fun value -> InputChanged(key, value)) in
+    labeled_elem textarea key [event] []
+  in
   let tracked_input key attrs =
     let event = onInput (fun value -> InputChanged(key, value)) in
     labeled_input key (event :: attrs)
@@ -117,6 +121,7 @@ let view model =
                :: List.map
                  (fun name -> (name, false))
                  ["Daily"; "Weekly"; "Monthly"; "Yearly"])
+        ; tracked_textarea "Description"
         ]
       )
     ; button

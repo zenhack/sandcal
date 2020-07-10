@@ -20,10 +20,11 @@ import qualified DateParsers as DP
 import qualified ICal
 
 data NewEvent = NewEvent
-    { summary :: LT.Text
-    , date    :: Time.Day
-    , time    :: NewEventTime
-    , repeats :: Maybe ICal.Frequency
+    { summary     :: LT.Text
+    , description :: LT.Text
+    , date        :: Time.Day
+    , time        :: NewEventTime
+    , repeats     :: Maybe ICal.Frequency
     }
 
 data NewEventTime
@@ -38,12 +39,14 @@ data NewEventTime
 getForm :: ActionM NewEvent
 getForm = do
     summary <- param "Summary"
+    description <- param "Description"
     DP.Day date <- param "Date"
     time <- getTime
     repeats <- param "Repeats"
     let repeatsFreq = M.lookup repeats freqNames
     pure NewEvent
         { summary
+        , description
         , date
         , time
         , repeats = repeatsFreq
