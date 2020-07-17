@@ -64,6 +64,12 @@ textarea {
 	justify-content: space-around;
 }
 
+.eventDescription {
+	/* Descriptions often have very long links; make sure they don't overly
+	 * distort the size of the box: */
+	overflow-wrap: anywhere;
+}
+
 .formBlock {
 	display: table;
 	border: 1px solid darkgrey;

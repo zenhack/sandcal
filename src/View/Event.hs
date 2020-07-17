@@ -90,7 +90,7 @@ viewLocalOCTime = \case
 
 viewDescription :: LT.Text -> H.Html
 viewDescription descr =
-    H.div $
+    H.div ! A.class_ "eventDescription" $
         LT.lines descr
         & map H.toHtml
         & intersperse H.br
