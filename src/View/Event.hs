@@ -8,6 +8,7 @@ import Zhp
 
 import View.Common
 
+import           Data.List                   (intersperse)
 import qualified Data.Set                    as S
 import qualified Data.Text.Lazy              as LT
 import qualified Data.Time                   as Time
@@ -36,9 +37,7 @@ event eid tzLabel ev zot =
             H.toHtml $ viewLocalOCTime $ Oc.ocTimeInZoneFudge (TZ.tzByLabel tzLabel) zot'
             for_ (ICal.veDescription ev) $ \de -> do
                 H.h2 "Description"
-                -- TODO: try to be smarter about formatting, e.g. insert paragraphs
-                -- and such instead of just throwing a <pre> at it.
-                H.pre $ H.toHtml $ ICal.descriptionValue de
+                viewDescription $ ICal.descriptionValue de
             let rrules = ICal.veRRule ev
             case S.size rrules of
                 0 -> pure ()
@@ -88,3 +87,11 @@ viewLocalOCTime = \case
             Time.defaultTimeLocale
             "%a %e %b %Y, %l:%M %p"
             localTime
+
+viewDescription :: LT.Text -> H.Html
+viewDescription descr =
+    H.div $
+        LT.lines descr
+        & map H.toHtml
+        & intersperse H.br
+        & mconcat
