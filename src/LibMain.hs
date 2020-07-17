@@ -85,13 +85,14 @@ viewHome db = do
     occurs <- getOccursSince db utcNow
         & fmap (takeWhile (`occursBefore` utcEnd))
         & fmap (take 20)
-    blaze $ View.home occurs
+    tzLabel <- userTZOrUTC db
+    blaze $ View.home (Tz.tzByLabel tzLabel) occurs
 
 viewWeek db refDay = do
     -- TODO: allow the user to configure the start of the week.
     let firstDayOfWeek = Time.Sunday
         (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
-    tzLabel <- mustGetUserTZ db
+    tzLabel <- userTZOrUTC db
     let tz = Tz.tzByLabel tzLabel
         utcStart = Tz.localTimeToUTCTZ tz (UT.startOfDay startDay)
         utcEnd   = Tz.localTimeToUTCTZ tz (UT.endOfDay endDay)
@@ -123,12 +124,12 @@ getUserTZ db = do
     uid <- Sandstorm.getUserId
     DB.runQuery db $ DB.getUserTimeZone uid
 
-mustGetUserTZ :: DB.Conn -> ActionM TZLabel
-mustGetUserTZ db = do
-    maybeTzLabel <- getUserTZ db
-    case maybeTzLabel of
-            Just label -> pure label
-            Nothing    -> error "TODO: deal with no timezone."
+userTZOrUTC :: DB.Conn -> ActionM TZLabel
+userTZOrUTC db = do
+    maybeTz <- getUserTZ db
+    pure $ case maybeTz of
+        Just tz -> tz
+        Nothing -> Tz.Etc__UTC
 
 eventOr404 db eid = do
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))

@@ -12,6 +12,7 @@ import qualified Route
 import qualified SandCal.DB  as DB
 
 import qualified Data.Time                   as Time
+import           Data.Time.Zones             (TZ)
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
@@ -35,17 +36,17 @@ makeItems' day (o@Oc.Occurrence{Oc.ocTimeStamp}:os) =
     else
         Occurrence o : makeItems' day os
 
-viewItem :: Item -> H.Html
-viewItem (DayHeading day) =
+viewItem :: TZ -> Item -> H.Html
+viewItem _ (DayHeading day) =
     H.h2 ! A.class_ "upcomingDayHeading" $
         H.toHtml $ Time.formatTime
             Time.defaultTimeLocale
             "%a %e %b %Y"
             day
 -- TODO: we should group events in a day into list elements.
-viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
+viewItem targetZone (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
     let title = eventSummary $ DB.eeVEvent ocItem
-        timeStamp = case Oc.octTime zot of
+        timeStamp = case Oc.ocTimeInZoneFudge targetZone zot of
             Oc.LocalOCAllDay _ ->
                 H.span ! A.class_ "eventTime" $ "All Day"
             Oc.LocalOCAtTime Time.LocalTime{Time.localTimeOfDay} ->
@@ -62,10 +63,10 @@ viewItem (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
             ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
             $ title
 
-home :: [Oc.Occurrence DB.EventEntry] -> H.Html
-home entries = docToHtml Document
+home :: TZ -> [Oc.Occurrence DB.EventEntry] -> H.Html
+home targetZone entries = docToHtml Document
     { title = "Upcoming Events"
     , body = do
         H.h1 "Upcoming Events"
-        traverse_ viewItem (makeItems entries)
+        traverse_ (viewItem targetZone) (makeItems entries)
     }

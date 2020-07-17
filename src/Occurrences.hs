@@ -174,6 +174,9 @@ firstOccurrence lbl ev =
         []     -> Nothing
         (oc:_) -> Just oc
 
+-- | @'eventOccurrences' defaultTz start event@ returns a (possibly infinite) list
+-- of occurrences of the event @event@ starting at @utc@. If the event's time zone
+-- is unspecified, it will be assumed to be @defaultTz@.
 eventOccurrences :: TZ.TZLabel -> Time.UTCTime -> VEvent -> [Occurrence VEvent]
 eventOccurrences defaultTz start ev =
     let rules = map rRuleValue $ Set.toList (veRRule ev)
