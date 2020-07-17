@@ -33,7 +33,7 @@ event eid tzLabel ev zot =
             H.h1 $ H.toHtml title
             H.nav $ H.ul $
                 H.li $ H.a ! A.href (H.toValue $ Route.Get $ Route.EditEvent eid) $ "Edit"
-            H.toHtml $ viewLocalOCTime (Oc.octTime zot')
+            H.toHtml $ viewLocalOCTime $ Oc.ocTimeInZoneFudge (TZ.tzByLabel tzLabel) zot'
             for_ (ICal.veDescription ev) $ \de -> do
                 H.h2 "Description"
                 -- TODO: try to be smarter about formatting, e.g. insert paragraphs

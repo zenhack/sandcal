@@ -12,7 +12,6 @@ import           View.Common
 import qualified Data.Map.Strict     as M
 import qualified Data.Time           as Time
 import           Data.Time.Zones     (TZ)
-import qualified Data.Time.Zones     as Tz
 import qualified Data.Time.Zones.All as Tz
 import qualified Text.Blaze.Html5    as H
 -- import qualified Util.Time           as UT
@@ -89,12 +88,9 @@ viewOccur Oc.Occurrence{ocItem = DB.EventEntry{eeVEvent}} =
     H.h3 $ eventSummary eeVEvent
 
 ocDay :: TZ -> Oc.ZonedOCTime -> Time.Day
-ocDay tz zot = case Oc.octTime zot of
-    Oc.LocalOCAllDay day -> day
-    Oc.LocalOCAtTime localTime ->
-        Tz.localTimeToUTCTZ (Tz.tzByLabel $ Oc.octZone zot) localTime
-            & Tz.utcToLocalTimeTZ tz
-            & Time.localDay
+ocDay tz zot = case Oc.ocTimeInZoneFudge tz zot of
+    Oc.LocalOCAllDay day       -> day
+    Oc.LocalOCAtTime localTime -> Time.localDay localTime
 
 
 week :: Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html

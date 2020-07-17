@@ -22,7 +22,6 @@ import qualified Data.Time           as Time
 import qualified Data.Time.Zones     as Tz
 import qualified Data.Time.Zones.All as Tz
 import qualified Data.UUID.V4        as UUID
-import qualified ICal.Util
 import qualified Route
 import qualified SandCal.DB          as DB
 import qualified Sandstorm
@@ -139,17 +138,8 @@ eventOr404 db eid = do
 
 getEvent db eid zot = do
     e <- eventOr404 db eid
-    tzLabel <- bestUserTZ db e
+    tzLabel <- userTZOrUTC db
     blaze $ View.event eid tzLabel e zot
-
-bestUserTZ db e = do
-    maybeTzLabel <- getUserTZ db
-    let Just tzLabel = asum
-            [ maybeTzLabel
-            , ICal.Util.veventTZLabel e
-            , Just Tz.Etc__UTC
-            ]
-    pure tzLabel
 
 editEvent db eid = do
     userTz <- getUserTZ db
