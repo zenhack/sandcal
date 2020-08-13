@@ -134,20 +134,19 @@ let view model =
         [ text model.submit_text ]
     ]
 
-type edit_template = {
-  title: string;
-  submitText: string;
-  userTz: string option;
-  action: string;
-}
-
-let main (tpl: edit_template) =
-  let user_tz = match tpl.userTz with
+let main tpl =
+  let tpl = Js.Json.parseExn tpl in
+  let tpl = Protocol.EditTemplate.decode tpl in
+  let tpl = match tpl with
+    | None -> failwith "decode failed"
+    | Some v -> v
+  in
+  let user_tz = match tpl.user_tz with
     | Some tz -> tz
     | None -> ""
   in
   beginnerProgram {
-    model = init user_tz tpl.action tpl.submitText;
+    model = init user_tz tpl.action tpl.submit_text;
     update;
     view;
   }
