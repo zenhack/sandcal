@@ -134,9 +134,20 @@ let view model =
         [ text model.submit_text ]
     ]
 
-let main user_tz action_ submit_text =
+type edit_template = {
+  title: string;
+  submitText: string;
+  userTz: string option;
+  action: string;
+}
+
+let main (tpl: edit_template) =
+  let user_tz = match tpl.userTz with
+    | Some tz -> tz
+    | None -> ""
+  in
   beginnerProgram {
-    model = init user_tz action_ submit_text;
+    model = init user_tz tpl.action tpl.submitText;
     update;
     view;
   }

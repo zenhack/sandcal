@@ -101,6 +101,7 @@ library libsandcal
     , Sandstorm
     , DateParsers
     , Occurrences
+    , TZ
     , Util.Time
   hs-source-dirs: src
 

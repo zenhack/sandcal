@@ -14,6 +14,7 @@ import Network.HTTP.Types.Status (status303)
 import Text.Blaze                (ToValue(toValue))
 import Web.Scotty
 
+import qualified Data.Aeson  as Aeson
 import qualified Data.Time   as Time
 import qualified Network.URI as URI
 
@@ -48,13 +49,22 @@ instance ToValue Route where
     toValue (Post r) = toValue r
 
 instance ToValue PostRoute where
-    toValue (PostEditEvent eid) = fromString $ "/event/" <> show eid <> "/edit"
-    toValue PostNewEvent  = "/event/new"
-    toValue SaveSettings  = "/settings"
-    toValue PostImportICS = "/import.ics"
+    toValue = renderPost
 
 instance ToValue GetRoute where
     toValue = renderGet
+
+instance Aeson.FromJSON PostRoute where
+    parseJSON = error "TODO"
+
+instance Aeson.ToJSON PostRoute where
+    toJSON = Aeson.String . renderPost
+
+renderPost :: IsString a => PostRoute -> a
+renderPost (PostEditEvent eid) = fromString $ "/event/" <> show eid <> "/edit"
+renderPost PostNewEvent        = "/event/new"
+renderPost SaveSettings        = "/settings"
+renderPost PostImportICS       = "/import.ics"
 
 renderGet :: IsString a => GetRoute -> a
 renderGet Home        = "/"
