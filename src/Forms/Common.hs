@@ -1,5 +1,6 @@
 module Forms.Common
-    ( decodeTZLabelOr400
+    ( decodeTZLabel
+    , decodeTZLabelOr400
     ) where
 
 import Zhp

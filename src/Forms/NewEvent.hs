@@ -3,11 +3,13 @@
 -- TODO: rename this; it used to just be for creating new events, but we are
 -- also using this to edit existing ones now.
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 module Forms.NewEvent
     ( NewEvent(..)
     , NewEventTime(..)
     , getForm
+    , fromVEvent
     , toVEvent
     , patchVEvent
     ) where
@@ -28,12 +30,15 @@ import qualified Data.Set                as S
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.Time               as Time
+import qualified Data.Time.Zones         as Tz
 import qualified Data.Time.Zones.All     as Tz
 import qualified Data.UUID               as UUID
 
 import qualified DateParsers as DP
 import qualified ICal
 
+-- TODO: can't represent events that cross a day boundary.
+-- TODO: this is no longer just used for "new" events; change the name.
 data NewEvent = NewEvent
     { summary     :: LT.Text
     , description :: LT.Text
@@ -186,6 +191,11 @@ patchTextField old newText =
 class FromTextField a where
     fromTextField' :: LT.Text -> a
     setTextField :: LT.Text -> a -> a
+    getTextField' :: a -> LT.Text
+
+getTextField :: FromTextField a => Maybe a -> LT.Text
+getTextField Nothing  = ""
+getTextField (Just v) = getTextField' v
 
 fromTextField :: FromTextField a => LT.Text -> Maybe a
 fromTextField txt
@@ -202,6 +212,7 @@ instance FromTextField ICal.Summary where
         }
     setTextField txt old =
         old { ICal.summaryValue = txt }
+    getTextField' = ICal.summaryValue
 
 instance FromTextField ICal.Location where
     fromTextField' txt = ICal.Location
@@ -212,6 +223,7 @@ instance FromTextField ICal.Location where
         }
     setTextField txt old =
         old { ICal.locationValue = txt }
+    getTextField' = ICal.locationValue
 
 instance FromTextField ICal.Description where
     fromTextField' txt = ICal.Description
@@ -222,6 +234,56 @@ instance FromTextField ICal.Description where
         }
     setTextField txt old =
         old { ICal.descriptionValue = txt }
+    getTextField' = ICal.descriptionValue
+
+fromVEvent :: Tz.TZLabel -> ICal.VEvent -> NewEvent
+fromVEvent defaultTz ev =
+    let
+        dateTimeTz = \case
+            ICal.FloatingDateTime _ -> defaultTz
+            ICal.UTCDateTime _ -> Tz.Etc__UTC
+            ICal.ZonedDateTime{dateTimeZone} ->
+                case decodeTZLabel (LT.encodeUtf8 dateTimeZone) of
+                    Nothing -> defaultTz
+                    Just tz -> tz
+        dateTimeTimeOfDay tz = \case
+            ICal.FloatingDateTime dt -> Time.localTimeOfDay dt
+            ICal.UTCDateTime utc ->
+                Time.localTimeOfDay (Tz.utcToLocalTimeTZ (Tz.tzByLabel tz) utc)
+            ICal.ZonedDateTime{dateTimeFloating} ->
+                Time.localTimeOfDay dateTimeFloating
+    in
+    NewEvent
+    { summary = getTextField $ ICal.veSummary ev
+    , location = getTextField $ ICal.veLocation ev
+    , description = getTextField $ ICal.veDescription ev
+    , repeats = case S.toList (ICal.veRRule ev) of
+        []                          -> Nothing
+        (ICal.RRule{rRuleValue = ICal.Recur{recurFreq}} : _) -> Just recurFreq
+    , date = case ICal.veDTStart ev of
+        Nothing    ->
+            error "TODO"
+        Just (ICal.DTStartDate (ICal.Date day) _) -> day
+        Just (ICal.DTStartDateTime val _) -> case val of
+            ICal.FloatingDateTime Time.LocalTime{localDay} ->
+                localDay
+            ICal.UTCDateTime utc ->
+                Time.localDay (Tz.utcToLocalTimeTZ Tz.utcTZ utc)
+            ICal.ZonedDateTime{dateTimeFloating} ->
+                Time.localDay dateTimeFloating
+    , time = case ICal.veDTStart ev of
+        Nothing ->
+            error "TODO"
+        Just (ICal.DTStartDate _ _) ->
+            AllDay
+        Just (ICal.DTStartDateTime val _) ->
+            let tz = dateTimeTz val in
+            StartEnd
+                { timeZone = tz
+                , startTime = dateTimeTimeOfDay tz val
+                , endTime = dateTimeTimeOfDay tz val -- FIXME: shouldn't be the same as start.
+                }
+    }
 
 -- | Convert user-supplied event form into an icalendar event.
 --
