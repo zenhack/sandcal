@@ -48,7 +48,7 @@ type model = {
   submit_text: string;
 }
 
-let init user_tz action_ submit_text =
+let init Protocol.EditTemplate.{user_tz; action = action_; submit_text} =
   let date_prefill = Js.Date.(
         let now = make () in
         let str n =
@@ -138,7 +138,7 @@ let main tpl =
     | Some v -> v
   in
   beginnerProgram {
-    model = init tpl.user_tz tpl.action tpl.submit_text;
+    model = init tpl;
     update;
     view;
   }
