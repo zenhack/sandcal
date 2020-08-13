@@ -14,6 +14,8 @@ import Zhp
 
 import View.Common
 
+import qualified Data.Time.Zones.All         as Tz
+import qualified Forms.NewEvent              as NewEvent
 import qualified Route
 import qualified SandCal.DB                  as DB
 import qualified Sandstorm                   as Sandstorm
@@ -39,10 +41,15 @@ settings uid =
                     H.button ! A.type_ "submit" $ "Save"
             }
 
-editEvent userTz eid = EditEvent.editEvent EditEvent.EditTemplate
-    { title = "Edit Event"
-    , submitText = "Update"
-    , action = Route.PostEditEvent eid
-    , userTz
-    , formData = Nothing -- TODO: actually fill in the data.
-    }
+editEvent userTz eid ev =
+    let tzLabel = case userTz of
+            Just v  -> v
+            Nothing -> Tz.Etc__UTC
+    in
+    EditEvent.editEvent EditEvent.EditTemplate
+        { title = "Edit Event"
+        , submitText = "Update"
+        , action = Route.PostEditEvent eid
+        , userTz
+        , formData = Just $ NewEvent.fromVEvent tzLabel ev
+        }

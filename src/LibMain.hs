@@ -143,7 +143,8 @@ getEvent db eid zot = do
 
 editEvent db eid = do
     userTz <- getUserTZ db
-    blaze $ View.editEvent userTz eid
+    event <- eventOr404 db eid
+    blaze $ View.editEvent userTz eid event
 
 importICS db = do
     fs <- files
