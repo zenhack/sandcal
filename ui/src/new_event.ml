@@ -49,10 +49,6 @@ type model = {
 }
 
 let init user_tz action_ submit_text =
-  let user_tz = match user_tz with
-    | "" -> None
-    | tz -> Some tz
-  in
   let date_prefill = Js.Date.(
         let now = make () in
         let str n =
@@ -141,12 +137,8 @@ let main tpl =
     | None -> failwith "decode failed"
     | Some v -> v
   in
-  let user_tz = match tpl.user_tz with
-    | Some tz -> tz
-    | None -> ""
-  in
   beginnerProgram {
-    model = init user_tz tpl.action tpl.submit_text;
+    model = init tpl.user_tz tpl.action tpl.submit_text;
     update;
     view;
   }
