@@ -2,6 +2,7 @@
 --
 -- TODO: rename this; it used to just be for creating new events, but we are
 -- also using this to edit existing ones now.
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
@@ -18,10 +19,13 @@ import Zhp
 
 import Web.Scotty
 
+import TZ ()
+
 import Forms.Common
 
 import Data.Default             (def)
 import Data.Text.Encoding.Error (lenientDecode)
+import GHC.Generics             (Generic)
 
 import qualified Data.Aeson              as Aeson
 import qualified Data.ByteString.Lazy    as LBS
@@ -47,6 +51,9 @@ data NewEvent = NewEvent
     , time        :: NewEventTime
     , repeats     :: Maybe ICal.Frequency
     }
+    deriving(Show, Generic)
+instance Aeson.ToJSON NewEvent
+instance Aeson.FromJSON NewEvent
 
 data NewEventTime
     = AllDay
@@ -55,6 +62,9 @@ data NewEventTime
         , endTime   :: Time.TimeOfDay
         , timeZone  :: Tz.TZLabel
         }
+    deriving(Show, Generic)
+instance Aeson.ToJSON NewEventTime
+instance Aeson.FromJSON NewEventTime
 
 
 getForm :: ActionM NewEvent
@@ -75,9 +85,7 @@ getForm = do
         , repeats = repeatsFreq
         }
 
-instance Aeson.ToJSON NewEvent where
-    toJSON form = Aeson.toJSON $ M.fromList $ toFields form
-
+{-
 toFields :: NewEvent -> [(LT.Text, LT.Text)]
 toFields form =
     -- TODO/FIXME: make sure the time format strings are right
@@ -99,6 +107,7 @@ toFields form =
             ]
   where
     formatTime fmt val = fromString $ Time.formatTime Time.defaultTimeLocale fmt val
+-}
 
 getTime :: ActionM NewEventTime
 getTime =

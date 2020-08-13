@@ -19,6 +19,7 @@ import           Data.Text.Encoding.Error    (lenientDecode)
 import qualified Data.Text.Lazy              as LT
 import qualified Data.Text.Lazy.Encoding     as LT
 import qualified Data.Time.Zones.All         as Tz
+import           Forms.NewEvent              (NewEvent)
 import           GHC.Generics                (Generic)
 import           Text.Blaze                  (ToValue(toValue))
 import           Text.Blaze.Html5            ((!))
@@ -30,6 +31,7 @@ data EditTemplate = EditTemplate
     , submitText :: T.Text
     , userTz     :: Maybe Tz.TZLabel
     , action     :: Route.PostRoute
+    , formData   :: Maybe NewEvent
     }
     deriving(Show, Generic)
 instance Aeson.ToJSON EditTemplate

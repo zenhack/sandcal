@@ -44,4 +44,5 @@ editEvent userTz eid = EditEvent.editEvent EditEvent.EditTemplate
     , submitText = "Update"
     , action = Route.PostEditEvent eid
     , userTz
+    , formData = Nothing -- TODO: actually fill in the data.
     }

@@ -18,4 +18,5 @@ newEvent userTz = editEvent EditTemplate
     , submitText = "Create"
     , action = Route.PostNewEvent
     , userTz
+    , formData = Nothing
     }
