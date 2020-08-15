@@ -59,8 +59,8 @@ module FormValues = struct
                 ]
                 @ user_tz
             | StartEnd {start_time; end_time; time_zone} ->
-                [ "Start Time", "12:00"
-                ; "End Time", "13:00"
+                [ "Start Time", start_time
+                ; "End Time", end_time
                 ; "Time Zone", time_zone
                 ]
           end;
@@ -101,7 +101,7 @@ type model = {
 }
 
 let init tpl =
-  let Protocol.EditTemplate.{user_tz; action = action_; submit_text; form_data} = tpl in
+  let Protocol.EditTemplate.{user_tz; action = action_; submit_text; form_data = _} = tpl in
   let form_values = FormValues.init tpl  in
   { form_values
   ; form_values_init = form_values
