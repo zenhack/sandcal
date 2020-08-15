@@ -3,6 +3,22 @@ open Tea.Html
 
 open Common
 
+let date_prefill_now () = Js.Date.(
+    let now = make () in
+    let str n =
+      let ret = string_of_int (int_of_float n) in
+      if n < 10. then
+        ("0" ^ ret)
+      else
+        ret
+    in
+    str (getFullYear now)
+      ^ "-"
+      ^ str (getMonth now +. 1.)
+      ^ "-"
+      ^ str (getDate now)
+  )
+
 type msg =
   | InputChanged of string * string
   | SetAllDay of bool
@@ -17,14 +33,47 @@ module FormValues = struct
     | "" -> StringMap.remove key old
     | _ -> StringMap.add key value old
 
-  let init date_prefill =
-    [ "Date", date_prefill
-    ; "Start Time", "12:00"
-    ; "End Time", "13:00"
-    ]
-    |> List.fold_left
-         (fun m (k, v) -> update k v m)
-         StringMap.empty
+  let init tpl =
+    let user_tz = match tpl.Protocol.EditTemplate.user_tz with
+      | None -> []
+      | Some tz -> [ "Time Zone", tz ]
+    in
+    let fields =
+      match tpl.Protocol.EditTemplate.form_data with
+      | None ->
+          [ "Date", date_prefill_now ()
+          ; "Start Time", "12:00"
+          ; "End Time", "13:00"
+          ]
+          @
+          user_tz
+      | Some fd -> List.concat [
+          [ "Summary", fd.summary
+          ; "Description", fd.description
+          ; "Location", fd.location
+          ; "Date", fd.date
+          ];
+          begin match fd.time with
+            | AllDay ->
+                [ "All Day", "on"
+                ]
+                @ user_tz
+            | StartEnd {start_time; end_time; time_zone} ->
+                [ "Start Time", "12:00"
+                ; "End Time", "13:00"
+                ; "Time Zone", time_zone
+                ]
+          end;
+          begin match fd.repeats with
+            | None -> []
+            | Some v -> [ "Repeats", v ]
+          end;
+        ]
+    in
+    List.fold_left
+      (fun m (k, v) -> update k v m)
+      StringMap.empty
+      fields
 
   let all_day (values: t) =
     StringMap.mem "All Day" values
@@ -38,35 +87,24 @@ module FormValues = struct
               && StringMap.mem "End Time" values
             )
         )
+
+  let date (values: t) =
+    StringMap.find "Date" values
 end
 
 type model = {
   user_tz: string option;
-  date_prefill: string;
   form_values: FormValues.t;
+  form_values_init: FormValues.t;
   action_: string;
   submit_text: string;
 }
 
-let init Protocol.EditTemplate.{user_tz; action = action_; submit_text} =
-  let date_prefill = Js.Date.(
-        let now = make () in
-        let str n =
-          let ret = string_of_int (int_of_float n) in
-          if n < 10. then
-            ("0" ^ ret)
-          else
-            ret
-        in
-        str (getFullYear now)
-          ^ "-"
-          ^ str (getMonth now +. 1.)
-          ^ "-"
-          ^ str (getDate now)
-      )
-  in
-  { form_values = FormValues.init date_prefill
-  ; date_prefill
+let init tpl =
+  let Protocol.EditTemplate.{user_tz; action = action_; submit_text; form_data} = tpl in
+  let form_values = FormValues.init tpl  in
+  { form_values
+  ; form_values_init = form_values
   ; user_tz
   ; action_
   ; submit_text
@@ -99,7 +137,7 @@ let view model =
     [ method' "post"; action model.action_ ]
     [ form_block (
         [ tracked_input "Summary" []
-        ; tracked_input "Date" [ type' "date"; value model.date_prefill ]
+        ; tracked_input "Date" [ type' "date"; value (FormValues.date model.form_values_init) ]
         ; labeled_input "All Day"
             [ onCheck (fun value -> SetAllDay(value))
             ; type' "checkbox"
