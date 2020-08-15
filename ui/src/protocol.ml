@@ -19,6 +19,25 @@ module NewEvent = struct
           end_time: string;
           time_zone: string;
         }
+
+    let decode v =
+      let open Js.Json in
+      let get = Js.Dict.get in
+      decodeObject v >>= fun obj ->
+      get obj "tag" >>= decodeString >>= function
+        | "AllDay" -> Some AllDay
+        | "StartEnd" -> (
+            get obj "startTime" >>= decodeString >>= fun start_time ->
+            get obj "endTime" >>= decodeString >>= fun end_time ->
+            get obj "timeZone" >>= decodeString >>= fun time_zone ->
+            Some (StartEnd {
+                start_time;
+                end_time;
+                time_zone;
+              })
+          )
+        | _ ->
+            None
   end
   type t = {
     summary: string;
@@ -73,8 +92,12 @@ module EditTemplate = struct
     )
     >>= (fun user_tz ->
       (match get obj "formData" with
-        | None -> Some None
-        | Some v -> NewEvent.decode v
+        | None -> None
+        | Some v ->
+            begin match classify v with
+              | JSONNull -> Some None
+              | _ -> NewEvent.decode v >>= fun ev -> Some (Some ev)
+            end
       ) >>= (fun form_data ->
         Some {title; submit_text; user_tz; action; form_data}
       )
