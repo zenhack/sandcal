@@ -90,6 +90,17 @@ module FormValues = struct
 
   let date (values: t) =
     StringMap.find "Date" values
+
+  let get_exn (values: t) k =
+    StringMap.find k values
+
+  let get (values: t) k =
+    StringMap.find_opt k values
+
+  let get_or (values: t) k default =
+    match get values k with
+    | Some v -> v
+    | None -> default
 end
 
 type model = {
@@ -125,9 +136,10 @@ let update model = function
       }
 
 let view model =
-  let tracked_textarea key =
+  let vals = model.form_values_init in
+  let tracked_textarea key content =
     let event = onInput (fun value -> InputChanged(key, value)) in
-    labeled_elem textarea key [event] []
+    labeled_elem textarea key [event; value content] []
   in
   let tracked_input key attrs =
     let event = onInput (fun value -> InputChanged(key, value)) in
@@ -136,8 +148,8 @@ let view model =
   form
     [ method' "post"; action model.action_ ]
     [ form_block (
-        [ tracked_input "Summary" []
-        ; tracked_input "Date" [ type' "date"; value (FormValues.date model.form_values_init) ]
+        [ tracked_input "Summary" [ value (FormValues.get_or vals "Summary" "") ]
+        ; tracked_input "Date" [ type' "date"; value (FormValues.date vals) ]
         ; labeled_input "All Day"
             [ onCheck (fun value -> SetAllDay(value))
             ; type' "checkbox"
@@ -146,19 +158,32 @@ let view model =
         (if FormValues.all_day model.form_values then
           []
         else
-          [ tracked_input "Start Time" [ type' "time"; value "12:00" ]
-          ; tracked_input "End Time" [ type' "time"; value "13:00" ]
-          ; labeled_tz_select "Time Zone" model.user_tz
+          [ tracked_input "Start Time" [ type' "time"; value (FormValues.get_exn vals "Start Time") ]
+          ; tracked_input "End Time" [ type' "time"; value (FormValues.get_exn vals "End Time") ]
+          ; labeled_tz_select "Time Zone" (FormValues.get vals "Time Zone")
           ]
         )
         @
-        [ labeled_select "Repeats"
-              (("Never", true)
-               :: List.map
-                 (fun name -> (name, false))
-                 ["Daily"; "Weekly"; "Monthly"; "Yearly"])
-        ; tracked_input "Location" []
-        ; tracked_textarea "Description"
+        [
+          begin
+            let repeats = FormValues.get vals "Repeats" in
+            labeled_select "Repeats"
+              (( "Never"
+               , match repeats with
+                  | Some _ -> false
+                  | None -> true
+               )
+                 :: List.map
+                   (fun name ->
+                       match repeats with
+                       | Some v -> (name, String.equal name v)
+                       | None -> (name, false)
+                   )
+                   ["Daily"; "Weekly"; "Monthly"; "Yearly"]
+                 )
+          end
+        ; tracked_input "Location" [ value (FormValues.get_or vals "Location" "") ]
+        ; tracked_textarea "Description" (FormValues.get_or vals "Description" "")
         ]
       )
     ; button
