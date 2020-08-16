@@ -58,8 +58,8 @@ instance Aeson.FromJSON NewEvent
 data NewEventTime
     = AllDay
     | StartEnd
-        { startTime :: Time.TimeOfDay
-        , endTime   :: Time.TimeOfDay
+        { startTime :: DP.TimeOfDay
+        , endTime   :: DP.TimeOfDay
         , timeZone  :: Tz.TZLabel
         }
     deriving(Show, Generic)
@@ -114,8 +114,8 @@ getTime =
     (AllDay <$ (param "All Day" :: ActionM String))
     `rescue`
     (\_ -> do
-        DP.TimeOfDay startTime <- param "Start Time"
-        DP.TimeOfDay endTime <- param "End Time"
+        startTime <- param "Start Time"
+        endTime <- param "End Time"
         tzName <- param "Time Zone"
         tzLabel <- decodeTZLabelOr400 tzName
         pure StartEnd
@@ -153,10 +153,10 @@ getStartEnd form = case time form of
     StartEnd { startTime, endTime, timeZone } ->
         let floatingStart = Time.LocalTime
                 { Time.localDay = date form
-                , Time.localTimeOfDay = startTime
+                , Time.localTimeOfDay = DP.toStdTimeOfDay startTime
                 }
             floatingEnd = floatingStart
-                { Time.localTimeOfDay = endTime
+                { Time.localTimeOfDay = DP.toStdTimeOfDay endTime
                 }
             dtStart = ICal.ZonedDateTime
                 { ICal.dateTimeFloating = floatingStart
@@ -291,12 +291,12 @@ fromVEvent defaultTz ev =
             in
             StartEnd
                 { timeZone = tz
-                , startTime
+                , startTime = DP.fromStdTimeOfDay startTime
                 , endTime = case ICal.veDTEndDuration ev of
                     Nothing               -> error "TODO"
                     Just (Left end)       ->
                         case end of
-                            ICal.DTEndDateTime dt _ -> dateTimeTimeOfDay tz dt
+                            ICal.DTEndDateTime dt _ -> DP.fromStdTimeOfDay $ dateTimeTimeOfDay tz dt
                             ICal.DTEndDate{} -> error "TODO"
                     Just (Right (ICal.DurationProp duration _)) ->
                         let applySign ICal.Positive = id
@@ -333,7 +333,7 @@ fromVEvent defaultTz ev =
                                     , todSec = Time.todSec startTime + applySign sign (fromIntegral s)
                                     }
                         in
-                        case duration of
+                        DP.fromStdTimeOfDay $ case duration of
                             ICal.DurationDate sign 0 h m s -> applyHMS sign h m s
                             ICal.DurationDate _ _ _ _ _-> error "TODO"
                             ICal.DurationTime sign h m s   -> applyHMS sign h m s

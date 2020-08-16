@@ -6,6 +6,8 @@
 module DateParsers
     ( TimeOfDay(..)
     , Day(..)
+    , toStdTimeOfDay
+    , fromStdTimeOfDay
     ) where
 
 import qualified Prelude
@@ -17,6 +19,7 @@ import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
+import qualified Data.Aeson     as Aeson
 import qualified Data.Text.Lazy as LT
 import qualified Data.Time      as Time
 
@@ -24,12 +27,35 @@ import qualified Web.Scotty as W
 
 type Parser = Parsec Void LT.Text
 
-newtype TimeOfDay = TimeOfDay Time.TimeOfDay
+data TimeOfDay = TimeOfDay
+    { hour :: !Int
+    , min  :: !Int
+    }
+
+toStdTimeOfDay :: TimeOfDay -> Time.TimeOfDay
+toStdTimeOfDay (TimeOfDay h m) = Time.TimeOfDay h m 0
+
+fromStdTimeOfDay :: Time.TimeOfDay -> TimeOfDay
+fromStdTimeOfDay (Time.TimeOfDay h m _) = TimeOfDay h m
+
+instance Show TimeOfDay where
+    show (TimeOfDay h m) =
+        printf "%02d:%02d" h m
+
+instance Aeson.ToJSON TimeOfDay where
+    toJSON = Aeson.toJSON . show
+
+instance Aeson.FromJSON TimeOfDay where
+    parseJSON (Aeson.String s) =
+        case parseParamWith timeOfDay (LT.fromStrict s) of
+            Right v -> pure v
+            Left _  -> empty
+    parseJSON _ = empty
 
 newtype Day = Day Time.Day
 
 instance W.Parsable TimeOfDay where
-    parseParam = fmap TimeOfDay . parseParamWith timeOfDay
+    parseParam = parseParamWith timeOfDay
 
 instance W.Parsable Day where
     parseParam = fmap Day . parseParamWith day
@@ -41,18 +67,14 @@ parseParamWith p input =
         Right v -> Right v
         Left e  -> Left $ LT.pack (show e)
 
-timeOfDay :: Parser Time.TimeOfDay
+timeOfDay :: Parser TimeOfDay
 timeOfDay = do
     h <- int
     _ <- char ':'
     m <- int
     guard (h >= 0 && h < 24)
     guard (m >= 0 && m < 60)
-    pure Time.TimeOfDay
-        { Time.todHour = h
-        , Time.todMin = m
-        , Time.todSec = 0
-        }
+    pure $ TimeOfDay h m
 
 day :: Parser Time.Day
 day = do
