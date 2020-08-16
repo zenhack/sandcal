@@ -6,6 +6,7 @@ module View.Common
     , labeledInput
     , navigation
     , postForm
+    , postLink
     , formBlock
     , tzSelect
     , labeledTzSelect
@@ -63,6 +64,10 @@ postForm attrs rt contents =
         ! A.method "post"
         ! A.action (H.toValue rt) $
             contents
+
+postLink :: Route.PostRoute -> String -> H.Html
+postLink rt label =
+    postForm (A.class_ "postLink") rt $ H.button ! A.type_ "submit" $ H.toHtml label
 
 formBlock :: H.Html -> H.Html
 formBlock body = do

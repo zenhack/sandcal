@@ -104,3 +104,12 @@ textarea {
 	border: 1px solid gray;
 	border-radius: 5px;
 }
+
+.postLink button {
+	background-color: white;
+	color: blue;
+	border: 0px none;
+	text-decoration: underline;
+	font: inherit;
+	margin: 0px;
+}
