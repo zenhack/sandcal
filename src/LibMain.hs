@@ -66,6 +66,14 @@ main = do
                 liftIO $ DB.runQuery db $ DB.setUserTimeZone uid timeZone
                 Route.redirectGet Route.Home
 
+            Route.Post (Route.PostDeleteEvent eid) -> do
+                liftIO $ DB.runQuery db $ DB.deleteEvent (DB.eventID eid)
+                Route.redirectGet Route.Home
+
+            Route.Post (Route.PostDeleteOccurrence eid zot) -> do
+                _ <- liftIO $ DB.runQuery db $ deleteOccurrence (DB.eventID eid) zot
+                Route.redirectGet Route.Home
+
         get "/bundle.min.js" $ file "ui/bundle.min.js"
         notFound $ do404
 
@@ -189,6 +197,8 @@ postEditEvent db eid = do
     case maybeEv of
         Nothing -> do404
         Just () -> Route.redirectGet $ Route.Event eid Nothing
+
+deleteOccurrence eid _zot = DB.updateEvent eid $ \ev -> ev -- TODO
 
 do404 = do
     status status404

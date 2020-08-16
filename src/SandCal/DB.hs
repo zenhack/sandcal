@@ -20,6 +20,7 @@ module SandCal.DB
     , addCalendar
     , getEvent
     , updateEvent
+    , deleteEvent
     , getUserTimeZone
     , setUserTimeZone
     ) where
@@ -150,6 +151,12 @@ updateEvent eid f = do
                 [ ":event" := Aeson.encode (f ev)
                 , ":ident" := unEventID eid
                 ]
+
+deleteEvent :: ID ICal.VEvent -> Query ()
+deleteEvent eid = Query $ \conn ->
+    DB.executeNamed conn
+        "DELETE FROM events WHERE id = :ident"
+        [ ":ident" := unEventID eid ]
 
 setUserTimeZone :: Sandstorm.UserId -> TZLabel -> Query ()
 setUserTimeZone userId timezoneName = Query $ \conn -> do

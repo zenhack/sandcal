@@ -42,6 +42,8 @@ data PostRoute
     | PostEditEvent Int64
     | SaveSettings
     | PostImportICS
+    | PostDeleteEvent Int64
+    | PostDeleteOccurrence Int64 Oc.ZonedOCTime
     deriving(Show)
 
 instance ToValue Route where
@@ -65,6 +67,13 @@ renderPost (PostEditEvent eid) = fromString $ "/event/" <> show eid <> "/edit"
 renderPost PostNewEvent        = "/event/new"
 renderPost SaveSettings        = "/settings"
 renderPost PostImportICS       = "/import.ics"
+renderPost (PostDeleteEvent eid) = fromString $ "/event/" <> show eid <> "/delete"
+renderPost (PostDeleteOccurrence eid zot) = fromString $ mconcat
+    [ "/event/"
+    , show eid
+    , "/delete?occurrence="
+    , URI.escapeURIString URI.isAllowedInURI (show zot)
+    ]
 
 renderGet :: IsString a => GetRoute -> a
 renderGet Home        = "/"
@@ -128,3 +137,9 @@ scottyM route = do
         route $ Post SaveSettings
     post "/import.ics" $
         route $ Post PostImportICS
+    post "/event/:eid/delete" $ do
+        eid <- param "eid"
+        occurStr <- (fmap Just (param "occurrence")) `rescue` (const $ pure Nothing)
+        case occurStr >>= (readMaybe . URI.unEscapeString) of
+            Nothing    -> route $ Post $ PostDeleteEvent eid
+            Just occur -> route $ Post $ PostDeleteOccurrence eid occur

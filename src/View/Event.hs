@@ -32,8 +32,14 @@ event eid tzLabel ev zot =
         { title = "Event - " <> LT.toStrict title
         , body = do
             H.h1 $ H.toHtml title
-            H.nav $ H.ul $
+            H.nav $ H.ul $ do
                 H.li $ H.a ! A.href (H.toValue $ Route.Get $ Route.EditEvent eid) $ "Edit"
+                H.li $
+                    postForm mempty (Route.PostDeleteEvent eid) $
+                        H.button ! A.type_ "submit" $ "Delete (all occurrences)"
+                for_ zot $ \z ->
+                    H.li $ postForm mempty (Route.PostDeleteOccurrence eid z) $
+                        H.button ! A.type_ "submit" $ "Delete (this occurrence only)"
             H.toHtml $ viewLocalOCTime $ Oc.ocTimeInZoneFudge (TZ.tzByLabel tzLabel) zot'
             for_ (ICal.veDescription ev) $ \de -> do
                 H.h2 "Description"
