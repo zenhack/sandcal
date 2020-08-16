@@ -35,8 +35,10 @@ event eid tzLabel ev zot =
             H.nav $ H.ul $ do
                 H.li $ H.a ! A.href (H.toValue $ Route.Get $ Route.EditEvent eid) $ "Edit"
                 H.li $ postLink (Route.PostDeleteEvent eid) $ "Delete (all occurrences)"
+{- TODO: implement the handler for this and then uncomment.
                 for_ zot $ \z ->
                     H.li $ postLink (Route.PostDeleteOccurrence eid z) $ "Delete (this occurrence only)"
+-}
             H.toHtml $ viewLocalOCTime $ Oc.ocTimeInZoneFudge (TZ.tzByLabel tzLabel) zot'
             for_ (ICal.veDescription ev) $ \de -> do
                 H.h2 "Description"
