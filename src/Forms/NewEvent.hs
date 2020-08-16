@@ -286,11 +286,59 @@ fromVEvent defaultTz ev =
         Just (ICal.DTStartDate _ _) ->
             AllDay
         Just (ICal.DTStartDateTime val _) ->
-            let tz = dateTimeTz val in
+            let tz = dateTimeTz val
+                startTime = dateTimeTimeOfDay tz val
+            in
             StartEnd
                 { timeZone = tz
-                , startTime = dateTimeTimeOfDay tz val
-                , endTime = dateTimeTimeOfDay tz val -- FIXME: shouldn't be the same as start.
+                , startTime
+                , endTime = case ICal.veDTEndDuration ev of
+                    Nothing               -> error "TODO"
+                    Just (Left end)       ->
+                        case end of
+                            ICal.DTEndDateTime dt _ -> dateTimeTimeOfDay tz dt
+                            ICal.DTEndDate{} -> error "TODO"
+                    Just (Right (ICal.DurationProp duration _)) ->
+                        let applySign ICal.Positive = id
+                            applySign ICal.Negative = negate
+                            fixTimeOfDay tod
+                                -- FIXME: technically because of leap seconds 60 is legal here,
+                                -- but it could also happen on overflow when it's not. We should
+                                -- really just be converting to some unit, doing arithmetic and
+                                -- converting back, rather than doing all of this ourselves.
+                                | Time.todSec tod >= 60 = fixTimeOfDay tod
+                                    { Time.todSec = Time.todSec tod - 60
+                                    , Time.todMin = Time.todMin tod + 1
+                                    }
+                                | Time.todSec tod < 0 = fixTimeOfDay tod
+                                    { Time.todSec = Time.todSec tod + 60
+                                    , Time.todMin = Time.todMin tod - 1
+                                    }
+                                | Time.todMin tod >= 60 = fixTimeOfDay tod
+                                    { Time.todMin = Time.todMin tod - 60
+                                    , Time.todHour = Time.todHour tod + 1
+                                    }
+                                | Time.todMin tod < 0 = fixTimeOfDay tod
+                                    { Time.todMin = Time.todMin tod + 60
+                                    , Time.todHour = Time.todHour tod - 1
+                                    }
+                                | Time.todHour tod < 0 || Time.todHour tod > 23 =
+                                    error "TODO"
+                                | otherwise =
+                                    tod
+                            applyHMS sign h m s =
+                                fixTimeOfDay $ Time.TimeOfDay
+                                    { todHour = Time.todHour startTime + applySign sign h
+                                    , todMin = Time.todMin startTime + applySign sign m
+                                    , todSec = Time.todSec startTime + applySign sign (fromIntegral s)
+                                    }
+                        in
+                        case duration of
+                            ICal.DurationDate sign 0 h m s -> applyHMS sign h m s
+                            ICal.DurationDate _ _ _ _ _-> error "TODO"
+                            ICal.DurationTime sign h m s   -> applyHMS sign h m s
+                            ICal.DurationWeek _ 0       -> startTime
+                            ICal.DurationWeek _ _ -> error "TODO"
                 }
     }
 
