@@ -17,6 +17,10 @@ importICS = docToHtml $ Document
     , body = do
         H.h1 "Import Calendar"
         postForm (A.enctype "multipart/form-data") Route.PostImportICS $ do
+            H.p $ mconcat
+                [ "Import calendar events from an .ics file. Note that this functionality "
+                , "is alpha quality; SandCal may not interpret all ics data correctly."
+                ]
             formBlock $
                 labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
             H.button ! A.type_ "submit" $ "Upload"
