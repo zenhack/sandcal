@@ -85,8 +85,10 @@ main = do
         notFound $ do404
 
 viewNewEvent csrfKey db = do
-    uid <- Sandstorm.getUserId
-    maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
+    uid <- Sandstorm.maybeGetUserId
+    maybeTzLabel <- case uid of
+        Just uid' -> DB.runQuery db $ DB.getUserTimeZone uid'
+        Nothing   -> pure Nothing
     blaze $ View.newEvent csrfKey uid maybeTzLabel
 
 occursBefore :: Occurrences.Occurrence a -> Time.UTCTime -> Bool
@@ -156,7 +158,7 @@ getEvent csrfKey db eid zot = do
     blaze $ View.event csrfKey maybeUid eid tzLabel e zot
 
 editEvent csrfToken db eid = do
-    uid <- Sandstorm.getUserId
+    uid <- Sandstorm.maybeGetUserId
     userTz <- getUserTZ db
     event <- eventOr404 db eid
     blaze $ View.editEvent csrfToken uid userTz eid event

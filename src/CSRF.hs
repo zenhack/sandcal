@@ -44,7 +44,7 @@ instance Ws.Parsable Mac where
 
 data PostCap = PostCap
     { route  :: Route.PostRoute
-    , userId :: Sandstorm.UserId
+    , userId :: Maybe Sandstorm.UserId
     }
     deriving(Generic)
 instance Aeson.ToJSON PostCap
@@ -63,7 +63,7 @@ makeCsrfToken key cap =
 verifyPostRoute :: Key -> Route.PostRoute -> Ws.ActionM ()
 verifyPostRoute key route = do
     mac <- Ws.param "csrfToken"
-    userId <- Sandstorm.getUserId
+    userId <- Sandstorm.maybeGetUserId
     verifyPostCap key PostCap{ route, userId } mac
 
 macPostCap :: Key -> PostCap -> Mac

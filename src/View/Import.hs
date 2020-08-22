@@ -14,20 +14,19 @@ import qualified Text.Blaze.Html5.Attributes as A
 
 import qualified CSRF
 
-importICS csrfKey maybeUid = docToHtml $ Document
+importICS csrfKey userId = docToHtml $ Document
     { title = "Import Calendar"
     , body = do
         H.h1 "Import Calendar"
-        for_ maybeUid $ \userId ->
-            postForm
-                csrfKey
-                (CSRF.PostCap Route.PostImportICS userId)
-                (A.enctype "multipart/form-data") $ do
-                    H.p $ mconcat
-                        [ "Import calendar events from an .ics file. Note that this functionality "
-                        , "is alpha quality; SandCal may not interpret all ics data correctly."
-                        ]
-                    formBlock $
-                        labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
-                    H.button ! A.type_ "submit" $ "Upload"
+        postForm
+            csrfKey
+            (CSRF.PostCap Route.PostImportICS userId)
+            (A.enctype "multipart/form-data") $ do
+                H.p $ mconcat
+                    [ "Import calendar events from an .ics file. Note that this functionality "
+                    , "is alpha quality; SandCal may not interpret all ics data correctly."
+                    ]
+                formBlock $
+                    labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
+                H.button ! A.type_ "submit" $ "Upload"
     }

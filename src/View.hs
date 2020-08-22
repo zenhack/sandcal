@@ -37,7 +37,7 @@ settings csrfKey uid =
             { title = "User Settings"
             , body = do
                 H.h1 "User Settings"
-                postForm csrfKey (CSRF.PostCap Route.SaveSettings uid) mempty $ do
+                postForm csrfKey (CSRF.PostCap Route.SaveSettings (Just uid)) mempty $ do
                     formBlock $
                         labeledTzSelect "Time Zone" userTz
                     H.button ! A.type_ "submit" $ "Save"

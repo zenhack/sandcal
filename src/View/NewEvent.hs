@@ -15,7 +15,7 @@ import qualified Text.Blaze.Html5    as H
 import qualified CSRF
 import qualified Sandstorm
 
-newEvent :: CSRF.Key -> Sandstorm.UserId -> Maybe Tz.TZLabel -> H.Html
+newEvent :: CSRF.Key -> Maybe Sandstorm.UserId -> Maybe Tz.TZLabel -> H.Html
 newEvent csrfKey uid userTz =
     let route = Route.PostNewEvent in
     editEvent EditTemplate

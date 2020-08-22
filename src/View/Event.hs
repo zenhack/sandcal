@@ -23,7 +23,7 @@ import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
 
 event :: CSRF.Key -> Maybe Sandstorm.UserId -> Int64 -> TZ.TZLabel -> ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
-event csrfKey maybeUserId eid tzLabel ev zot =
+event csrfKey userId eid tzLabel ev zot =
     let title = case ICal.veSummary ev of
             Nothing                               -> "Untitled Event"
             Just ICal.Summary {ICal.summaryValue} -> summaryValue
@@ -36,9 +36,8 @@ event csrfKey maybeUserId eid tzLabel ev zot =
             H.h1 $ H.toHtml title
             H.nav $ H.ul $ do
                 H.li $ H.a ! A.href (H.toValue $ Route.Get $ Route.EditEvent eid) $ "Edit"
-                for_ maybeUserId $ \userId -> do
-                    H.li $ postLink csrfKey (CSRF.PostCap (Route.PostDeleteEvent eid) userId) $
-                        "Delete (all occurrences)"
+                H.li $ postLink csrfKey (CSRF.PostCap (Route.PostDeleteEvent eid) userId) $
+                    "Delete (all occurrences)"
     {- TODO: implement the handler for this and then uncomment.
                     for_ zot $ \z ->
                         H.li $ postLink (Route.PostDeleteOccurrence eid z) $ "Delete (this occurrence only)"
