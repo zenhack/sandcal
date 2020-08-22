@@ -77,6 +77,7 @@ module EditTemplate = struct
     user_tz: string option;
     action: string;
     form_data: NewEvent.t option;
+    csrf_token: string;
   }
 
   let decode: Js.Json.t -> t option =
@@ -86,6 +87,7 @@ module EditTemplate = struct
     get obj "title" >>= decodeString >>= fun title ->
     get obj "submitText" >>= decodeString >>= fun submit_text ->
     get obj "action" >>= decodeString >>= fun action ->
+    get obj "csrfToken" >>= decodeString >>= fun csrf_token ->
     (match get obj "userTz" with
       | None -> Some None
       | Some v -> Some (decodeString v)
@@ -99,7 +101,7 @@ module EditTemplate = struct
               | _ -> NewEvent.decode v >>= fun ev -> Some (Some ev)
             end
       ) >>= (fun form_data ->
-        Some {title; submit_text; user_tz; action; form_data}
+        Some {title; submit_text; user_tz; action; form_data; csrf_token}
       )
     )
 end

@@ -109,16 +109,18 @@ type model = {
   form_values_init: FormValues.t;
   action_: string;
   submit_text: string;
+  csrf_token: string;
 }
 
 let init tpl =
-  let Protocol.EditTemplate.{user_tz; action = action_; submit_text; form_data = _} = tpl in
+  let Protocol.EditTemplate.{user_tz; action = action_; submit_text; csrf_token; form_data = _} = tpl in
   let form_values = FormValues.init tpl  in
   { form_values
   ; form_values_init = form_values
   ; user_tz
   ; action_
   ; submit_text
+  ; csrf_token
   }
 
 let update model = function
@@ -148,7 +150,8 @@ let view model =
   form
     [ method' "post"; action model.action_ ]
     [ form_block (
-        [ tracked_input "Summary" [ value (FormValues.get_or vals "Summary" "") ]
+        [ input' [ type' "hidden"; name "csrfToken"; value model.csrf_token ] []
+        ; tracked_input "Summary" [ value (FormValues.get_or vals "Summary" "") ]
         ; tracked_input "Date" [ type' "date"; value (FormValues.date vals) ]
         ; labeled_input "All Day"
             [ onCheck (fun value -> SetAllDay(value))

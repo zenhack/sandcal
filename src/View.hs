@@ -28,23 +28,26 @@ import qualified View.Home
 import qualified View.NewEvent
 import qualified View.Week
 
-settings :: Sandstorm.UserId -> DB.Query H.Html
-settings uid =
+import qualified CSRF
+
+settings :: CSRF.Key -> Sandstorm.UserId -> DB.Query H.Html
+settings csrfKey uid =
     flip fmap (DB.getUserTimeZone uid) $ \userTz ->
         docToHtml $ Document
             { title = "User Settings"
             , body = do
                 H.h1 "User Settings"
-                postForm mempty Route.SaveSettings $ do
+                postForm csrfKey (CSRF.PostCap Route.SaveSettings uid) mempty $ do
                     formBlock $
                         labeledTzSelect "Time Zone" userTz
                     H.button ! A.type_ "submit" $ "Save"
             }
 
-editEvent userTz eid ev =
+editEvent csrfKey userId userTz eid ev =
     let tzLabel = case userTz of
             Just v  -> v
             Nothing -> Tz.Etc__UTC
+        route = Route.PostEditEvent eid
     in
     EditEvent.editEvent EditEvent.EditTemplate
         { title = "Edit Event"
@@ -52,4 +55,5 @@ editEvent userTz eid ev =
         , action = Route.PostEditEvent eid
         , userTz
         , formData = Just $ NewEvent.fromVEvent tzLabel ev
+        , csrfToken = CSRF.makeCsrfToken csrfKey (CSRF.PostCap route userId)
         }

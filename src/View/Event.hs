@@ -8,6 +8,7 @@ import Zhp
 
 import View.Common
 
+import qualified CSRF
 import           Data.List                   (intersperse)
 import qualified Data.Set                    as S
 import qualified Data.Text.Lazy              as LT
@@ -16,12 +17,13 @@ import qualified Data.Time.Zones.All         as TZ
 import qualified ICal
 import qualified Occurrences                 as Oc
 import qualified Route
+import qualified Sandstorm
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
 
-event :: Int64 -> TZ.TZLabel -> ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
-event eid tzLabel ev zot =
+event :: CSRF.Key -> Maybe Sandstorm.UserId -> Int64 -> TZ.TZLabel -> ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
+event csrfKey maybeUserId eid tzLabel ev zot =
     let title = case ICal.veSummary ev of
             Nothing                               -> "Untitled Event"
             Just ICal.Summary {ICal.summaryValue} -> summaryValue
@@ -34,10 +36,12 @@ event eid tzLabel ev zot =
             H.h1 $ H.toHtml title
             H.nav $ H.ul $ do
                 H.li $ H.a ! A.href (H.toValue $ Route.Get $ Route.EditEvent eid) $ "Edit"
-                H.li $ postLink (Route.PostDeleteEvent eid) $ "Delete (all occurrences)"
-{- TODO: implement the handler for this and then uncomment.
-                for_ zot $ \z ->
-                    H.li $ postLink (Route.PostDeleteOccurrence eid z) $ "Delete (this occurrence only)"
+                for_ maybeUserId $ \userId -> do
+                    H.li $ postLink csrfKey (CSRF.PostCap (Route.PostDeleteEvent eid) userId) $
+                        "Delete (all occurrences)"
+    {- TODO: implement the handler for this and then uncomment.
+                    for_ zot $ \z ->
+                        H.li $ postLink (Route.PostDeleteOccurrence eid z) $ "Delete (this occurrence only)"
 -}
             H.toHtml $ viewLocalOCTime $ Oc.ocTimeInZoneFudge (TZ.tzByLabel tzLabel) zot'
             for_ (ICal.veDescription ev) $ \de -> do

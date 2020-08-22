@@ -19,6 +19,7 @@ import Zhp
 
 import Network.URI (URI)
 
+import qualified CSRF
 import qualified Route
 
 import qualified Data.ByteString.Char8       as B8
@@ -56,18 +57,20 @@ labeledInput name attrs =
         H.label ! A.for name' $ H.toHtml name
         H.input ! A.name name' ! attrs
 
--- FIXME(security): xsrf.
-postForm :: H.Attribute -> Route.PostRoute -> H.Html -> H.Html
-postForm attrs rt contents =
+postForm :: CSRF.Key -> CSRF.PostCap -> H.Attribute -> H.Html -> H.Html
+postForm csrfKey cap attrs contents =
+    let token = CSRF.makeCsrfToken csrfKey cap in
     H.form
         ! attrs
         ! A.method "post"
-        ! A.action (H.toValue rt) $
+        ! A.action (H.toValue (CSRF.route cap)) $ do
+            H.input ! A.type_ "hidden" ! A.name "csrfToken" ! A.value (H.toValue token)
             contents
 
-postLink :: Route.PostRoute -> String -> H.Html
-postLink rt label =
-    postForm (A.class_ "postLink") rt $ H.button ! A.type_ "submit" $ H.toHtml label
+postLink :: CSRF.Key -> CSRF.PostCap -> String -> H.Html
+postLink  key cap label =
+    postForm key cap (A.class_ "postLink") $
+        H.button ! A.type_ "submit" $ H.toHtml label
 
 formBlock :: H.Html -> H.Html
 formBlock body = do

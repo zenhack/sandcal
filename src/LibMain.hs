@@ -29,6 +29,7 @@ import qualified Util.Time           as UT
 import qualified View
 import qualified View.Import
 
+import qualified CSRF
 import qualified Occurrences
 
 
@@ -40,6 +41,7 @@ blaze = html . renderHtml
 
 main :: IO ()
 main = do
+    csrfKey <- CSRF.genKey
     dbPath <- cfgDBPath <$> getConfig
     db <- DB.open dbPath
     DB.runQuery db DB.initSchema
@@ -50,37 +52,42 @@ main = do
 
             Route.Get Route.Home -> viewHome db
             Route.Get (Route.Week refDay) -> viewWeek db refDay
-            Route.Get Route.Settings -> viewSettings db
-            Route.Get Route.NewEvent -> viewNewEvent db
-            Route.Get (Route.Event eid zot) -> getEvent db eid zot
-            Route.Get (Route.EditEvent eid) -> editEvent db eid
-            Route.Get Route.ImportICS -> blaze $ View.Import.importICS
+            Route.Get Route.Settings -> viewSettings csrfKey db
+            Route.Get Route.NewEvent -> viewNewEvent csrfKey db
+            Route.Get (Route.Event eid zot) -> getEvent csrfKey db eid zot
+            Route.Get (Route.EditEvent eid) -> editEvent csrfKey db eid
+            Route.Get Route.ImportICS -> do
+                maybeUid <- Sandstorm.maybeGetUserId
+                blaze $ View.Import.importICS csrfKey maybeUid
 
-            Route.Post (Route.PostEditEvent eid) -> postEditEvent db eid
-            Route.Post Route.PostNewEvent -> postNewEvent db
-            Route.Post Route.PostImportICS -> importICS db
+            Route.Post postRt -> do
+                CSRF.verifyPostRoute csrfKey postRt
+                case postRt of
+                    Route.PostEditEvent eid -> postEditEvent db eid
+                    Route.PostNewEvent -> postNewEvent db
+                    Route.PostImportICS -> importICS db
 
-            Route.Post Route.SaveSettings -> do
-                uid <- Sandstorm.getUserId
-                Forms.Settings.Settings{timeZone} <- Forms.Settings.getForm
-                liftIO $ DB.runQuery db $ DB.setUserTimeZone uid timeZone
-                Route.redirectGet Route.Home
+                    Route.SaveSettings -> do
+                        uid <- Sandstorm.getUserId
+                        Forms.Settings.Settings{timeZone} <- Forms.Settings.getForm
+                        liftIO $ DB.runQuery db $ DB.setUserTimeZone uid timeZone
+                        Route.redirectGet Route.Home
 
-            Route.Post (Route.PostDeleteEvent eid) -> do
-                liftIO $ DB.runQuery db $ DB.deleteEvent (DB.eventID eid)
-                Route.redirectGet Route.Home
+                    Route.PostDeleteEvent eid -> do
+                        liftIO $ DB.runQuery db $ DB.deleteEvent (DB.eventID eid)
+                        Route.redirectGet Route.Home
 
-            Route.Post (Route.PostDeleteOccurrence eid zot) -> do
-                _ <- liftIO $ DB.runQuery db $ deleteOccurrence (DB.eventID eid) zot
-                Route.redirectGet Route.Home
+                    Route.PostDeleteOccurrence eid zot -> do
+                        _ <- liftIO $ DB.runQuery db $ deleteOccurrence (DB.eventID eid) zot
+                        Route.redirectGet Route.Home
 
         get "/bundle.min.js" $ file "ui/bundle.min.js"
         notFound $ do404
 
-viewNewEvent db = do
+viewNewEvent csrfKey db = do
     uid <- Sandstorm.getUserId
     maybeTzLabel <- DB.runQuery db $ DB.getUserTimeZone uid
-    blaze $ View.newEvent maybeTzLabel
+    blaze $ View.newEvent csrfKey uid maybeTzLabel
 
 occursBefore :: Occurrences.Occurrence a -> Time.UTCTime -> Bool
 occursBefore occur end =
@@ -144,15 +151,17 @@ eventOr404 db eid = do
         Nothing -> do404
         Just e  -> pure e
 
-getEvent db eid zot = do
+getEvent csrfKey db eid zot = do
+    maybeUid <- Sandstorm.maybeGetUserId
     e <- eventOr404 db eid
     tzLabel <- userTZOrUTC db
-    blaze $ View.event eid tzLabel e zot
+    blaze $ View.event csrfKey maybeUid eid tzLabel e zot
 
-editEvent db eid = do
+editEvent csrfToken db eid = do
+    uid <- Sandstorm.getUserId
     userTz <- getUserTZ db
     event <- eventOr404 db eid
-    blaze $ View.editEvent userTz eid event
+    blaze $ View.editEvent csrfToken uid userTz eid event
 
 importICS db = do
     fs <- files
@@ -176,9 +185,9 @@ importICS db = do
                     traverse_ DB.addCalendar vcals
             Route.redirectGet Route.Home
 
-viewSettings db = do
+viewSettings csrfKey db = do
     uid <- Sandstorm.getUserId
-    result <- DB.runQuery db $ View.settings uid
+    result <- DB.runQuery db $ View.settings csrfKey uid
     blaze result
 
 postNewEvent db = do

@@ -32,6 +32,7 @@ data EditTemplate = EditTemplate
     , userTz     :: Maybe Tz.TZLabel
     , action     :: Route.PostRoute
     , formData   :: Maybe NewEvent
+    , csrfToken  :: String
     }
     deriving(Show, Generic)
 instance Aeson.ToJSON EditTemplate
