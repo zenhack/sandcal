@@ -34,7 +34,8 @@ settings :: CSRF.Key -> Sandstorm.UserId -> DB.Query H.Html
 settings csrfKey uid =
     flip fmap (DB.getUserTimeZone uid) $ \userTz ->
         docToHtml $ Document
-            { title = "User Settings"
+            { user = Just uid
+            , title = "User Settings"
             , body = do
                 H.h1 "User Settings"
                 postForm csrfKey (CSRF.PostCap Route.SaveSettings (Just uid)) mempty $ do
@@ -49,7 +50,7 @@ editEvent csrfKey userId userTz eid ev =
             Nothing -> Tz.Etc__UTC
         route = Route.PostEditEvent eid
     in
-    EditEvent.editEvent EditEvent.EditTemplate
+    EditEvent.editEvent userId EditEvent.EditTemplate
         { title = "Edit Event"
         , submitText = "Update"
         , action = Route.PostEditEvent eid

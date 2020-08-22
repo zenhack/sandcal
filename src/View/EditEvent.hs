@@ -10,6 +10,7 @@ import Zhp
 import qualified View.Common as VC
 
 import qualified Route
+import qualified Sandstorm
 
 import TZ ()
 
@@ -44,9 +45,10 @@ instance ToValue EditTemplate where
         >>> LT.unpack
         >>> fromString
 
-editEvent :: EditTemplate -> H.Html
-editEvent tpl = VC.docToHtml VC.Document
-    { title = title tpl
+editEvent :: Maybe Sandstorm.UserId -> EditTemplate -> H.Html
+editEvent uid tpl = VC.docToHtml VC.Document
+    { user = uid
+    , title = title tpl
     , body = do
         H.script ! A.src "/bundle.min.js" $ pure ()
         H.h1 $ H.toHtml $ title tpl

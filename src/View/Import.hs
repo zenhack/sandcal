@@ -15,7 +15,8 @@ import qualified Text.Blaze.Html5.Attributes as A
 import qualified CSRF
 
 importICS csrfKey userId = docToHtml $ Document
-    { title = "Import Calendar"
+    { user = userId
+    , title = "Import Calendar"
     , body = do
         H.h1 "Import Calendar"
         postForm

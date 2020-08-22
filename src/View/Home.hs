@@ -10,6 +10,7 @@ import View.Common
 import qualified Occurrences as Oc
 import qualified Route
 import qualified SandCal.DB  as DB
+import qualified Sandstorm
 
 import qualified Data.Time                   as Time
 import           Data.Time.Zones             (TZ)
@@ -63,9 +64,10 @@ viewItem targetZone (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) 
             ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
             $ title
 
-home :: TZ -> [Oc.Occurrence DB.EventEntry] -> H.Html
-home targetZone entries = docToHtml Document
-    { title = "Upcoming Events"
+home :: Maybe Sandstorm.UserId -> TZ -> [Oc.Occurrence DB.EventEntry] -> H.Html
+home uid targetZone entries = docToHtml Document
+    { user = uid
+    , title = "Upcoming Events"
     , body = do
         H.h1 "Upcoming Events"
         traverse_ (viewItem targetZone) (makeItems entries)

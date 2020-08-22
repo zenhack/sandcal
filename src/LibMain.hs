@@ -96,18 +96,20 @@ occursBefore occur end =
     Occurrences.zonedOCTimeToUTCFudge (Occurrences.ocTimeStamp occur) <= end
 
 viewHome db = do
+    uid <- Sandstorm.maybeGetUserId
     utcNow <- liftIO $ Time.getCurrentTime
     let utcEnd = Time.addUTCTime (Time.nominalDay * 45) utcNow
     occurs <- getOccursSince db utcNow
         & fmap (takeWhile (`occursBefore` utcEnd))
         & fmap (take 20)
     tzLabel <- userTZOrUTC db
-    blaze $ View.home (Tz.tzByLabel tzLabel) occurs
+    blaze $ View.home uid (Tz.tzByLabel tzLabel) occurs
 
 viewWeek db refDay = do
     -- TODO: allow the user to configure the start of the week.
     let firstDayOfWeek = Time.Sunday
         (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
+    uid <- Sandstorm.maybeGetUserId
     tzLabel <- userTZOrUTC db
     let tz = Tz.tzByLabel tzLabel
         utcStart = Tz.localTimeToUTCTZ tz (UT.startOfDay startDay)
@@ -118,7 +120,7 @@ viewWeek db refDay = do
             }
     occurs <- takeWhile (`occursBefore` utcEnd)
         <$> getOccursSince db utcStart
-    blaze $ View.week firstDayOfWeek zonedOCTime occurs
+    blaze $ View.week uid firstDayOfWeek zonedOCTime occurs
 
 getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
 getOccursSince db utc = do

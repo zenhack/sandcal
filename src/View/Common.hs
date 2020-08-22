@@ -21,6 +21,7 @@ import Network.URI (URI)
 
 import qualified CSRF
 import qualified Route
+import qualified Sandstorm
 
 import qualified Data.ByteString.Char8       as B8
 import qualified Data.Text                   as T
@@ -33,6 +34,7 @@ import qualified Text.Blaze.Html5.Attributes as A
 data Document = Document
     { title :: T.Text
     , body  :: H.Html
+    , user  :: Maybe Sandstorm.UserId
     }
 
 eventSummary :: ICal.VEvent -> H.Html
@@ -41,12 +43,12 @@ eventSummary ev = case ICal.veSummary ev of
     Nothing      -> "Untitled event"
 
 docToHtml :: Document -> H.Html
-docToHtml Document{title, body} = H.docTypeHtml $ do
+docToHtml Document{title, body, user} = H.docTypeHtml $ do
     H.title $ H.toHtml (title <> " · SandCal")
     H.link ! A.rel "stylesheet" ! A.href (H.toValue Route.StyleCss)
     H.script ! A.src (H.toValue Route.SandstormJS) $ pure ()
     H.body $ do
-        navigation
+        navigation user
         H.div ! A.class_ "mainContentContainer" $
             H.div ! A.class_ "mainContent" $ body
 
@@ -114,16 +116,21 @@ labeledSelect selectName options =
                 in
                 opt'' $ H.toHtml name
 
-navigation :: H.Html
-navigation = H.nav $ H.ul $ traverse_ navItem
-    [ (Route.Home, "Upcoming Events")
-    , (Route.NewEvent, "New Event")
-    , (Route.Settings, "Settings")
-    , (Route.ImportICS, "Import")
-    ]
+navigation :: Maybe Sandstorm.UserId -> H.Html
+navigation uid =
+    H.nav $ H.ul $ traverse_ navItem items
   where
     navItem (rt, label) =
         H.li $ H.a ! A.href (H.toValue rt) $ label
+    items = mconcat
+        [ [ (Route.Home, "Upcoming Events")
+          , (Route.NewEvent, "New Event")
+          ]
+        , case uid of
+            Nothing -> []
+            Just _  -> [ (Route.Settings, "Settings") ]
+        , [ (Route.ImportICS, "Import") ]
+        ]
 
 maybeLink :: H.ToMarkup a => a -> Maybe URI -> H.Html
 maybeLink content = \case
