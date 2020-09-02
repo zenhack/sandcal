@@ -24,6 +24,7 @@ import qualified Data.Time.Zones.All as TZ
 
 import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Set                as Set
+import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LTE
 import qualified Data.Time               as Time
 
@@ -96,6 +97,51 @@ zonedOCTimeFromUTC utcTime = ZonedOCTime
         Time.utcToLocalTime Time.utc utcTime
     }
 
+{-
+dateTimeToZonedOCTime :: TZ.TZLabel -> DateTime -> ZonedOCTime
+dateTimeToZonedOCTime defaultTz = \case
+    FloatingDateTime t -> ZonedOCTime
+        { octZone = defaultTz
+        , octTime = LocalOCAtTime t
+        }
+    UTCDateTime t ->
+        let tz = TZ.Etc__UTC in
+        ZonedOCTime
+            { octZone = tz
+            , octTime = LocalOCAtTime $ TZ.utcToLocalTimeTZ (TZ.tzByLabel tz) t
+            }
+    ZonedDateTime t z -> ZonedOCTime
+        { octZone = case tzLabelFromLazyText z of
+            Nothing  -> defaultTz
+            Just lbl -> lbl
+        , octTime = LocalOCAtTime t
+        }
+
+-- | @'dtEndZonedTime' defaultTz@ converts a DTEnd to a ZonedOCTime, using
+-- 'defaultTz' as the time zone if the DTEnd does not specify one.
+dtEndZonedTime :: TZ.TZLabel -> DTEnd -> ZonedOCTime
+dtEndZonedTime defaultTz = \case
+    DTEndDate (Date d) _ -> ZonedOCTime
+        { octZone = defaultTz
+        , octTime = LocalOCAllDay d
+        }
+    DTEndDateTime dt _ ->
+        dateTimeToZonedOCTime defaultTz dt
+
+eventDuration :: VEvent -> Maybe Time.DiffTime
+eventDuration ev = flip fmap (veDTEndDuration ev) $ \case
+    Left _dtEnd -> error "TODO"
+    Right (DurationProp _dur _) -> error "TODO"
+
+
+-- | Like 'zonedStartTime', but computes the _end_ of an event.
+zonedEndTime :: TZ.TZLabel -> VEvent -> Maybe ZonedOCTime
+zonedEndTime defaultTz ev = flip fmap (veDTEndDuration ev) $ \case
+    Left dtEnd -> dtEndZonedTime defaultTz dtEnd
+    Right _dtDur -> error "TODO"
+-}
+
+
 -- | @'zonedStartTime' defaultTz event@ is the start time of an event
 -- with a time zone.
 --
@@ -119,7 +165,7 @@ zonedStartTime defaultTz ev =
         Just DTStartDateTime{dtStartDateTimeValue = UTCDateTime utcTime} ->
             zonedOCTimeFromUTC utcTime
         Just DTStartDateTime{dtStartDateTimeValue = ZonedDateTime{dateTimeFloating, dateTimeZone}} ->
-            let tz = case TZ.fromTZName $ LBS.toStrict $ LTE.encodeUtf8 dateTimeZone of
+            let tz = case tzLabelFromLazyText dateTimeZone of
                     Nothing   -> defaultTz
                     Just zone -> zone
             in
@@ -127,6 +173,9 @@ zonedStartTime defaultTz ev =
                 { octZone = tz
                 , octTime = LocalOCAtTime dateTimeFloating
                 }
+
+tzLabelFromLazyText :: LT.Text -> Maybe TZ.TZLabel
+tzLabelFromLazyText txt = TZ.fromTZName $ LBS.toStrict $ LTE.encodeUtf8 txt
 
 merge :: [[Occurrence a]] -> [Occurrence a]
 merge = mergeManyOn (ocTimeStamp >>> zonedOCTimeToUTCFudge)
@@ -175,21 +224,19 @@ firstOccurrence lbl ev =
         (oc:_) -> Just oc
 
 -- | @'eventOccurrences' defaultTz start event@ returns a (possibly infinite) list
--- of occurrences of the event @event@ starting at @utc@. If the event's time zone
--- is unspecified, it will be assumed to be @defaultTz@.
+-- of occurrences of the event @event@ which end after @utc@ (so, ongoing events as
+-- well as future events). If the event's time zone is unspecified, it will be
+-- assumed to be @defaultTz@.
 eventOccurrences :: TZ.TZLabel -> Time.UTCTime -> VEvent -> [Occurrence VEvent]
 eventOccurrences defaultTz start ev =
     let rules = map rRuleValue $ Set.toList (veRRule ev)
-        -- TODO(cleanup): refactor to just pass eventStartTime into
-        -- ruleOccurrences, rather than re-computing it.
         streams = map (ruleOccurrences defaultTz start ev) rules
-        eventStartTime = zonedStartTime defaultTz ev
         hd =
             [ Occurrence
                 { ocItem = ev
-                , ocTimeStamp = eventStartTime
+                , ocTimeStamp = zonedStartTime defaultTz ev
                 }
-            | zonedOCTimeToUTCFudge eventStartTime >= start
+            | zonedOCTimeToUTCFudge (zonedStartTime defaultTz ev) >= start
             ]
     in
     dedup $ hd <> merge streams
