@@ -23,12 +23,12 @@ import           Text.Blaze                  (ToValue(toValue))
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
-import qualified Util.TZ                     as Tz
+import qualified Util.TZ                     as TZ
 
 data EditTemplate = EditTemplate
     { title      :: T.Text
     , submitText :: T.Text
-    , userTz     :: Maybe Tz.TZLabel
+    , userTz     :: Maybe TZ.TZLabel
     , action     :: Route.PostRoute
     , formData   :: Maybe NewEvent
     , csrfToken  :: String

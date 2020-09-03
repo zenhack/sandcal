@@ -2,12 +2,12 @@ import Zhp
 
 import Data.List (intercalate)
 
-import qualified Data.Time.Zones.All as Tz
+import qualified Data.Time.Zones.All as TZ
 
 camlSrc :: String
 camlSrc = mconcat
     [ "let tz_labels = ["
-    , map (Tz.toTZName >>> show) [minBound..maxBound]
+    , map (TZ.toTZName >>> show) [minBound..maxBound]
         & intercalate "; "
     , "]\n"
     ]

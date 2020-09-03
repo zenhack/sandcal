@@ -14,7 +14,7 @@ import qualified Data.Map.Strict  as M
 import qualified Data.Time        as Time
 import qualified Text.Blaze.Html5 as H
 import           Util.TZ          (TZ)
-import qualified Util.TZ          as Tz
+import qualified Util.TZ          as TZ
 -- import qualified Util.Time           as UT
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5.Attributes as A
@@ -96,9 +96,9 @@ ocDay tz zot = case Oc.ocTimeInZoneFudge tz zot of
 
 week :: Maybe Sandstorm.UserId -> Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
 week uid startOfWeek now occurs =
-    let tz = Tz.tzByLabel $ Oc.octZone now
+    let tz = TZ.tzByLabel $ Oc.octZone now
         items = occurs
-            & map (\o -> (ocDay (Tz.tzByLabel $ Oc.octZone now) (Oc.ocTimeStamp o), o))
+            & map (\o -> (ocDay (TZ.tzByLabel $ Oc.octZone now) (Oc.ocTimeStamp o), o))
             & foldl' (\m (d, o) ->
                     M.alter
                         (\case

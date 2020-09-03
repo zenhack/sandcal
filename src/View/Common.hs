@@ -29,7 +29,7 @@ import qualified ICal
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
-import qualified Util.TZ                     as Tz
+import qualified Util.TZ                     as TZ
 
 data Document = Document
     { title :: T.Text
@@ -80,23 +80,23 @@ formBlock body = do
         ! A.class_ "formBlock"
         $ body
 
-tzSelect :: T.Text -> Maybe Tz.TZLabel -> H.Html
+tzSelect :: T.Text -> Maybe TZ.TZLabel -> H.Html
 tzSelect label userTz =
-    let addSelected :: Tz.TZLabel -> (H.Html -> H.Html) -> H.Html -> H.Html
+    let addSelected :: TZ.TZLabel -> (H.Html -> H.Html) -> H.Html -> H.Html
         addSelected tz elt
          | (Just tz) == userTz = elt ! A.selected ""
          | otherwise = elt
 
-        name :: IsString a => Tz.TZLabel -> a
-        name tz = fromString $ B8.unpack $ Tz.toTZName tz
+        name :: IsString a => TZ.TZLabel -> a
+        name tz = fromString $ B8.unpack $ TZ.toTZName tz
 
-        tzOption :: Tz.TZLabel -> H.Html
+        tzOption :: TZ.TZLabel -> H.Html
         tzOption tz = addSelected tz H.option ! A.value (name tz) $ (name tz)
     in
     H.select ! A.id (H.toValue label) ! A.name (H.toValue label) $
         traverse_ tzOption [minBound..maxBound]
 
-labeledTzSelect :: T.Text -> Maybe Tz.TZLabel -> H.Html
+labeledTzSelect :: T.Text -> Maybe TZ.TZLabel -> H.Html
 labeledTzSelect name userTz =
     H.div ! A.class_ "labeledInput" $ do
         H.label ! A.for (H.toValue name) $ H.toHtml name

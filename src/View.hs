@@ -21,7 +21,7 @@ import qualified Sandstorm                   as Sandstorm
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
-import qualified Util.TZ                     as Tz
+import qualified Util.TZ                     as TZ
 import qualified View.EditEvent              as EditEvent
 import qualified View.Event
 import qualified View.Home
@@ -47,7 +47,7 @@ settings csrfKey uid =
 editEvent csrfKey userId userTz eid ev =
     let tzLabel = case userTz of
             Just v  -> v
-            Nothing -> Tz.Etc__UTC
+            Nothing -> TZ.Etc__UTC
         route = Route.PostEditEvent eid
     in
     EditEvent.editEvent userId EditEvent.EditTemplate

@@ -10,10 +10,10 @@ import Web.Scotty
 
 import Forms.Common
 
-import qualified Util.TZ as Tz
+import qualified Util.TZ as TZ
 
 data Settings = Settings
-    { timeZone :: Tz.TZLabel
+    { timeZone :: TZ.TZLabel
     }
 
 getForm :: ActionM Settings

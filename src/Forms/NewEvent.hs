@@ -33,7 +33,7 @@ import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.Time               as Time
 import qualified Data.UUID               as UUID
-import qualified Util.TZ                 as Tz
+import qualified Util.TZ                 as TZ
 
 import qualified ICal
 import qualified Util.Scotty.DateParsers as DP
@@ -57,7 +57,7 @@ data NewEventTime
     | StartEnd
         { startTime :: DP.TimeOfDay
         , endTime   :: DP.TimeOfDay
-        , timeZone  :: Tz.TZLabel
+        , timeZone  :: TZ.TZLabel
         }
     deriving(Show, Generic)
 instance Aeson.ToJSON NewEventTime
@@ -242,12 +242,12 @@ instance FromTextField ICal.Description where
         old { ICal.descriptionValue = txt }
     getTextField' = ICal.descriptionValue
 
-fromVEvent :: Tz.TZLabel -> ICal.VEvent -> NewEvent
+fromVEvent :: TZ.TZLabel -> ICal.VEvent -> NewEvent
 fromVEvent defaultTz ev =
     let
         dateTimeTz = \case
             ICal.FloatingDateTime _ -> defaultTz
-            ICal.UTCDateTime _ -> Tz.Etc__UTC
+            ICal.UTCDateTime _ -> TZ.Etc__UTC
             ICal.ZonedDateTime{dateTimeZone} ->
                 case decodeTZLabel (LT.encodeUtf8 dateTimeZone) of
                     Nothing -> defaultTz
@@ -255,7 +255,7 @@ fromVEvent defaultTz ev =
         dateTimeTimeOfDay tz = \case
             ICal.FloatingDateTime dt -> Time.localTimeOfDay dt
             ICal.UTCDateTime utc ->
-                Time.localTimeOfDay (Tz.utcToLocalTimeTZ (Tz.tzByLabel tz) utc)
+                Time.localTimeOfDay (TZ.utcToLocalTimeTZ (TZ.tzByLabel tz) utc)
             ICal.ZonedDateTime{dateTimeFloating} ->
                 Time.localTimeOfDay dateTimeFloating
     in
@@ -274,7 +274,7 @@ fromVEvent defaultTz ev =
             ICal.FloatingDateTime Time.LocalTime{localDay} ->
                 localDay
             ICal.UTCDateTime utc ->
-                Time.localDay (Tz.utcToLocalTimeTZ Tz.utcTZ utc)
+                Time.localDay (TZ.utcToLocalTimeTZ TZ.utcTZ utc)
             ICal.ZonedDateTime{dateTimeFloating} ->
                 Time.localDay dateTimeFloating
     , time = case ICal.veDTStart ev of
@@ -418,8 +418,8 @@ makeRRule (Just freq) =
             }
         }
 
-encodeTZLabel :: Tz.TZLabel -> LT.Text
+encodeTZLabel :: TZ.TZLabel -> LT.Text
 encodeTZLabel =
-    Tz.toTZName
+    TZ.toTZName
     >>> LBS.fromStrict
     >>> LT.decodeUtf8With lenientDecode

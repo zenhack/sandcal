@@ -24,7 +24,7 @@ import qualified DB
 import qualified Route
 import qualified Sandstorm
 import qualified Util.Time    as UT
-import qualified Util.TZ      as Tz
+import qualified Util.TZ      as TZ
 import qualified View
 import qualified View.Import
 
@@ -102,7 +102,7 @@ viewHome db = do
         & fmap (takeWhile (`occursBefore` utcEnd))
         & fmap (take 20)
     tzLabel <- userTZOrUTC db
-    blaze $ View.home uid (Tz.tzByLabel tzLabel) occurs
+    blaze $ View.home uid (TZ.tzByLabel tzLabel) occurs
 
 viewWeek db refDay = do
     -- TODO: allow the user to configure the start of the week.
@@ -110,9 +110,9 @@ viewWeek db refDay = do
         (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
     uid <- Sandstorm.maybeGetUserId
     tzLabel <- userTZOrUTC db
-    let tz = Tz.tzByLabel tzLabel
-        utcStart = Tz.localTimeToUTCTZ tz (UT.startOfDay startDay)
-        utcEnd   = Tz.localTimeToUTCTZ tz (UT.endOfDay endDay)
+    let tz = TZ.tzByLabel tzLabel
+        utcStart = TZ.localTimeToUTCTZ tz (UT.startOfDay startDay)
+        utcEnd   = TZ.localTimeToUTCTZ tz (UT.endOfDay endDay)
         zonedOCTime = Occurrences.ZonedOCTime
             { octZone = tzLabel
             , octTime = Occurrences.LocalOCAllDay refDay
@@ -144,7 +144,7 @@ userTZOrUTC db = do
     maybeTz <- getUserTZ db
     pure $ case maybeTz of
         Just tz -> tz
-        Nothing -> Tz.Etc__UTC
+        Nothing -> TZ.Etc__UTC
 
 eventOr404 db eid = do
     res <- DB.runQuery db (DB.getEvent (DB.eventID eid))

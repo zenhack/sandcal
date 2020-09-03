@@ -10,12 +10,12 @@ import View.EditEvent
 
 import qualified Route
 import qualified Text.Blaze.Html5 as H
-import qualified Util.TZ          as Tz
+import qualified Util.TZ          as TZ
 
 import qualified Sandstorm
 import qualified Util.CSRF as CSRF
 
-newEvent :: CSRF.Key -> Maybe Sandstorm.UserId -> Maybe Tz.TZLabel -> H.Html
+newEvent :: CSRF.Key -> Maybe Sandstorm.UserId -> Maybe TZ.TZLabel -> H.Html
 newEvent csrfKey uid userTz =
     let route = Route.PostNewEvent in
     editEvent uid EditTemplate
