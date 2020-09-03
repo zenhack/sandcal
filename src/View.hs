@@ -15,9 +15,9 @@ import Zhp
 import View.Common
 
 import qualified Data.Time.Zones.All         as Tz
+import qualified DB
 import qualified Forms.NewEvent              as NewEvent
 import qualified Route
-import qualified SandCal.DB                  as DB
 import qualified Sandstorm                   as Sandstorm
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H

@@ -1,4 +1,4 @@
-module SandCal.Config
+module Config
     ( Config(..)
     , getConfig
     ) where

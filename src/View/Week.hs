@@ -5,8 +5,8 @@ module View.Week where
 
 import Zhp
 
+import qualified DB
 import qualified Occurrences as Oc
-import qualified SandCal.DB  as DB
 import qualified Sandstorm
 import           View.Common
 

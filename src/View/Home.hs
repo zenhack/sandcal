@@ -7,9 +7,9 @@ import Zhp
 
 import View.Common
 
+import qualified DB
 import qualified Occurrences as Oc
 import qualified Route
-import qualified SandCal.DB  as DB
 import qualified Sandstorm
 
 import qualified Data.Time                   as Time

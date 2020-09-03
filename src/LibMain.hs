@@ -4,10 +4,10 @@
 {-# LANGUAGE QuasiQuotes           #-}
 module LibMain (main) where
 
+import Config                        (cfgDBPath, getConfig)
 import Data.Default                  (def)
 import Network.HTTP.Types.Status     (status400, status404)
 import Network.Wai.Parse             (FileInfo(..))
-import SandCal.Config                (cfgDBPath, getConfig)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5              (Html)
 import Text.ICalendar.Parser         (parseICalendar)
@@ -22,8 +22,8 @@ import qualified Data.Time           as Time
 import qualified Data.Time.Zones     as Tz
 import qualified Data.Time.Zones.All as Tz
 import qualified Data.UUID.V4        as UUID
+import qualified DB
 import qualified Route
-import qualified SandCal.DB          as DB
 import qualified Sandstorm
 import qualified Util.Time           as UT
 import qualified View

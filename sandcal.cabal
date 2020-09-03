@@ -84,8 +84,8 @@ library libsandcal
   import: shared-opts
   exposed-modules:
       LibMain
-    , SandCal.DB
-    , SandCal.Config
+    , DB
+    , Config
     , Forms.Common
     , Forms.NewEvent
     , Forms.Settings

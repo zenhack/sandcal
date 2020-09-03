@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric  #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes    #-}
-module SandCal.DB
+module DB
     ( Conn
     , Query
     , open
@@ -30,7 +30,7 @@ import Zhp
 import qualified Data.Aeson             as Aeson
 import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Lazy   as LBS
-import qualified Database.SQLite.Simple as DB
+import qualified Database.SQLite.Simple as Sql
 import qualified ICal
 
 import qualified Sandstorm
@@ -44,7 +44,7 @@ import Text.Heredoc (here)
 
 ----- wrappers, to abstract out storage details.
 
-newtype Conn = Conn DB.Connection
+newtype Conn = Conn Sql.Connection
 
 newtype ID a = ID Int64
 
@@ -57,7 +57,7 @@ eventID = ID
 unEventID :: ID ICal.VEvent -> Int64
 unEventID (ID x) = x
 
-newtype Query a = Query { getQueryFn :: DB.Connection -> IO a }
+newtype Query a = Query { getQueryFn :: Sql.Connection -> IO a }
 
 instance Functor Query where
     fmap f q = Query $ fmap f . getQueryFn q
@@ -72,11 +72,11 @@ instance Monad Query where
         getQueryFn (f x') conn
 
 open :: MonadIO m => String -> m Conn
-open path = Conn <$> liftIO (DB.open path)
+open path = Conn <$> liftIO (Sql.open path)
 
 runQuery :: MonadIO m => Conn -> Query a -> m a
 runQuery (Conn conn) (Query f) =
-    liftIO $ DB.withTransaction conn $ f conn
+    liftIO $ Sql.withTransaction conn $ f conn
 
 
 ---- Helper types that appear in our queries
@@ -90,9 +90,9 @@ data EventEntry = EventEntry
 instance Aeson.ToJSON EventEntry
 instance Aeson.FromJSON EventEntry
 
-instance DB.FromRow EventEntry where
+instance Sql.FromRow EventEntry where
     fromRow = do
-        (eeId, vevent) <- DB.fromRow
+        (eeId, vevent) <- Sql.fromRow
         let !ev = mustDecode vevent
         pure EventEntry { eeId, eeVEvent = ev }
 
@@ -106,14 +106,14 @@ mustDecode bytes = case Aeson.decode (LBS.fromStrict bytes) of
 -- | Initialize the schema.
 initSchema :: Query ()
 initSchema = Query $ \conn -> do
-    DB.execute_ conn
+    Sql.execute_ conn
         [here|
             CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY,
                 vevent BLOB NOT NULL
             )
         |]
-    DB.execute_ conn
+    Sql.execute_ conn
         [here|
             CREATE TABLE IF NOT EXISTS user_timezones (
                 user_id VARCHAR PRIMARY KEY,
@@ -122,31 +122,31 @@ initSchema = Query $ \conn -> do
         |]
 
 allEvents :: Query [EventEntry]
-allEvents = Query $ \conn -> DB.query_ conn "SELECT id, vevent FROM events"
+allEvents = Query $ \conn -> Sql.query_ conn "SELECT id, vevent FROM events"
 
 addEvent :: ICal.VEvent -> Query (ID ICal.VEvent)
 addEvent ev = Query $ \conn -> do
-    DB.executeNamed conn
+    Sql.executeNamed conn
         "INSERT INTO events(vevent) VALUES(:event)"
         [":event" := Aeson.encode ev]
-    ID <$> DB.lastInsertRowId conn
+    ID <$> Sql.lastInsertRowId conn
 
 addCalendar :: ICal.VCalendar -> Query ()
 addCalendar vcal = traverse_ addEvent (ICal.vcEvents vcal)
 
 getEvent :: ID ICal.VEvent -> Query (Maybe ICal.VEvent)
 getEvent (ID ident) = Query $ \conn -> do
-    rs <- DB.queryNamed conn "SELECT vevent FROM events WHERE id = :ident" [":ident" := ident]
+    rs <- Sql.queryNamed conn "SELECT vevent FROM events WHERE id = :ident" [":ident" := ident]
     case rs of
-        []            -> pure Nothing
-        (DB.Only r:_) -> pure $! Just $! mustDecode r
+        []             -> pure Nothing
+        (Sql.Only r:_) -> pure $! Just $! mustDecode r
 
 updateEvent :: ID ICal.VEvent -> (ICal.VEvent -> ICal.VEvent) -> Query (Maybe ())
 updateEvent eid f = do
     maybeEv <- getEvent eid
     for maybeEv $ \ev ->
         Query $ \conn ->
-            DB.executeNamed conn
+            Sql.executeNamed conn
                 "UPDATE events SET vevent = :event WHERE id = :ident"
                 [ ":event" := Aeson.encode (f ev)
                 , ":ident" := unEventID eid
@@ -154,13 +154,13 @@ updateEvent eid f = do
 
 deleteEvent :: ID ICal.VEvent -> Query ()
 deleteEvent eid = Query $ \conn ->
-    DB.executeNamed conn
+    Sql.executeNamed conn
         "DELETE FROM events WHERE id = :ident"
         [ ":ident" := unEventID eid ]
 
 setUserTimeZone :: Sandstorm.UserId -> TZLabel -> Query ()
 setUserTimeZone userId timezoneName = Query $ \conn -> do
-    DB.executeNamed conn
+    Sql.executeNamed conn
         [here|
             INSERT OR REPLACE
             INTO user_timezones(user_id, timezone_name)
@@ -173,9 +173,9 @@ setUserTimeZone userId timezoneName = Query $ \conn -> do
 
 getUserTimeZone :: Sandstorm.UserId -> Query (Maybe TZLabel)
 getUserTimeZone userId = Query $ \conn -> do
-    rs <- DB.queryNamed conn
+    rs <- Sql.queryNamed conn
         "SELECT timezone_name FROM user_timezones WHERE user_id = :user_id"
         [":user_id" := Sandstorm.userIdToText userId]
     case rs of
-        []            -> pure Nothing
-        (DB.Only r:_) -> pure $! fromTZName r
+        []             -> pure Nothing
+        (Sql.Only r:_) -> pure $! fromTZName r
