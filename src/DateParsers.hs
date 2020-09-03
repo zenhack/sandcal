@@ -1,11 +1,14 @@
 -- This module provides Web.Scotty.Parsable instances for dates & times as they
 -- are provided by browsers' form elements.
 --
--- The instances are defined on newtype wrappers around corresponding types
--- from the time package.
+-- This package defines its own types for parsing purposes, and supplies
+-- functions to convert between these types and the ones from from the
+-- time package.
 module DateParsers
     ( TimeOfDay(..)
     , Day(..)
+    , toStdDay
+    , fromStdDay
     , toStdTimeOfDay
     , fromStdTimeOfDay
     ) where
@@ -53,6 +56,12 @@ instance Aeson.FromJSON TimeOfDay where
     parseJSON _ = empty
 
 newtype Day = Day Time.Day
+
+toStdDay :: Day -> Time.Day
+toStdDay (Day d) = d
+
+fromStdDay :: Time.Day -> Day
+fromStdDay = Day
 
 instance W.Parsable TimeOfDay where
     parseParam = parseParamWith timeOfDay

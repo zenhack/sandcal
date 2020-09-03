@@ -72,7 +72,7 @@ getForm = do
     summary <- param "Summary"
     description <- param "Description"
     location <- param "Location"
-    DP.Day date <- param "Date"
+    date <- DP.toStdDay <$> param "Date"
     time <- getTime
     repeats <- param "Repeats"
     let repeatsFreq = M.lookup repeats freqNames
