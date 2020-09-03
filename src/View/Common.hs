@@ -25,10 +25,10 @@ import qualified Util.CSRF as CSRF
 
 import qualified Data.ByteString.Char8       as B8
 import qualified Data.Text                   as T
-import qualified ICal
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
+import qualified Util.ICal                   as ICal
 import qualified Util.TZ                     as TZ
 
 data Document = Document

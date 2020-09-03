@@ -98,11 +98,10 @@ library libsandcal
     , View.EditEvent
     , View.Week
     , Route
-    , ICal
-    , ICal.Util
     , Sandstorm
     , Occurrences
     , Util.CSRF
+    , Util.ICal
     , Util.Scotty.DateParsers
     , Util.Time
     , Util.TZ

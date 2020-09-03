@@ -1,7 +1,9 @@
+{-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell    #-}
-module ICal
+module Util.ICal
     ( module Text.ICalendar
+    , veventTZLabel
     ) where
 
 import Zhp
@@ -20,6 +22,19 @@ import           Data.CaseInsensitive (CI)
 import qualified Data.CaseInsensitive as CI
 
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text.Encoding   as TE
+import qualified Data.Text.Lazy       as LT
+
+import qualified Util.TZ as TZ
+
+veventTZLabel :: VEvent -> Maybe TZ.TZLabel
+veventTZLabel ve = do
+    DTStartDateTime{dtStartDateTimeValue} <- veDTStart ve
+    case dtStartDateTimeValue of
+        FloatingDateTime{} -> Nothing
+        UTCDateTime{}      -> Just TZ.Etc__UTC
+        ZonedDateTime{dateTimeZone} ->
+            TZ.fromTZName $ TE.encodeUtf8 $ LT.toStrict dateTimeZone
 
 deriving instance Read Frequency
 

@@ -31,7 +31,7 @@ import qualified Data.Aeson             as Aeson
 import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Lazy   as LBS
 import qualified Database.SQLite.Simple as Sql
-import qualified ICal
+import qualified Util.ICal              as ICal
 
 import qualified Sandstorm
 

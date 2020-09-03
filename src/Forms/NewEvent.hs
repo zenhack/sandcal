@@ -35,7 +35,7 @@ import qualified Data.Time               as Time
 import qualified Data.UUID               as UUID
 import qualified Util.TZ                 as TZ
 
-import qualified ICal
+import qualified Util.ICal               as ICal
 import qualified Util.Scotty.DateParsers as DP
 
 -- TODO: can't represent events that cross a day boundary.

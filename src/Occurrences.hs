@@ -16,7 +16,7 @@ module Occurrences
 
 import Zhp
 
-import ICal
+import Util.ICal
 
 import           Util.TZ (TZ)
 import qualified Util.TZ as TZ
