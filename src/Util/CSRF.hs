@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric  #-}
 {-# LANGUAGE NamedFieldPuns #-}
-module CSRF
+-- | Helper module for CSRF protection.
+module Util.CSRF
     ( Key
     , Mac
     , PostCap(..)

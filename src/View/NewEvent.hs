@@ -12,8 +12,8 @@ import qualified Data.Time.Zones.All as Tz
 import qualified Route
 import qualified Text.Blaze.Html5    as H
 
-import qualified CSRF
 import qualified Sandstorm
+import qualified Util.CSRF as CSRF
 
 newEvent :: CSRF.Key -> Maybe Sandstorm.UserId -> Maybe Tz.TZLabel -> H.Html
 newEvent csrfKey uid userTz =

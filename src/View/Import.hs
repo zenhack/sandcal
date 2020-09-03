@@ -12,7 +12,7 @@ import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
 
-import qualified CSRF
+import qualified Util.CSRF as CSRF
 
 importICS csrfKey userId = docToHtml $ Document
     { user = userId

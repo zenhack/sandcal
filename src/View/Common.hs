@@ -19,9 +19,9 @@ import Zhp
 
 import Network.URI (URI)
 
-import qualified CSRF
 import qualified Route
 import qualified Sandstorm
+import qualified Util.CSRF as CSRF
 
 import qualified Data.ByteString.Char8       as B8
 import qualified Data.Text                   as T

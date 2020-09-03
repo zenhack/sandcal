@@ -28,7 +28,7 @@ import qualified View.Home
 import qualified View.NewEvent
 import qualified View.Week
 
-import qualified CSRF
+import qualified Util.CSRF as CSRF
 
 settings :: CSRF.Key -> Sandstorm.UserId -> DB.Query H.Html
 settings csrfKey uid =

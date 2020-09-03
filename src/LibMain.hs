@@ -29,8 +29,8 @@ import qualified Util.Time           as UT
 import qualified View
 import qualified View.Import
 
-import qualified CSRF
 import qualified Occurrences
+import qualified Util.CSRF   as CSRF
 
 
 import Web.Scotty
