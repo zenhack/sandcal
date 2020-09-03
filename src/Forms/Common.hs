@@ -9,8 +9,8 @@ import Web.Scotty
 
 import qualified Data.ByteString.Lazy as LBS
 
-import Data.Time.Zones.All       (TZLabel, fromTZName)
 import Network.HTTP.Types.Status (status400)
+import Util.TZ                   (TZLabel, fromTZName)
 
 decodeTZLabel :: LBS.ByteString -> Maybe TZLabel
 decodeTZLabel = LBS.toStrict >>> fromTZName

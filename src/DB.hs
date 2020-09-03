@@ -35,7 +35,7 @@ import qualified ICal
 
 import qualified Sandstorm
 
-import Data.Time.Zones.DB (TZLabel, fromTZName, toTZName)
+import Util.TZ (TZLabel, fromTZName, toTZName)
 
 import Database.SQLite.Simple (NamedParam((:=)))
 

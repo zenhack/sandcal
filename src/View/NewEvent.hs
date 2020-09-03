@@ -8,9 +8,9 @@ import Zhp
 
 import View.EditEvent
 
-import qualified Data.Time.Zones.All as Tz
 import qualified Route
-import qualified Text.Blaze.Html5    as H
+import qualified Text.Blaze.Html5 as H
+import qualified Util.TZ          as Tz
 
 import qualified Sandstorm
 import qualified Util.CSRF as CSRF

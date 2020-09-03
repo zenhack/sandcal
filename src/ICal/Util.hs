@@ -6,10 +6,10 @@ module ICal.Util
 
 import Zhp
 
-import qualified Data.Text.Encoding  as TE
-import qualified Data.Text.Lazy      as LT
-import qualified Data.Time.Zones.All as TZ
+import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Lazy     as LT
 import qualified ICal
+import qualified Util.TZ            as TZ
 
 veventTZLabel :: ICal.VEvent -> Maybe TZ.TZLabel
 veventTZLabel ve = do

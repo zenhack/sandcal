@@ -12,20 +12,18 @@ import qualified View.Common as VC
 import qualified Route
 import qualified Sandstorm
 
-import TZ ()
-
 import qualified Data.Aeson                  as Aeson
 import qualified Data.Text                   as T
 import           Data.Text.Encoding.Error    (lenientDecode)
 import qualified Data.Text.Lazy              as LT
 import qualified Data.Text.Lazy.Encoding     as LT
-import qualified Data.Time.Zones.All         as Tz
 import           Forms.NewEvent              (NewEvent)
 import           GHC.Generics                (Generic)
 import           Text.Blaze                  (ToValue(toValue))
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
+import qualified Util.TZ                     as Tz
 
 data EditTemplate = EditTemplate
     { title      :: T.Text

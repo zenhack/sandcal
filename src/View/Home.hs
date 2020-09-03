@@ -13,10 +13,10 @@ import qualified Route
 import qualified Sandstorm
 
 import qualified Data.Time                   as Time
-import           Data.Time.Zones             (TZ)
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
+import           Util.TZ                     (TZ)
 
 data Item
     = DayHeading Time.Day

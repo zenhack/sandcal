@@ -102,10 +102,10 @@ library libsandcal
     , ICal.Util
     , Sandstorm
     , Occurrences
-    , TZ
     , Util.CSRF
     , Util.Scotty.DateParsers
     , Util.Time
+    , Util.TZ
   hs-source-dirs: src
 
 executable sandcal

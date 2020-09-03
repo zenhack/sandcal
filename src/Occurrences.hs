@@ -18,9 +18,8 @@ import Zhp
 
 import ICal
 
-import           Data.Time.Zones     (TZ)
-import qualified Data.Time.Zones     as TZ
-import qualified Data.Time.Zones.All as TZ
+import           Util.TZ (TZ)
+import qualified Util.TZ as TZ
 
 import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Set                as Set

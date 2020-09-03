@@ -12,7 +12,6 @@ import           Data.List                   (intersperse)
 import qualified Data.Set                    as S
 import qualified Data.Text.Lazy              as LT
 import qualified Data.Time                   as Time
-import qualified Data.Time.Zones.All         as TZ
 import qualified ICal
 import qualified Occurrences                 as Oc
 import qualified Route
@@ -21,6 +20,7 @@ import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
 import qualified Util.CSRF                   as CSRF
+import qualified Util.TZ                     as TZ
 
 event :: CSRF.Key -> Maybe Sandstorm.UserId -> Int64 -> TZ.TZLabel -> ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
 event csrfKey userId eid tzLabel ev zot =

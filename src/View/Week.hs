@@ -10,11 +10,11 @@ import qualified Occurrences as Oc
 import qualified Sandstorm
 import           View.Common
 
-import qualified Data.Map.Strict     as M
-import qualified Data.Time           as Time
-import           Data.Time.Zones     (TZ)
-import qualified Data.Time.Zones.All as Tz
-import qualified Text.Blaze.Html5    as H
+import qualified Data.Map.Strict  as M
+import qualified Data.Time        as Time
+import qualified Text.Blaze.Html5 as H
+import           Util.TZ          (TZ)
+import qualified Util.TZ          as Tz
 -- import qualified Util.Time           as UT
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5.Attributes as A

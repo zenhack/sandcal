@@ -10,7 +10,7 @@ import Web.Scotty
 
 import Forms.Common
 
-import qualified Data.Time.Zones.All as Tz
+import qualified Util.TZ as Tz
 
 data Settings = Settings
     { timeZone :: Tz.TZLabel

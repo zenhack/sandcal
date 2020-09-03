@@ -16,16 +16,15 @@ import Text.ICalendar.Parser         (parseICalendar)
 import qualified Forms.NewEvent
 import qualified Forms.Settings
 
-import Data.Time.Zones.All (TZLabel)
+import Util.TZ (TZLabel)
 
-import qualified Data.Time           as Time
-import qualified Data.Time.Zones     as Tz
-import qualified Data.Time.Zones.All as Tz
-import qualified Data.UUID.V4        as UUID
+import qualified Data.Time    as Time
+import qualified Data.UUID.V4 as UUID
 import qualified DB
 import qualified Route
 import qualified Sandstorm
-import qualified Util.Time           as UT
+import qualified Util.Time    as UT
+import qualified Util.TZ      as Tz
 import qualified View
 import qualified View.Import
 

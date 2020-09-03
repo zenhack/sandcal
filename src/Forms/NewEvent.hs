@@ -19,8 +19,6 @@ import Zhp
 
 import Web.Scotty
 
-import TZ ()
-
 import Forms.Common
 
 import Data.Default             (def)
@@ -34,9 +32,8 @@ import qualified Data.Set                as S
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.Time               as Time
-import qualified Data.Time.Zones         as Tz
-import qualified Data.Time.Zones.All     as Tz
 import qualified Data.UUID               as UUID
+import qualified Util.TZ                 as Tz
 
 import qualified ICal
 import qualified Util.Scotty.DateParsers as DP
