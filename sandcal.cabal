@@ -101,9 +101,9 @@ library libsandcal
     , ICal
     , ICal.Util
     , Sandstorm
-    , DateParsers
     , Occurrences
     , TZ
+    , Util.Scotty.DateParsers
     , Util.Time
     , CSRF
   hs-source-dirs: src

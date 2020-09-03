@@ -38,8 +38,8 @@ import qualified Data.Time.Zones         as Tz
 import qualified Data.Time.Zones.All     as Tz
 import qualified Data.UUID               as UUID
 
-import qualified DateParsers as DP
 import qualified ICal
+import qualified Util.Scotty.DateParsers as DP
 
 -- TODO: can't represent events that cross a day boundary.
 -- TODO: this is no longer just used for "new" events; change the name.

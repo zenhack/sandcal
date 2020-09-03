@@ -4,7 +4,7 @@
 -- This package defines its own types for parsing purposes, and supplies
 -- functions to convert between these types and the ones from from the
 -- time package.
-module DateParsers
+module Util.Scotty.DateParsers
     ( TimeOfDay(..)
     , Day(..)
     , toStdDay
