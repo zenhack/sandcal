@@ -137,16 +137,30 @@ dtEndZonedTime defaultTz = \case
 
 
 -- | Like 'zonedStartTime', but computes the _end_ of an event.
-zonedEndTime :: TZ.TZLabel -> VEvent -> Maybe ZonedOCTime
-zonedEndTime defaultTz ev = flip fmap (veDTEndDuration ev) $ \case
-    Left dtEnd -> dtEndZonedTime defaultTz dtEnd
-    Right (DurationProp dur _) ->
+zonedEndTime :: TZ.TZLabel -> VEvent -> ZonedOCTime
+zonedEndTime defaultTz ev = case veDTEndDuration ev of
+    Just (Left dtEnd) -> dtEndZonedTime defaultTz dtEnd
+    Just (Right (DurationProp dur _)) ->
         let start = zonedStartTime defaultTz ev in
         case octTime start of
             LocalOCAtTime t ->
                 start { octTime = LocalOCAtTime $ Util.Time.addICalDuration dur t }
             LocalOCAllDay d ->
                 start { octTime = LocalOCAtTime $ Util.Time.addICalDuration dur $ Util.Time.startOfDay d }
+    Nothing ->
+        -- No explicitly recorded end time or duration. But all is not lost -- let's see
+        -- if it's an all day event:
+        let start = zonedStartTime defaultTz ev in
+        case octTime start of
+            LocalOCAllDay d ->
+                -- It is! That's easy; the end is just the end of that day:
+                start { octTime = LocalOCAtTime $ Util.Time.endOfDay d }
+
+            LocalOCAtTime Time.LocalTime{Time.localDay} ->
+                -- Crap. Let's treat it as going to the the end of the day. TODO/FIXME.
+                start { octTime = LocalOCAtTime $ Util.Time.endOfDay localDay }
+
+
 
 
 -- | @'zonedStartTime' defaultTz event@ is the start time of an event
@@ -240,9 +254,7 @@ eventOccurrences defaultTz start ev =
         streams = map (ruleOccurrences defaultTz start ev) rules
 
         eventStart = zonedStartTime defaultTz ev
-        eventEnd = case zonedEndTime defaultTz ev of
-            Just t  -> t
-            Nothing -> eventStart
+        eventEnd = zonedEndTime defaultTz ev
 
         hd =
             [ Occurrence
@@ -271,9 +283,8 @@ expandFreq defaultTz viewStart ev freq interval =
         Yearly   -> expandModifyDay Time.addGregorianYearsClip
   where
     eventStart = zonedStartTime defaultTz ev
-    eventEnd = case zonedEndTime defaultTz ev of
-        Just t  -> t
-        Nothing -> eventStart
+    eventEnd = zonedEndTime defaultTz ev
+
     expandIndex atIdx =
         let startIdx =
                 findStartPoint $ \i -> viewStart < zonedOCTimeToUTCFudge (snd $ atIdx i)
