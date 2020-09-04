@@ -102,6 +102,7 @@ library libsandcal
     , Occurrences
     , Util.CSRF
     , Util.ICal
+    , Util.Scotty.Cookie
     , Util.Scotty.DateParsers
     , Util.Time
     , Util.TZ

@@ -18,18 +18,20 @@ import qualified Forms.Settings
 
 import Util.TZ (TZLabel)
 
-import qualified Data.Time    as Time
-import qualified Data.UUID.V4 as UUID
+import qualified Data.ByteString.Lazy    as LBS
+import qualified Data.Text.Lazy.Encoding as LTE
+import qualified Data.Time               as Time
+import qualified Data.UUID.V4            as UUID
 import qualified DB
+import qualified Occurrences
 import qualified Route
 import qualified Sandstorm
-import qualified Util.Time    as UT
-import qualified Util.TZ      as TZ
+import qualified Util.CSRF               as CSRF
+import qualified Util.Scotty.Cookie      as Cookie
+import qualified Util.Time               as UT
+import qualified Util.TZ                 as TZ
 import qualified View
 import qualified View.Import
-
-import qualified Occurrences
-import qualified Util.CSRF   as CSRF
 
 
 import Web.Scotty
@@ -134,10 +136,17 @@ getOccursSince db utc = do
 
 getUserTZ :: DB.Conn -> ActionM (Maybe TZLabel)
 getUserTZ db = do
+    cookieTz <- Cookie.getCookie "timezone"
     maybeUid <- Sandstorm.maybeGetUserId
-    case maybeUid of
+    maybeTz <- case maybeUid of
         Nothing  -> pure Nothing
         Just uid -> DB.runQuery db $ DB.getUserTimeZone uid
+    pure $ asum
+        [ maybeTz
+        , do
+            tz <- cookieTz
+            TZ.fromTZName (LBS.toStrict $ LTE.encodeUtf8 tz)
+        ]
 
 userTZOrUTC :: DB.Conn -> ActionM TZLabel
 userTZOrUTC db = do
