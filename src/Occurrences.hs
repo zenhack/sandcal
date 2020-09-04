@@ -130,7 +130,7 @@ dtEndZonedTime :: TZ.TZLabel -> DTEnd -> ZonedOCTime
 dtEndZonedTime defaultTz = \case
     DTEndDate (Date d) _ -> ZonedOCTime
         { octZone = defaultTz
-        , octTime = LocalOCAllDay d
+        , octTime = LocalOCAtTime $ Util.Time.endOfDay d
         }
     DTEndDateTime dt _ ->
         dateTimeToZonedOCTime defaultTz dt
