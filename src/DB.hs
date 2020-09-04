@@ -21,8 +21,6 @@ module DB
     , getEvent
     , updateEvent
     , deleteEvent
-    , getUserTimeZone
-    , setUserTimeZone
     ) where
 
 import Zhp
@@ -32,10 +30,6 @@ import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Lazy   as LBS
 import qualified Database.SQLite.Simple as Sql
 import qualified Util.ICal              as ICal
-
-import qualified Sandstorm
-
-import Util.TZ (TZLabel, fromTZName, toTZName)
 
 import Database.SQLite.Simple (NamedParam((:=)))
 
@@ -113,13 +107,6 @@ initSchema = Query $ \conn -> do
                 vevent BLOB NOT NULL
             )
         |]
-    Sql.execute_ conn
-        [here|
-            CREATE TABLE IF NOT EXISTS user_timezones (
-                user_id VARCHAR PRIMARY KEY,
-                timezone_name BLOB NOT NULL
-            )
-        |]
 
 allEvents :: Query [EventEntry]
 allEvents = Query $ \conn -> Sql.query_ conn "SELECT id, vevent FROM events"
@@ -157,25 +144,3 @@ deleteEvent eid = Query $ \conn ->
     Sql.executeNamed conn
         "DELETE FROM events WHERE id = :ident"
         [ ":ident" := unEventID eid ]
-
-setUserTimeZone :: Sandstorm.UserId -> TZLabel -> Query ()
-setUserTimeZone userId timezoneName = Query $ \conn -> do
-    Sql.executeNamed conn
-        [here|
-            INSERT OR REPLACE
-            INTO user_timezones(user_id, timezone_name)
-            VALUES (:user_id, :timezone_name)
-        |]
-        [ ":user_id" := Sandstorm.userIdToText userId
-        , ":timezone_name" := toTZName timezoneName
-        ]
-
-
-getUserTimeZone :: Sandstorm.UserId -> Query (Maybe TZLabel)
-getUserTimeZone userId = Query $ \conn -> do
-    rs <- Sql.queryNamed conn
-        "SELECT timezone_name FROM user_timezones WHERE user_id = :user_id"
-        [":user_id" := Sandstorm.userIdToText userId]
-    case rs of
-        []             -> pure Nothing
-        (Sql.Only r:_) -> pure $! fromTZName r

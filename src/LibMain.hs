@@ -52,7 +52,7 @@ main = do
 
             Route.Get Route.Home -> viewHome db
             Route.Get (Route.Week refDay) -> viewWeek db refDay
-            Route.Get Route.NewEvent -> viewNewEvent csrfKey db
+            Route.Get Route.NewEvent -> viewNewEvent csrfKey
             Route.Get (Route.Event eid zot) -> getEvent csrfKey db eid zot
             Route.Get (Route.EditEvent eid) -> editEvent csrfKey db eid
             Route.Get Route.ImportICS -> do
@@ -77,12 +77,9 @@ main = do
         get "/bundle.min.js" $ file "ui/bundle.min.js"
         notFound $ do404
 
-viewNewEvent csrfKey db = do
+viewNewEvent csrfKey = do
     uid <- Sandstorm.maybeGetUserId
-    maybeTzLabel <- case uid of
-        Just uid' -> DB.runQuery db $ DB.getUserTimeZone uid'
-        Nothing   -> pure Nothing
-    blaze $ View.newEvent csrfKey uid maybeTzLabel
+    blaze $ View.newEvent csrfKey uid
 
 occursBefore :: Occurrences.Occurrence a -> Time.UTCTime -> Bool
 occursBefore occur end =
@@ -94,14 +91,14 @@ viewHome db = do
     occurs <- getOccursSince db utcNow
         & fmap (takeWhile (`occursBefore` utcEnd))
         & fmap (take 20)
-    tzLabel <- userTZOrUTC db
+    tzLabel <- userTZOrUTC
     blaze $ View.home (TZ.tzByLabel tzLabel) occurs
 
 viewWeek db refDay = do
     -- TODO: allow the user to configure the start of the week.
     let firstDayOfWeek = Time.Sunday
         (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
-    tzLabel <- userTZOrUTC db
+    tzLabel <- userTZOrUTC
     let tz = TZ.tzByLabel tzLabel
         utcStart = TZ.localTimeToUTCTZ tz (UT.startOfDay startDay)
         utcEnd   = TZ.localTimeToUTCTZ tz (UT.endOfDay endDay)
@@ -116,7 +113,7 @@ viewWeek db refDay = do
 getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
 getOccursSince db utc = do
     events <- DB.runQuery db DB.allEvents
-    tzLabel <- userTZOrUTC db
+    tzLabel <- userTZOrUTC
     pure $ events
         & map (\ev ->
             Occurrences.eventOccurrences tzLabel utc (DB.eeVEvent ev)
@@ -124,23 +121,16 @@ getOccursSince db utc = do
         )
         & Occurrences.merge
 
-getUserTZ :: DB.Conn -> ActionM (Maybe TZLabel)
-getUserTZ db = do
+getUserTZ :: ActionM (Maybe TZLabel)
+getUserTZ = do
     cookieTz <- Cookie.getCookie "timezone"
-    maybeUid <- Sandstorm.maybeGetUserId
-    maybeTz <- case maybeUid of
-        Nothing  -> pure Nothing
-        Just uid -> DB.runQuery db $ DB.getUserTimeZone uid
-    pure $ asum
-        [ maybeTz
-        , do
-            tz <- cookieTz
-            TZ.fromTZName (LBS.toStrict $ LTE.encodeUtf8 tz)
-        ]
+    pure $ do
+        tz <- cookieTz
+        TZ.fromTZName (LBS.toStrict $ LTE.encodeUtf8 tz)
 
-userTZOrUTC :: DB.Conn -> ActionM TZLabel
-userTZOrUTC db = do
-    maybeTz <- getUserTZ db
+userTZOrUTC :: ActionM TZLabel
+userTZOrUTC = do
+    maybeTz <- getUserTZ
     pure $ case maybeTz of
         Just tz -> tz
         Nothing -> TZ.Etc__UTC
@@ -154,12 +144,12 @@ eventOr404 db eid = do
 getEvent csrfKey db eid zot = do
     maybeUid <- Sandstorm.maybeGetUserId
     e <- eventOr404 db eid
-    tzLabel <- userTZOrUTC db
+    tzLabel <- userTZOrUTC
     blaze $ View.event csrfKey maybeUid eid tzLabel e zot
 
 editEvent csrfToken db eid = do
     uid <- Sandstorm.maybeGetUserId
-    userTz <- getUserTZ db
+    userTz <- getUserTZ
     event <- eventOr404 db eid
     blaze $ View.editEvent csrfToken uid userTz eid event
 
