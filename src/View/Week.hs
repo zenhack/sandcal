@@ -7,7 +7,6 @@ import Zhp
 
 import qualified DB
 import qualified Occurrences as Oc
-import qualified Sandstorm
 import           View.Common
 
 import qualified Data.Map.Strict  as M
@@ -94,8 +93,8 @@ ocDay tz zot = case Oc.ocTimeInZoneFudge tz zot of
     Oc.LocalOCAtTime localTime -> Time.localDay localTime
 
 
-week :: Maybe Sandstorm.UserId -> Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
-week uid startOfWeek now occurs =
+week :: Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
+week startOfWeek now occurs =
     let tz = TZ.tzByLabel $ Oc.octZone now
         items = occurs
             & map (\o -> (ocDay (TZ.tzByLabel $ Oc.octZone now) (Oc.ocTimeStamp o), o))
@@ -136,8 +135,7 @@ week uid startOfWeek now occurs =
             & mconcat
     in
     docToHtml $ Document
-        { user = uid
-        , title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now)
+        { title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now)
         , body = H.div
             ! A.class_ "week-grid"
             $ for_ items (viewItem startOfWeek)

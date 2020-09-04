@@ -14,7 +14,6 @@ import Text.ICalendar.Parser         (parseICalendar)
 
 
 import qualified Forms.NewEvent
-import qualified Forms.Settings
 
 import Util.TZ (TZLabel)
 
@@ -53,7 +52,6 @@ main = do
 
             Route.Get Route.Home -> viewHome db
             Route.Get (Route.Week refDay) -> viewWeek db refDay
-            Route.Get Route.Settings -> viewSettings csrfKey db
             Route.Get Route.NewEvent -> viewNewEvent csrfKey db
             Route.Get (Route.Event eid zot) -> getEvent csrfKey db eid zot
             Route.Get (Route.EditEvent eid) -> editEvent csrfKey db eid
@@ -67,12 +65,6 @@ main = do
                     Route.PostEditEvent eid -> postEditEvent db eid
                     Route.PostNewEvent -> postNewEvent db
                     Route.PostImportICS -> importICS db
-
-                    Route.SaveSettings -> do
-                        uid <- Sandstorm.getUserId
-                        Forms.Settings.Settings{timeZone} <- Forms.Settings.getForm
-                        liftIO $ DB.runQuery db $ DB.setUserTimeZone uid timeZone
-                        Route.redirectGet Route.Home
 
                     Route.PostDeleteEvent eid -> do
                         liftIO $ DB.runQuery db $ DB.deleteEvent (DB.eventID eid)
@@ -97,20 +89,18 @@ occursBefore occur end =
     Occurrences.zonedOCTimeToUTCFudge (Occurrences.ocTimeStamp occur) <= end
 
 viewHome db = do
-    uid <- Sandstorm.maybeGetUserId
     utcNow <- liftIO $ Time.getCurrentTime
     let utcEnd = Time.addUTCTime (Time.nominalDay * 45) utcNow
     occurs <- getOccursSince db utcNow
         & fmap (takeWhile (`occursBefore` utcEnd))
         & fmap (take 20)
     tzLabel <- userTZOrUTC db
-    blaze $ View.home uid (TZ.tzByLabel tzLabel) occurs
+    blaze $ View.home (TZ.tzByLabel tzLabel) occurs
 
 viewWeek db refDay = do
     -- TODO: allow the user to configure the start of the week.
     let firstDayOfWeek = Time.Sunday
         (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
-    uid <- Sandstorm.maybeGetUserId
     tzLabel <- userTZOrUTC db
     let tz = TZ.tzByLabel tzLabel
         utcStart = TZ.localTimeToUTCTZ tz (UT.startOfDay startDay)
@@ -121,7 +111,7 @@ viewWeek db refDay = do
             }
     occurs <- takeWhile (`occursBefore` utcEnd)
         <$> getOccursSince db utcStart
-    blaze $ View.week uid firstDayOfWeek zonedOCTime occurs
+    blaze $ View.week firstDayOfWeek zonedOCTime occurs
 
 getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
 getOccursSince db utc = do
@@ -194,11 +184,6 @@ importICS db = do
                 for_ cals' $ \(vcals, _) ->
                     traverse_ DB.addCalendar vcals
             Route.redirectGet Route.Home
-
-viewSettings csrfKey db = do
-    uid <- Sandstorm.getUserId
-    result <- DB.runQuery db $ View.settings csrfKey uid
-    blaze result
 
 postNewEvent db = do
     utcNow <- liftIO $ Time.getCurrentTime

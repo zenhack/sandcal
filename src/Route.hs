@@ -28,7 +28,6 @@ data Route
 data GetRoute
     = Home
     | Week Time.Day
-    | Settings
     | Event Int64 (Maybe Oc.ZonedOCTime)
     | NewEvent
     | EditEvent Int64
@@ -40,7 +39,6 @@ data GetRoute
 data PostRoute
     = PostNewEvent
     | PostEditEvent Int64
-    | SaveSettings
     | PostImportICS
     | PostDeleteEvent Int64
     | PostDeleteOccurrence Int64 Oc.ZonedOCTime
@@ -65,7 +63,6 @@ instance Aeson.ToJSON PostRoute where
 renderPost :: IsString a => PostRoute -> a
 renderPost (PostEditEvent eid) = fromString $ "/event/" <> show eid <> "/edit"
 renderPost PostNewEvent        = "/event/new"
-renderPost SaveSettings        = "/settings"
 renderPost PostImportICS       = "/import.ics"
 renderPost (PostDeleteEvent eid) = fromString $ "/event/" <> show eid <> "/delete"
 renderPost (PostDeleteOccurrence eid zot) = fromString $ mconcat
@@ -80,7 +77,6 @@ renderGet Home        = "/"
 renderGet (Week day) =
     let (y, m, d) = Time.toGregorian day in
     fromString $ "/week/" <> show y <> "/" <> show m <> "/" <> show d
-renderGet Settings    = "/settings"
 renderGet (Event eid zot) = fromString $ mconcat
     [ "/event/"
     , show eid
@@ -111,8 +107,6 @@ scottyM route = do
         m <- param "m"
         d <- param "d"
         route $ Get $ Week $ Time.fromGregorian y m d
-    get "/settings" $
-        route $ Get Settings
     get "/event/new" $
         route $ Get NewEvent
     get "/event/:eid" $ do
@@ -133,8 +127,6 @@ scottyM route = do
         route $ Get ImportICS
     post "/event/new" $
         route $ Post PostNewEvent
-    post "/settings" $
-        route $ Post SaveSettings
     post "/import.ics" $
         route $ Post PostImportICS
     post "/event/:eid/delete" $ do

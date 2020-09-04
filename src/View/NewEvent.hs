@@ -18,7 +18,7 @@ import qualified Util.CSRF as CSRF
 newEvent :: CSRF.Key -> Maybe Sandstorm.UserId -> Maybe TZ.TZLabel -> H.Html
 newEvent csrfKey uid userTz =
     let route = Route.PostNewEvent in
-    editEvent uid EditTemplate
+    editEvent EditTemplate
         { title = "New Event"
         , submitText = "Create"
         , action = route

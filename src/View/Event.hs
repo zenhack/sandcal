@@ -31,8 +31,7 @@ event csrfKey userId eid tzLabel ev zot =
             zot <|> (fmap Oc.ocTimeStamp (Oc.firstOccurrence tzLabel ev))
     in
     docToHtml Document
-        { user = userId
-        , title = "Event - " <> LT.toStrict title
+        { title = "Event - " <> LT.toStrict title
         , body = do
             H.h1 $ H.toHtml title
             H.nav $ H.ul $ do
