@@ -96,7 +96,6 @@ zonedOCTimeFromUTC utcTime = ZonedOCTime
         Time.utcToLocalTime Time.utc utcTime
     }
 
-{-
 dateTimeToZonedOCTime :: TZ.TZLabel -> DateTime -> ZonedOCTime
 dateTimeToZonedOCTime defaultTz = \case
     FloatingDateTime t -> ZonedOCTime
@@ -115,6 +114,13 @@ dateTimeToZonedOCTime defaultTz = \case
             Just lbl -> lbl
         , octTime = LocalOCAtTime t
         }
+{-
+
+eventDuration :: VEvent -> Maybe Time.DiffTime
+eventDuration ev = flip fmap (veDTEndDuration ev) $ \case
+    Left _dtEnd -> error "TODO"
+    Right (DurationProp _dur _) -> error "TODO"
+-}
 
 -- | @'dtEndZonedTime' defaultTz@ converts a DTEnd to a ZonedOCTime, using
 -- 'defaultTz' as the time zone if the DTEnd does not specify one.
@@ -127,18 +133,12 @@ dtEndZonedTime defaultTz = \case
     DTEndDateTime dt _ ->
         dateTimeToZonedOCTime defaultTz dt
 
-eventDuration :: VEvent -> Maybe Time.DiffTime
-eventDuration ev = flip fmap (veDTEndDuration ev) $ \case
-    Left _dtEnd -> error "TODO"
-    Right (DurationProp _dur _) -> error "TODO"
-
 
 -- | Like 'zonedStartTime', but computes the _end_ of an event.
 zonedEndTime :: TZ.TZLabel -> VEvent -> Maybe ZonedOCTime
 zonedEndTime defaultTz ev = flip fmap (veDTEndDuration ev) $ \case
     Left dtEnd -> dtEndZonedTime defaultTz dtEnd
     Right _dtDur -> error "TODO"
--}
 
 
 -- | @'zonedStartTime' defaultTz event@ is the start time of an event
@@ -230,12 +230,18 @@ eventOccurrences :: TZ.TZLabel -> Time.UTCTime -> VEvent -> [Occurrence VEvent]
 eventOccurrences defaultTz start ev =
     let rules = map rRuleValue $ Set.toList (veRRule ev)
         streams = map (ruleOccurrences defaultTz start ev) rules
+
+        eventStart = zonedStartTime defaultTz ev
+        eventEnd = case zonedEndTime defaultTz ev of
+            Just t  -> t
+            Nothing -> eventStart
+
         hd =
             [ Occurrence
                 { ocItem = ev
-                , ocTimeStamp = zonedStartTime defaultTz ev
+                , ocTimeStamp = eventStart
                 }
-            | zonedOCTimeToUTCFudge (zonedStartTime defaultTz ev) >= start
+            | zonedOCTimeToUTCFudge eventEnd >= start
             ]
     in
     dedup $ hd <> merge streams
@@ -256,29 +262,39 @@ expandFreq defaultTz viewStart ev freq interval =
         Monthly  -> expandModifyDay Time.addGregorianMonthsClip
         Yearly   -> expandModifyDay Time.addGregorianYearsClip
   where
-    start = zonedStartTime defaultTz ev
+    eventStart = zonedStartTime defaultTz ev
+    eventEnd = case zonedEndTime defaultTz ev of
+        Just t  -> t
+        Nothing -> eventStart
     expandIndex atIdx =
         let startIdx =
-                findStartPoint $ \i -> viewStart < zonedOCTimeToUTCFudge (atIdx i)
+                findStartPoint $ \i -> viewStart < zonedOCTimeToUTCFudge (snd $ atIdx i)
         in
         [ Occurrence
             { ocItem = ev
-            , ocTimeStamp = atIdx (startIdx + (n * interval))
+            , ocTimeStamp = fst $ atIdx (startIdx + (n * interval))
             }
         | n <- [0..]
         ]
     expandSeconds toSeconds =
         let toNDF = toSeconds >>> fromIntegral >>> Time.secondsToNominalDiffTime in
-        case octTime start of
+        case octTime eventStart of
             LocalOCAllDay _ ->
                 -- Shouldn't see this on fractional parts of a day.
                 []
             LocalOCAtTime localTime ->
-                expandIndex $ \i -> start
-                    { octTime = LocalOCAtTime $ Time.addLocalTime (toNDF i) localTime
-                    }
-    expandModifyDay modify = expandIndex $ \i -> start
-        { octTime = modifyLocalOCDay (modify $ fromIntegral i) (octTime start) }
+                expandIndex $ \i ->
+                    let bump t = t
+                            { octTime = LocalOCAtTime $ Time.addLocalTime (toNDF i) localTime
+                            }
+                    in
+                    ( bump eventStart, bump eventEnd )
+    expandModifyDay modify = expandIndex $ \i ->
+        let bump t = t
+                { octTime = modifyLocalOCDay (modify $ fromIntegral i) (octTime t)
+                }
+        in
+        ( bump eventStart, bump eventEnd )
     expandDays toNDays =
         expandModifyDay $ Time.addDays . toNDays
 
