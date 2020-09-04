@@ -25,6 +25,10 @@ type msg =
 
 module StringMap = Map.Make(String)
 
+let choose_tz user_tz browser_tz = match user_tz with
+  | Some tz -> tz
+  | None -> browser_tz
+
 module FormValues = struct
   type t = string StringMap.t
 
@@ -33,11 +37,8 @@ module FormValues = struct
     | "" -> StringMap.remove key old
     | _ -> StringMap.add key value old
 
-  let init tpl =
-    let user_tz = match tpl.Protocol.EditTemplate.user_tz with
-      | None -> []
-      | Some tz -> [ "Time Zone", tz ]
-    in
+  let init tpl browser_tz =
+    let user_tz = [ "Time Zone", choose_tz tpl.Protocol.EditTemplate.user_tz browser_tz ] in
     let fields =
       match tpl.Protocol.EditTemplate.form_data with
       | None ->
@@ -104,7 +105,7 @@ module FormValues = struct
 end
 
 type model = {
-  user_tz: string option;
+  user_tz: string;
   form_values: FormValues.t;
   form_values_init: FormValues.t;
   action_: string;
@@ -112,12 +113,12 @@ type model = {
   csrf_token: string;
 }
 
-let init tpl =
+let init tpl browser_tz =
   let Protocol.EditTemplate.{user_tz; action = action_; submit_text; csrf_token; form_data = _} = tpl in
-  let form_values = FormValues.init tpl  in
+  let form_values = FormValues.init tpl browser_tz in
   { form_values
   ; form_values_init = form_values
-  ; user_tz
+  ; user_tz = choose_tz user_tz browser_tz
   ; action_
   ; submit_text
   ; csrf_token
@@ -196,7 +197,7 @@ let view model =
         [ text model.submit_text ]
     ]
 
-let main tpl =
+let main tpl browser_tz =
   let tpl = Js.Json.parseExn tpl in
   let tpl = Protocol.EditTemplate.decode tpl in
   let tpl = match tpl with
@@ -204,7 +205,7 @@ let main tpl =
     | Some v -> v
   in
   beginnerProgram {
-    model = init tpl;
+    model = init tpl browser_tz;
     update;
     view;
   }
