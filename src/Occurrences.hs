@@ -21,6 +21,8 @@ import Util.ICal
 import           Util.TZ (TZ)
 import qualified Util.TZ as TZ
 
+import qualified Util.Time
+
 import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Set                as Set
 import qualified Data.Text.Lazy          as LT
@@ -138,7 +140,13 @@ dtEndZonedTime defaultTz = \case
 zonedEndTime :: TZ.TZLabel -> VEvent -> Maybe ZonedOCTime
 zonedEndTime defaultTz ev = flip fmap (veDTEndDuration ev) $ \case
     Left dtEnd -> dtEndZonedTime defaultTz dtEnd
-    Right _dtDur -> error "TODO"
+    Right (DurationProp dur _) ->
+        let start = zonedStartTime defaultTz ev in
+        case octTime start of
+            LocalOCAtTime t ->
+                start { octTime = LocalOCAtTime $ Util.Time.addICalDuration dur t }
+            LocalOCAllDay d ->
+                start { octTime = LocalOCAtTime $ Util.Time.addICalDuration dur $ Util.Time.startOfDay d }
 
 
 -- | @'zonedStartTime' defaultTz event@ is the start time of an event

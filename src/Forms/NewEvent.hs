@@ -296,6 +296,11 @@ fromVEvent defaultTz ev =
                             ICal.DTEndDateTime dt _ -> DP.fromStdTimeOfDay $ dateTimeTimeOfDay tz dt
                             ICal.DTEndDate{} -> error "TODO"
                     Just (Right (ICal.DurationProp duration _)) ->
+                        -- TODO(cleanup): this is heavily duplicated with Util.Time.addICalDuration;
+                        -- just use that. Note that doing that is not 100% mechanical, as that
+                        -- gives us a LocalTime, not a TimeOfDay -- we need to decide what to do
+                        -- if the day isn't the same. But we should do that anyway, as right now
+                        -- we just crash in those cases.
                         let applySign ICal.Positive = id
                             applySign ICal.Negative = negate
                             fixTimeOfDay tod
