@@ -36,15 +36,17 @@ makeItems' day (o@Oc.Occurrence{Oc.ocTimeStamp}:os) =
     else
         Occurrence o : makeItems' day os
 
-viewItem :: TZ -> Item -> H.Html
-viewItem _ (DayHeading day) =
-    H.h2 ! A.class_ "upcomingDayHeading" $
+viewItem :: Time.Day -> TZ -> Item -> H.Html
+viewItem today _ (DayHeading day) =
+    H.h2 ! A.class_ "upcomingDayHeading" $ do
         H.toHtml $ Time.formatTime
             Time.defaultTimeLocale
             "%a %e %b %Y"
             day
+        when (day == today) " (Today)"
+        when (day == succ today) " (Tomorrow)"
 -- TODO: we should group events in a day into list elements.
-viewItem targetZone (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
+viewItem _ targetZone (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) =
     let title = eventSummary $ DB.eeVEvent ocItem
         timeStamp = case Oc.ocTimeInZoneFudge targetZone zot of
             Oc.LocalOCAllDay _ ->
@@ -63,10 +65,10 @@ viewItem targetZone (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}) 
             ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
             $ title
 
-home :: TZ -> [Oc.Occurrence DB.EventEntry] -> H.Html
-home targetZone entries = docToHtml Document
+home :: Time.Day -> TZ -> [Oc.Occurrence DB.EventEntry] -> H.Html
+home today targetZone entries = docToHtml Document
     { title = "Upcoming Events"
     , body = do
         H.h1 "Upcoming Events"
-        traverse_ (viewItem targetZone) (makeItems entries)
+        traverse_ (viewItem today targetZone) (makeItems entries)
     }

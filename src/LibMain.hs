@@ -92,7 +92,9 @@ viewHome db = do
         & fmap (takeWhile (`occursBefore` utcEnd))
         & fmap (take 20)
     tzLabel <- userTZOrUTC
-    blaze $ View.home (TZ.tzByLabel tzLabel) occurs
+    let tz = TZ.tzByLabel tzLabel
+    let today = Time.localDay $ TZ.utcToLocalTimeTZ tz utcNow
+    blaze $ View.home today tz occurs
 
 viewWeek db refDay = do
     -- TODO: allow the user to configure the start of the week.
