@@ -14,4 +14,26 @@ document.addEventListener('DOMContentLoaded', function() {
   window.parent.postMessage({
     setTitle: document.title,
   }, '*')
+
+  window.parent.postMessage({
+    renderTemplate: {
+      rpcId: '0',
+      template: location.protocol + "//$API_HOST/.sandstorm-token/$API_TOKEN/export.ics",
+      clipboardButton: 'left',
+      roleAssignment: {roleId: 0}, // viewer
+      forSharing: true,
+    },
+  }, '*');
+})
+window.addEventListener('message', function(event) {
+  if(event.source != window.parent) {
+    return;
+  }
+
+  console.log("Event", event)
+
+  const exportIframe = document.getElementById('export-offer-iframe');
+  if(exportIframe !== null) {
+    exportIframe.src = event.data.uri;
+  }
 })

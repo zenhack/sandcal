@@ -37,5 +37,8 @@ importICS csrfKey permissions userId = docToHtml $ Document
                         labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
                     H.button ! A.type_ "submit" $ "Upload"
         H.h1 "Export Calendar"
-        H.a ! (A.href $ H.toValue Route.ExportICS) $ "Download ICalendar File"
+        H.a ! (A.href $ H.toValue Route.ExportICS) $ "Download"
+        H.div $ do
+            H.label "Subscribe: "
+            H.iframe ! (A.id "export-offer-iframe") $ pure ()
     }
