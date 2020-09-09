@@ -50,74 +50,74 @@ main = do
     db <- DB.open dbPath
     DB.runQuery db DB.initSchema
     scotty 3000 $ do
-        Route.scottyM $ \case
-            Route.Get Route.StyleCss -> file "style.css"
-            Route.Get Route.SandstormJS -> file "sandstorm.js"
+        Route.scottyM $ \rt -> do
+            perm <- Sandstorm.getPermissions
+            case rt of
+                Route.Get Route.StyleCss -> file "style.css"
+                Route.Get Route.SandstormJS -> file "sandstorm.js"
 
-            Route.Get Route.Home -> viewHome db
-            Route.Get (Route.Week refDay) -> viewWeek db refDay
-            Route.Get Route.NewEvent -> viewNewEvent csrfKey
-            Route.Get (Route.Event eid zot) -> getEvent csrfKey db eid zot
-            Route.Get (Route.EditEvent eid) -> editEvent csrfKey db eid
-            Route.Get Route.ImportICS -> do
-                maybeUid <- Sandstorm.maybeGetUserId
-                blaze $ View.Import.importICS csrfKey maybeUid
+                Route.Get Route.Home -> viewHome perm db
+                Route.Get (Route.Week refDay) -> viewWeek perm db refDay
+                Route.Get Route.NewEvent -> viewNewEvent csrfKey perm
+                Route.Get (Route.Event eid zot) -> getEvent csrfKey perm db eid zot
+                Route.Get (Route.EditEvent eid) -> editEvent csrfKey perm db eid
+                Route.Get Route.ImportICS -> do
+                    maybeUid <- Sandstorm.maybeGetUserId
+                    blaze $ View.Import.importICS csrfKey perm maybeUid
 
-            Route.Get Route.ExportICS -> do
-                events <- DB.runQuery db $ fmap DB.eeVEvent <$> DB.allEvents
-                setHeader "Content-Type" "text/calendar"
-                raw $ printICalendar def ICal.VCalendar
-                        { vcProdId = ICal.ProdId "SandCal" def
-                        , vcVersion = ICal.MinMaxICalVersion
-                            (Version [2, 0] [])
-                            (Version [2, 0] []) def
-                        , vcScale = def
-                        , vcOther = def
-                        , vcMethod = def
-                        , vcTimeZones = def -- TODO: fill this in with something?
-                        , vcEvents = M.fromList
-                            [ ((uid, Nothing), ev)
-                            | ev@ICal.VEvent{ veUID = ICal.UID uid _ } <- events
-                            ]
-                        , vcTodos = def
-                        , vcJournals = def
-                        , vcFreeBusys = def
-                        , vcOtherComps = def
-                        }
+                Route.Get Route.ExportICS -> do
+                    events <- DB.runQuery db $ fmap DB.eeVEvent <$> DB.allEvents
+                    setHeader "Content-Type" "text/calendar"
+                    raw $ printICalendar def ICal.VCalendar
+                            { vcProdId = ICal.ProdId "SandCal" def
+                            , vcVersion = ICal.MinMaxICalVersion
+                                (Version [2, 0] [])
+                                (Version [2, 0] []) def
+                            , vcScale = def
+                            , vcOther = def
+                            , vcMethod = def
+                            , vcTimeZones = def -- TODO: fill this in with something?
+                            , vcEvents = M.fromList
+                                [ ((uid, Nothing), ev)
+                                | ev@ICal.VEvent{ veUID = ICal.UID uid _ } <- events
+                                ]
+                            , vcTodos = def
+                            , vcJournals = def
+                            , vcFreeBusys = def
+                            , vcOtherComps = def
+                            }
 
-            Route.Post postRt -> do
-                perm <- Sandstorm.getPermissions
-                unless ("editor" `elem` perm) $ do
-                    status status401
-                    text "You do not have editor permission for this grain."
-                    finish
+                Route.Post postRt -> do
+                    unless ("editor" `elem` perm) $ do
+                        status status401
+                        text "You do not have editor permission for this grain."
+                        finish
 
-                CSRF.verifyPostRoute csrfKey postRt
-                case postRt of
-                    Route.PostEditEvent eid -> postEditEvent db eid
-                    Route.PostNewEvent -> postNewEvent db
-                    Route.PostImportICS -> importICS db
+                    CSRF.verifyPostRoute csrfKey postRt
+                    case postRt of
+                        Route.PostEditEvent eid -> postEditEvent db eid
+                        Route.PostNewEvent -> postNewEvent db
+                        Route.PostImportICS -> importICS db
 
-                    Route.PostDeleteEvent eid -> do
-                        liftIO $ DB.runQuery db $ DB.deleteEvent (DB.eventID eid)
-                        Route.redirectGet Route.Home
+                        Route.PostDeleteEvent eid -> do
+                            liftIO $ DB.runQuery db $ DB.deleteEvent (DB.eventID eid)
+                            Route.redirectGet Route.Home
 
-                    Route.PostDeleteOccurrence eid zot -> do
-                        _ <- liftIO $ DB.runQuery db $ deleteOccurrence (DB.eventID eid) zot
-                        Route.redirectGet Route.Home
-
+                        Route.PostDeleteOccurrence eid zot -> do
+                            _ <- liftIO $ DB.runQuery db $ deleteOccurrence (DB.eventID eid) zot
+                            Route.redirectGet Route.Home
         get "/bundle.min.js" $ file "ui/bundle.min.js"
         notFound $ do404
 
-viewNewEvent csrfKey = do
+viewNewEvent csrfKey perm = do
     uid <- Sandstorm.maybeGetUserId
-    blaze $ View.newEvent csrfKey uid
+    blaze $ View.newEvent csrfKey perm uid
 
 occursBefore :: Occurrences.Occurrence a -> Time.UTCTime -> Bool
 occursBefore occur end =
     Occurrences.zonedOCTimeToUTCFudge (Occurrences.ocTimeStamp occur) <= end
 
-viewHome db = do
+viewHome perm db = do
     utcNow <- liftIO $ Time.getCurrentTime
     let utcEnd = Time.addUTCTime (Time.nominalDay * 45) utcNow
     occurs <- getOccursSince db utcNow
@@ -126,9 +126,9 @@ viewHome db = do
     tzLabel <- userTZOrUTC
     let tz = TZ.tzByLabel tzLabel
     let today = Time.localDay $ TZ.utcToLocalTimeTZ tz utcNow
-    blaze $ View.home today tz occurs
+    blaze $ View.home perm today tz occurs
 
-viewWeek db refDay = do
+viewWeek perm db refDay = do
     -- TODO: allow the user to configure the start of the week.
     let firstDayOfWeek = Time.Sunday
         (startDay, endDay) = UT.weekBounds firstDayOfWeek refDay
@@ -142,7 +142,7 @@ viewWeek db refDay = do
             }
     occurs <- takeWhile (`occursBefore` utcEnd)
         <$> getOccursSince db utcStart
-    blaze $ View.week firstDayOfWeek zonedOCTime occurs
+    blaze $ View.week perm firstDayOfWeek zonedOCTime occurs
 
 getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
 getOccursSince db utc = do
@@ -175,17 +175,17 @@ eventOr404 db eid = do
         Nothing -> do404
         Just e  -> pure e
 
-getEvent csrfKey db eid zot = do
+getEvent csrfKey perm db eid zot = do
     maybeUid <- Sandstorm.maybeGetUserId
     e <- eventOr404 db eid
     tzLabel <- userTZOrUTC
-    blaze $ View.event csrfKey maybeUid eid tzLabel e zot
+    blaze $ View.event csrfKey perm maybeUid eid tzLabel e zot
 
-editEvent csrfToken db eid = do
+editEvent csrfToken perm db eid = do
     uid <- Sandstorm.maybeGetUserId
     userTz <- getUserTZ
     event <- eventOr404 db eid
-    blaze $ View.editEvent csrfToken uid userTz eid event
+    blaze $ View.editEvent csrfToken perm uid userTz eid event
 
 importICS db = do
     fs <- files

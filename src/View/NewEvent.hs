@@ -8,16 +8,16 @@ import Zhp
 
 import View.EditEvent
 
+import qualified Data.Text.Lazy   as LT
 import qualified Route
-import qualified Text.Blaze.Html5 as H
-
 import qualified Sandstorm
-import qualified Util.CSRF as CSRF
+import qualified Text.Blaze.Html5 as H
+import qualified Util.CSRF        as CSRF
 
-newEvent :: CSRF.Key -> Maybe Sandstorm.UserId -> H.Html
-newEvent csrfKey uid =
+newEvent :: CSRF.Key -> [LT.Text] -> Maybe Sandstorm.UserId -> H.Html
+newEvent csrfKey permissions uid =
     let route = Route.PostNewEvent in
-    editEvent EditTemplate
+    editEvent permissions EditTemplate
         { title = "New Event"
         , submitText = "Create"
         , action = route

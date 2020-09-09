@@ -22,13 +22,13 @@ import qualified View.Week
 
 import qualified Util.CSRF as CSRF
 
-editEvent csrfKey userId userTz eid ev =
+editEvent csrfKey permissions userId userTz eid ev =
     let tzLabel = case userTz of
             Just v  -> v
             Nothing -> TZ.Etc__UTC
         route = Route.PostEditEvent eid
     in
-    EditEvent.editEvent EditEvent.EditTemplate
+    EditEvent.editEvent permissions EditEvent.EditTemplate
         { title = "Edit Event"
         , submitText = "Update"
         , action = Route.PostEditEvent eid

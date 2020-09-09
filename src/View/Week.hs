@@ -10,6 +10,7 @@ import qualified Occurrences as Oc
 import           View.Common
 
 import qualified Data.Map.Strict  as M
+import qualified Data.Text.Lazy   as LT
 import qualified Data.Time        as Time
 import qualified Text.Blaze.Html5 as H
 import           Util.TZ          (TZ)
@@ -93,8 +94,8 @@ ocDay tz zot = case Oc.ocTimeInZoneFudge tz zot of
     Oc.LocalOCAtTime localTime -> Time.localDay localTime
 
 
-week :: Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
-week startOfWeek now occurs =
+week :: [LT.Text] -> Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
+week permissions startOfWeek now occurs =
     let tz = TZ.tzByLabel $ Oc.octZone now
         items = occurs
             & map (\o -> (ocDay (TZ.tzByLabel $ Oc.octZone now) (Oc.ocTimeStamp o), o))
@@ -135,7 +136,8 @@ week startOfWeek now occurs =
             & mconcat
     in
     docToHtml $ Document
-        { title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now)
+        { permissions
+        , title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now)
         , body = H.div
             ! A.class_ "week-grid"
             $ for_ items (viewItem startOfWeek)

@@ -24,6 +24,7 @@ import qualified Util.CSRF as CSRF
 
 import qualified Data.ByteString.Char8       as B8
 import qualified Data.Text                   as T
+import qualified Data.Text.Lazy              as LT
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
 import qualified Text.Blaze.Html5.Attributes as A
@@ -31,8 +32,9 @@ import qualified Util.ICal                   as ICal
 import qualified Util.TZ                     as TZ
 
 data Document = Document
-    { title :: T.Text
-    , body  :: H.Html
+    { title       :: T.Text
+    , permissions :: [LT.Text]
+    , body        :: H.Html
     }
 
 eventSummary :: ICal.VEvent -> H.Html
@@ -41,12 +43,12 @@ eventSummary ev = case ICal.veSummary ev of
     Nothing      -> "Untitled event"
 
 docToHtml :: Document -> H.Html
-docToHtml Document{title, body } = H.docTypeHtml $ do
+docToHtml Document{title, body, permissions} = H.docTypeHtml $ do
     H.title $ H.toHtml (title <> " · SandCal")
     H.link ! A.rel "stylesheet" ! A.href (H.toValue Route.StyleCss)
     H.script ! A.src (H.toValue Route.SandstormJS) $ pure ()
     H.body $ do
-        navigation
+        navigation permissions
         H.div ! A.class_ "mainContentContainer" $
             H.div ! A.class_ "mainContent" $ body
 
@@ -114,17 +116,22 @@ labeledSelect selectName options =
                 in
                 opt'' $ H.toHtml name
 
-navigation :: H.Html
-navigation =
+navigation :: [LT.Text] -> H.Html
+navigation permissions =
     H.nav $ H.ul $ traverse_ navItem items
   where
     navItem (rt, label) =
         H.li $ H.a ! A.href (H.toValue rt) $ label
     items =
-        [ (Route.Home, "Upcoming Events")
-        , (Route.NewEvent, "New Event")
-        , (Route.ImportICS, "Import/Export")
-        ]
+        if "editor" `elem` permissions then
+            [ (Route.Home, "Upcoming Events")
+            , (Route.NewEvent, "New Event")
+            , (Route.ImportICS, "Import/Export")
+            ]
+        else
+            [ (Route.Home, "Upcoming Events")
+            , (Route.ImportICS, "Export")
+            ]
 
 maybeLink :: H.ToMarkup a => a -> Maybe URI -> H.Html
 maybeLink content = \case

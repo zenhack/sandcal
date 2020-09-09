@@ -11,6 +11,7 @@ import qualified DB
 import qualified Occurrences as Oc
 import qualified Route
 
+import qualified Data.Text.Lazy              as LT
 import qualified Data.Time                   as Time
 import           Text.Blaze.Html5            ((!))
 import qualified Text.Blaze.Html5            as H
@@ -65,9 +66,10 @@ viewItem _ targetZone (Occurrence Oc.Occurrence{Oc.ocItem, Oc.ocTimeStamp = zot}
             ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
             $ title
 
-home :: Time.Day -> TZ -> [Oc.Occurrence DB.EventEntry] -> H.Html
-home today targetZone entries = docToHtml Document
-    { title = "Upcoming Events"
+home :: [LT.Text] -> Time.Day -> TZ -> [Oc.Occurrence DB.EventEntry] -> H.Html
+home permissions today targetZone entries = docToHtml Document
+    { permissions
+    , title = "Upcoming Events"
     , body = do
         H.h1 "Upcoming Events"
         traverse_ (viewItem today targetZone) (makeItems entries)

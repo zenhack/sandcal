@@ -22,8 +22,8 @@ import qualified Util.CSRF                   as CSRF
 import qualified Util.ICal                   as ICal
 import qualified Util.TZ                     as TZ
 
-event :: CSRF.Key -> Maybe Sandstorm.UserId -> Int64 -> TZ.TZLabel -> ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
-event csrfKey userId eid tzLabel ev zot =
+event :: CSRF.Key -> [LT.Text] -> Maybe Sandstorm.UserId -> Int64 -> TZ.TZLabel -> ICal.VEvent -> Maybe Oc.ZonedOCTime -> H.Html
+event csrfKey permissions userId eid tzLabel ev zot =
     let title = case ICal.veSummary ev of
             Nothing                               -> "Untitled Event"
             Just ICal.Summary {ICal.summaryValue} -> summaryValue
@@ -31,16 +31,18 @@ event csrfKey userId eid tzLabel ev zot =
             zot <|> (fmap Oc.ocTimeStamp (Oc.firstOccurrence tzLabel ev))
     in
     docToHtml Document
-        { title = "Event - " <> LT.toStrict title
+        { permissions
+        , title = "Event - " <> LT.toStrict title
         , body = do
             H.h1 $ H.toHtml title
-            H.nav $ H.ul $ do
-                H.li $ H.a ! A.href (H.toValue $ Route.Get $ Route.EditEvent eid) $ "Edit"
-                H.li $ postLink csrfKey (CSRF.PostCap (Route.PostDeleteEvent eid) userId) $
-                    "Delete (all occurrences)"
-    {- TODO: implement the handler for this and then uncomment.
-                    for_ zot $ \z ->
-                        H.li $ postLink (Route.PostDeleteOccurrence eid z) $ "Delete (this occurrence only)"
+            when ("editor" `elem` permissions) $ do
+                H.nav $ H.ul $ do
+                    H.li $ H.a ! A.href (H.toValue $ Route.Get $ Route.EditEvent eid) $ "Edit"
+                    H.li $ postLink csrfKey (CSRF.PostCap (Route.PostDeleteEvent eid) userId) $
+                        "Delete (all occurrences)"
+        {- TODO: implement the handler for this and then uncomment.
+                        for_ zot $ \z ->
+                            H.li $ postLink (Route.PostDeleteOccurrence eid z) $ "Delete (this occurrence only)"
 -}
             H.toHtml $ viewLocalOCTime $ Oc.ocTimeInZoneFudge (TZ.tzByLabel tzLabel) zot'
             for_ (ICal.veDescription ev) $ \de -> do

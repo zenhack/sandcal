@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 module View.EditEvent
     ( EditTemplate(..)
     , editEvent
@@ -42,9 +43,10 @@ instance ToValue EditTemplate where
         >>> LT.unpack
         >>> fromString
 
-editEvent :: EditTemplate -> H.Html
-editEvent tpl = VC.docToHtml VC.Document
-    { title = title tpl
+editEvent :: [LT.Text] -> EditTemplate -> H.Html
+editEvent permissions tpl = VC.docToHtml VC.Document
+    { permissions
+    , title = title tpl
     , body = do
         H.script ! A.src "/bundle.min.js" $ pure ()
         H.h1 $ H.toHtml $ title tpl
