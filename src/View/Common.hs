@@ -123,7 +123,7 @@ navigation =
     items =
         [ (Route.Home, "Upcoming Events")
         , (Route.NewEvent, "New Event")
-        , (Route.ImportICS, "Import")
+        , (Route.ImportICS, "Import/Export")
         ]
 
 maybeLink :: H.ToMarkup a => a -> Maybe URI -> H.Html

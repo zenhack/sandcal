@@ -34,6 +34,7 @@ data GetRoute
     | StyleCss
     | SandstormJS
     | ImportICS
+    | ExportICS
     deriving(Show)
 
 data PostRoute
@@ -92,6 +93,7 @@ renderGet NewEvent    = "/event/new"
 renderGet StyleCss    = "/style.css"
 renderGet SandstormJS = "/sandstorm.js"
 renderGet ImportICS   = "/import"
+renderGet ExportICS   = "/export.ics"
 
 redirectGet :: GetRoute -> ActionM ()
 redirectGet rt = do
@@ -125,6 +127,8 @@ scottyM route = do
         route $ Get SandstormJS
     get "/import" $
         route $ Get ImportICS
+    get "/export.ics" $
+        route $ Get ExportICS
     post "/event/new" $
         route $ Post PostNewEvent
     post "/import.ics" $

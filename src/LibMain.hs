@@ -6,11 +6,13 @@ module LibMain (main) where
 
 import Config                        (cfgDBPath, getConfig)
 import Data.Default                  (def)
+import Data.Version                  (Version(..))
 import Network.HTTP.Types.Status     (status400, status404)
 import Network.Wai.Parse             (FileInfo(..))
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5              (Html)
 import Text.ICalendar.Parser         (parseICalendar)
+import Text.ICalendar.Printer        (printICalendar)
 
 
 import qualified Forms.NewEvent
@@ -18,6 +20,7 @@ import qualified Forms.NewEvent
 import Util.TZ (TZLabel)
 
 import qualified Data.ByteString.Lazy    as LBS
+import qualified Data.Map.Strict         as M
 import qualified Data.Text.Lazy.Encoding as LTE
 import qualified Data.Time               as Time
 import qualified Data.UUID.V4            as UUID
@@ -26,6 +29,7 @@ import qualified Occurrences
 import qualified Route
 import qualified Sandstorm
 import qualified Util.CSRF               as CSRF
+import qualified Util.ICal               as ICal
 import qualified Util.Scotty.Cookie      as Cookie
 import qualified Util.Time               as UT
 import qualified Util.TZ                 as TZ
@@ -58,6 +62,28 @@ main = do
             Route.Get Route.ImportICS -> do
                 maybeUid <- Sandstorm.maybeGetUserId
                 blaze $ View.Import.importICS csrfKey maybeUid
+
+            Route.Get Route.ExportICS -> do
+                events <- DB.runQuery db $ fmap DB.eeVEvent <$> DB.allEvents
+                setHeader "Content-Type" "text/calendar"
+                raw $ printICalendar def ICal.VCalendar
+                        { vcProdId = ICal.ProdId "SandCal" def
+                        , vcVersion = ICal.MinMaxICalVersion
+                            (Version [2, 0] [])
+                            (Version [2, 0] []) def
+                        , vcScale = def
+                        , vcOther = def
+                        , vcMethod = def
+                        , vcTimeZones = def -- TODO: fill this in with something?
+                        , vcEvents = M.fromList
+                            [ ((uid, Nothing), ev)
+                            | ev@ICal.VEvent{ veUID = ICal.UID uid _ } <- events
+                            ]
+                        , vcTodos = def
+                        , vcJournals = def
+                        , vcFreeBusys = def
+                        , vcOtherComps = def
+                        }
 
             Route.Post postRt -> do
                 CSRF.verifyPostRoute csrfKey postRt

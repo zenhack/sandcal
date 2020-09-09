@@ -15,7 +15,7 @@ import qualified Text.Blaze.Html5.Attributes as A
 import qualified Util.CSRF as CSRF
 
 importICS csrfKey userId = docToHtml $ Document
-    { title = "Import Calendar"
+    { title = "Import/Export Calendar"
     , body = do
         H.h1 "Import Calendar"
         postForm
@@ -29,4 +29,6 @@ importICS csrfKey userId = docToHtml $ Document
                 formBlock $
                     labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
                 H.button ! A.type_ "submit" $ "Upload"
+        H.h1 "Export Calendar"
+        H.a ! (A.href $ H.toValue Route.ExportICS) $ "Download ICalendar File"
     }
