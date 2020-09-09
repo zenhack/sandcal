@@ -7,7 +7,7 @@ module LibMain (main) where
 import Config                        (cfgDBPath, getConfig)
 import Data.Default                  (def)
 import Data.Version                  (Version(..))
-import Network.HTTP.Types.Status     (status400, status404)
+import Network.HTTP.Types.Status     (status400, status401, status404)
 import Network.Wai.Parse             (FileInfo(..))
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5              (Html)
@@ -86,6 +86,12 @@ main = do
                         }
 
             Route.Post postRt -> do
+                perm <- Sandstorm.getPermissions
+                unless ("editor" `elem` perm) $ do
+                    status status401
+                    text "You do not have editor permission for this grain."
+                    finish
+
                 CSRF.verifyPostRoute csrfKey postRt
                 case postRt of
                     Route.PostEditEvent eid -> postEditEvent db eid

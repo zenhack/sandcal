@@ -1,13 +1,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Sandstorm
     ( getUserId
+    , getPermissions
     , maybeGetUserId
     , UserId(..)
     ) where
 
 import Zhp
 
-import qualified Data.Aeson as Aeson
+import qualified Data.Aeson     as Aeson
+import qualified Data.Text.Lazy as LT
 
 import Data.Text.Lazy            (Text)
 import Network.HTTP.Types.Status (status401)
@@ -29,3 +31,10 @@ getUserId = do
             status status401
             text "Error: No X-Sandstorm-User-Id header"
             finish
+
+getPermissions :: ActionM [Text]
+getPermissions = do
+    h <- header "X-Sandstorm-Permissions"
+    pure $ case h of
+        Nothing -> []
+        Just v  -> LT.splitOn "," v
