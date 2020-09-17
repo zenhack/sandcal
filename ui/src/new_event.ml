@@ -144,26 +144,23 @@ let view model =
     let event = onInput (fun value -> InputChanged(key, value)) in
     labeled_elem textarea key [event; value content] []
   in
-  let tracked_input key attrs =
+  let tracked_input ~typ key attrs =
     let event = onInput (fun value -> InputChanged(key, value)) in
-    labeled_input key (event :: attrs)
+    labeled_input ~typ key (event :: attrs)
   in
   form
     [ method' "post"; action model.action_ ]
     [ form_block (
         [ input' [ type' "hidden"; name "csrfToken"; value model.csrf_token ] []
-        ; tracked_input "Summary" [ type' "text"; value (FormValues.get_or vals "Summary" "") ]
-        ; tracked_input "Date" [ type' "date"; value (FormValues.date vals) ]
-        ; labeled_input "All Day"
-            [ onCheck (fun value -> SetAllDay(value))
-            ; type' "checkbox"
-            ]
+        ; tracked_input ~typ:"text" "Summary" [ value (FormValues.get_or vals "Summary" "") ]
+        ; tracked_input ~typ:"date" "Date" [ value (FormValues.date vals) ]
+        ; labeled_input ~typ:"checkbox" "All Day" [ onCheck (fun value -> SetAllDay(value)) ]
         ] @
         (if FormValues.all_day model.form_values then
           []
         else
-          [ tracked_input "Start Time" [ type' "time"; value (FormValues.get_exn vals "Start Time") ]
-          ; tracked_input "End Time" [ type' "time"; value (FormValues.get_exn vals "End Time") ]
+          [ tracked_input ~typ:"time" "Start Time" [ value (FormValues.get_exn vals "Start Time") ]
+          ; tracked_input ~typ:"time" "End Time" [ value (FormValues.get_exn vals "End Time") ]
           ; labeled_tz_select "Time Zone" (FormValues.get vals "Time Zone")
           ]
         )
@@ -186,7 +183,7 @@ let view model =
                    ["Daily"; "Weekly"; "Monthly"; "Yearly"]
                  )
           end
-        ; tracked_input "Location" [ type' "text"; value (FormValues.get_or vals "Location" "") ]
+        ; tracked_input ~typ:"text" "Location" [ value (FormValues.get_or vals "Location" "") ]
         ; tracked_textarea "Description" (FormValues.get_or vals "Description" "")
         ]
       )

@@ -7,8 +7,8 @@ let labeled_elem elem label_name attrs kids =
       ; elem (name label_name :: attrs) kids
       ]
 
-let labeled_input label_name attrs =
-  labeled_elem input' label_name attrs []
+let labeled_input ~typ label_name attrs =
+  labeled_elem input' label_name (type' typ :: attrs) []
 
 let labeled_select select_name options =
   labeled_elem

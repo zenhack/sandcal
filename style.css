@@ -87,6 +87,11 @@ textarea {
 	padding-right: 3rem;
 }
 .labeledInput > input[type="text"] {
+	/* We want raw text fields to expand, but not other inputs.
+	 * Note that this selector will only apply to <input> elements
+	 * that have type set _explicitly_ -- but the labeled_elem
+	 * helper function forces us to always supply a type, so that's
+	 * fine. */
 	flex: 1 1 auto;
 }
 .labeledInput > label, .labeledInput > input, .labeledInput > select {
