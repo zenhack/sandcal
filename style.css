@@ -72,7 +72,6 @@ textarea {
 }
 
 .formBlock {
-	display: table;
 	border: 1px solid darkgrey;
 	border-radius: 0.25rem;
 	padding: 0.5rem;
@@ -80,12 +79,19 @@ textarea {
 }
 
 .labeledInput {
-	display: table-row;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+}
+.labeledInput > label {
+	padding-right: 3rem;
+}
+.labeledInput > input[type="text"] {
+	flex: 1 1 auto;
 }
 .labeledInput > label, .labeledInput > input, .labeledInput > select {
-	padding-right: 3rem;
-	margin-bottom: 0.25rem;
-	display: table-cell;
+	margin-bottom: 0.5rem;
+	margin-top: 0.5rem;
 }
 
 .week-grid {

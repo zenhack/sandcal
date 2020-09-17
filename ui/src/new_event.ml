@@ -152,7 +152,7 @@ let view model =
     [ method' "post"; action model.action_ ]
     [ form_block (
         [ input' [ type' "hidden"; name "csrfToken"; value model.csrf_token ] []
-        ; tracked_input "Summary" [ value (FormValues.get_or vals "Summary" "") ]
+        ; tracked_input "Summary" [ type' "text"; value (FormValues.get_or vals "Summary" "") ]
         ; tracked_input "Date" [ type' "date"; value (FormValues.date vals) ]
         ; labeled_input "All Day"
             [ onCheck (fun value -> SetAllDay(value))
@@ -186,7 +186,7 @@ let view model =
                    ["Daily"; "Weekly"; "Monthly"; "Yearly"]
                  )
           end
-        ; tracked_input "Location" [ value (FormValues.get_or vals "Location" "") ]
+        ; tracked_input "Location" [ type' "text"; value (FormValues.get_or vals "Location" "") ]
         ; tracked_textarea "Description" (FormValues.get_or vals "Description" "")
         ]
       )
