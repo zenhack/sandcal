@@ -1,6 +1,8 @@
-# 0.2 (upcoming)
+# 0.2
 
 * The new event form is now responsive for mobile devices.
+* Fixed a bug where the upcoming events page would sometimes display
+  the wrong date for events (<https://github.com/zenhack/sandcal/issues/19>)
 
 # 0.1
 
