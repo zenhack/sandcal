@@ -126,7 +126,7 @@ viewHome perm db = do
     tzLabel <- userTZOrUTC
     let tz = TZ.tzByLabel tzLabel
     let today = Time.localDay $ TZ.utcToLocalTimeTZ tz utcNow
-    blaze $ View.home perm today tz occurs
+    blaze $ View.home perm today tzLabel occurs
 
 viewWeek perm db refDay = do
     -- TODO: allow the user to configure the start of the week.
