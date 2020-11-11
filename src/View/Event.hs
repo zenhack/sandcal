@@ -74,12 +74,7 @@ event csrfKey permissions userId eid tzLabel ev zot =
 viewRRule :: ICal.RRule -> H.Html
 viewRRule rr =
     let recur = ICal.rRuleValue rr
-        freq = show (ICal.recurFreq recur)
-            & map toLower
-            -- Chop the -ly off the end:
-            & reverse
-            & drop 2
-            & reverse
+        freq = ICal.freqUnitName (ICal.recurFreq recur)
     in
     H.toHtml $ case ICal.recurInterval recur of
         1        -> "every " <> freq

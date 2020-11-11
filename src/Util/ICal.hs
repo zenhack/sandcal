@@ -1,14 +1,16 @@
+{-# LANGUAGE LambdaCase         #-}
 {-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell    #-}
 module Util.ICal
     ( module Text.ICalendar
     , veventTZLabel
+    , freqUnitName
     ) where
 
 import Zhp
 
-import           Data.Aeson                  (FromJSON(..), ToJSON(..))
+import           Data.Aeson                  (FromJSON (..), ToJSON (..))
 import qualified Data.Aeson                  as Aeson
 import           Data.Aeson.TH               (defaultOptions, deriveJSON)
 import qualified Data.ByteString.Base64.Lazy as Base64
@@ -49,6 +51,16 @@ instance ToJSON s => ToJSON (CI s) where
     toEncoding = toEncoding . CI.original
 instance (CI.FoldCase s, FromJSON s) => FromJSON (CI s) where
     parseJSON v = CI.mk <$> parseJSON v
+
+freqUnitName :: Frequency -> String
+freqUnitName = \case
+    Secondly -> "second"
+    Minutely -> "minute"
+    Hourly   -> "hour"
+    Daily    -> "day"
+    Weekly   -> "week"
+    Monthly  -> "month"
+    Yearly   -> "year"
 
 do
     let drv = deriveJSON defaultOptions
