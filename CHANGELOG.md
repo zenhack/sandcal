@@ -1,3 +1,7 @@
+# 0.3
+
+* Fixed a spelling error in some of the UI text.
+
 # 0.2
 
 * The new event form is now responsive for mobile devices.
