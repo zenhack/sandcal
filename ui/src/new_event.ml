@@ -188,8 +188,8 @@ module FormValues = struct
               end;
             repeat =
               begin match fd.repeats with
-                | None -> Repeat.never
-                | Some v -> v
+                | [] -> Repeat.never
+                | [v] -> v.frequency
               end;
           }
 end

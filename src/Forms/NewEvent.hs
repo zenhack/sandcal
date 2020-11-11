@@ -46,11 +46,19 @@ data NewEvent = NewEvent
     , location    :: LT.Text
     , date        :: Time.Day
     , time        :: NewEventTime
-    , repeats     :: Maybe ICal.Frequency
+    , repeats     :: [RepeatRule]
     }
     deriving(Show, Generic)
 instance Aeson.ToJSON NewEvent
 instance Aeson.FromJSON NewEvent
+
+data RepeatRule = RepeatRule
+    { frequency :: ICal.Frequency
+    , interval  :: !Int
+    }
+    deriving(Show, Generic)
+instance Aeson.ToJSON RepeatRule
+instance Aeson.FromJSON RepeatRule
 
 data NewEventTime
     = AllDay
@@ -79,7 +87,14 @@ getForm = do
         , location
         , date
         , time
-        , repeats = repeatsFreq
+        , repeats = case repeatsFreq of
+            Nothing -> []
+            Just frequency ->
+                [ RepeatRule
+                    { frequency
+                    , interval = 1
+                    }
+                ]
         }
 
 {-
@@ -185,7 +200,7 @@ patchVEvent utcNow form old =
             { lastModifiedValue = utcNow
             , lastModifiedOther = def
             }
-        , ICal.veRRule = makeRRule (repeats form)
+        , ICal.veRRule = S.fromList $ map makeRRule (repeats form)
         }
 
 patchTextField :: FromTextField a => Maybe a -> LT.Text -> Maybe a
@@ -263,9 +278,13 @@ fromVEvent defaultTz ev =
     { summary = getTextField $ ICal.veSummary ev
     , location = getTextField $ ICal.veLocation ev
     , description = getTextField $ ICal.veDescription ev
-    , repeats = case S.toList (ICal.veRRule ev) of
-        []                          -> Nothing
-        (ICal.RRule{rRuleValue = ICal.Recur{recurFreq}} : _) -> Just recurFreq
+    , repeats = S.toList (ICal.veRRule ev)
+        & map (\ICal.RRule{rRuleValue = ICal.Recur{recurFreq, recurInterval}} ->
+            RepeatRule
+                { frequency = recurFreq
+                , interval = recurInterval
+                }
+        )
     , date = case ICal.veDTStart ev of
         Nothing    ->
             error "TODO"
@@ -372,7 +391,7 @@ toVEvent utcNow uuid form =
             , lastModifiedOther = def
             }
         , veDescription = fromTextField (description form)
-        , veRRule = makeRRule (repeats form)
+        , veRRule = S.fromList $ map makeRRule (repeats form)
         , veLocation = fromTextField (location form)
 
         -- Not used for now:
@@ -399,29 +418,27 @@ toVEvent utcNow uuid form =
         , veOther = def
         }
 
-makeRRule :: Maybe ICal.Frequency -> S.Set ICal.RRule
-makeRRule Nothing = def
-makeRRule (Just freq) =
-    S.singleton $ ICal.RRule
-        { rRuleOther = def
-        , rRuleValue = ICal.Recur
-            { recurFreq = freq
-            , recurUntilCount = def
-            , recurInterval = 1
-            , recurBySecond = def
-            , recurByMinute = def
-            , recurByHour = def
-            , recurByDay = def
-            , recurByMonthDay = def
-            , recurByYearDay = def
-            , recurByWeekNo = def
-            , recurByMonth = def
-            , recurBySetPos = def
-            , recurWkSt = ICal.Sunday
-              -- ^ Does this matter? Not for our current usage,
-              -- but we should research what it means.
-            }
+makeRRule :: RepeatRule -> ICal.RRule
+makeRRule RepeatRule{frequency, interval} = ICal.RRule
+    { rRuleOther = def
+    , rRuleValue = ICal.Recur
+        { recurFreq = frequency
+        , recurUntilCount = def
+        , recurInterval = interval
+        , recurBySecond = def
+        , recurByMinute = def
+        , recurByHour = def
+        , recurByDay = def
+        , recurByMonthDay = def
+        , recurByYearDay = def
+        , recurByWeekNo = def
+        , recurByMonth = def
+        , recurBySetPos = def
+        , recurWkSt = ICal.Sunday
+          -- ^ Does this matter? Not for our current usage,
+          -- but we should research what it means.
         }
+    }
 
 encodeTZLabel :: TZ.TZLabel -> LT.Text
 encodeTZLabel =

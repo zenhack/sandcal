@@ -3,11 +3,42 @@ let (>>=) = fun x f -> match x with
   | None -> None
   | Some v -> f v
 
+let decodeList decodeElem v =
+  Js.Json.(
+    decodeArray v >>= fun arr ->
+    Array.fold_right
+      (fun item tail ->
+          tail >>= fun xs ->
+          decodeElem item >>= fun x ->
+          Some (x :: xs)
+      )
+      arr
+      (Some [])
+  )
+
 module Frequency = struct
   type t = string (* TODO: make this a variant. *)
 
   let decode: Js.Json.t -> t option =
     Js.Json.decodeString
+end
+
+module Repeat = struct
+  type t = {
+    frequency: Frequency.t;
+    interval: int;
+  }
+
+  let decode: Js.Json.t -> t option =
+    fun v ->
+    let open Js.Json in
+    let get = Js.Dict.get in
+    decodeObject v >>= fun obj ->
+    get obj "frequency" >>= decodeString >>= fun frequency ->
+    get obj "interval" >>= decodeNumber >>= fun num ->
+    let interval = int_of_float num in
+    Some { frequency; interval }
+
 end
 
 module NewEvent = struct
@@ -45,7 +76,7 @@ module NewEvent = struct
     location: string;
     date: string;
     time: Time.t;
-    repeats: Frequency.t option;
+    repeats: Repeat.t list;
   }
 
   let decode: Js.Json.t -> t option =
@@ -59,7 +90,7 @@ module NewEvent = struct
       get obj "date" >>= decodeString >>= fun date ->
       get obj "time" >>= Time.decode >>= fun time ->
       get obj "repeats" >>= fun r ->
-        let repeats = Frequency.decode r in
+      decodeList Repeat.decode r >>= fun repeats ->
         Some {
           summary;
           description;
