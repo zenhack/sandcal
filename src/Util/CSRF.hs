@@ -63,9 +63,19 @@ makeCsrfToken key cap =
 
 verifyPostRoute :: Key -> Route.PostRoute -> Ws.ActionM ()
 verifyPostRoute key route = do
-    mac <- Ws.param "csrfToken"
+    mac <- getRequestMac
     userId <- Sandstorm.maybeGetUserId
     verifyPostCap key PostCap{ route, userId } mac
+
+getRequestMac :: Ws.ActionM Mac
+getRequestMac = do
+    hdr <- Ws.header "X-CSRF-Token"
+    case hdr of
+        Nothing -> Ws.param "csrfToken"
+        Just value ->
+            case Ws.parseParam value of
+                Right mac -> pure mac
+                Left _    -> invalidCSRF
 
 macPostCap :: Key -> PostCap -> Mac
 macPostCap (Key key) cap =
@@ -79,8 +89,10 @@ validPostCapMac key cap mac =
 
 verifyPostCap :: Key -> PostCap -> Mac -> Ws.ActionM ()
 verifyPostCap key cap mac =
-    unless (validPostCapMac key cap mac) $
-        Ws.raiseStatus status401 "Invalid CSRF token"
+    unless (validPostCapMac key cap mac) invalidCSRF
+
+invalidCSRF :: Ws.ActionM a
+invalidCSRF = Ws.raiseStatus status401 "Invalid CSRF token"
 
 b64ToMac :: BS.ByteString -> Maybe Mac
 b64ToMac b64 =
