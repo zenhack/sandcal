@@ -3,6 +3,9 @@ let (>>=) = fun x f -> match x with
   | None -> None
   | Some v -> f v
 
+let encodeFields fields =
+  Js.Json.object_ (Js.Dict.fromList fields)
+
 let decodeList decodeElem v =
   Js.Json.(
     decodeArray v >>= fun arr ->
@@ -19,6 +22,9 @@ let decodeList decodeElem v =
 module Frequency = struct
   type t = string (* TODO: make this a variant. *)
 
+  let encode: t -> Js.Json.t =
+    Js.Json.string
+
   let decode: Js.Json.t -> t option =
     Js.Json.decodeString
 end
@@ -28,6 +34,12 @@ module Repeat = struct
     frequency: Frequency.t;
     interval: int;
   }
+
+  let encode v =
+    encodeFields [
+      ("frequency", Frequency.encode v.frequency);
+      ("interval", Js.Json.number (float_of_int v.interval));
+    ]
 
   let decode: Js.Json.t -> t option =
     fun v ->
@@ -50,6 +62,17 @@ module NewEvent = struct
           end_time: string;
           time_zone: string;
         }
+
+    let encode = function
+      | AllDay -> encodeFields [("tag", Js.Json.string "AllDay")]
+      | StartEnd {start_time; end_time; time_zone} ->
+          let s = Js.Json.string in
+          encodeFields [
+            ("tag", s "StartEnd");
+            ("startTime", s start_time);
+            ("endTime", s end_time);
+            ("timeZone", s time_zone);
+          ]
 
     let decode v =
       let open Js.Json in
@@ -78,6 +101,22 @@ module NewEvent = struct
     time: Time.t;
     repeats: Repeat.t list;
   }
+
+  let encode v =
+    let s = Js.Json.string in
+    encodeFields [
+      ("summary", s v.summary);
+      ("description", s v.description);
+      ("location", s v.location);
+      ("date", s v.date);
+      ("time", Time.encode v.time);
+      ( "repeats"
+      , v.repeats
+          |> List.map Repeat.encode
+          |> Array.of_list
+          |> Js.Json.array
+      )
+    ]
 
   let decode: Js.Json.t -> t option =
     fun v ->
