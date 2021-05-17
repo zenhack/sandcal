@@ -123,15 +123,53 @@ module FormValues = struct
         }
   end
 
+  let make_protocol_new_event fv =
+    let repeats =
+      if String.equal fv.repeat Repeat.never then
+        []
+      else
+        [
+          Protocol.Repeat.{
+            frequency = fv.repeat;
+            interval = 1;
+          }
+        ]
+    in
+    Protocol.NewEvent.{
+      summary = fv.summary;
+      date = fv.date;
+      time =
+        if fv.all_day then
+          Time.AllDay
+        else
+          Time.(StartEnd {
+              start_time = fv.time.start;
+              end_time = fv.time.stop;
+              time_zone = fv.time_zone;
+            });
+      description = fv.description;
+      location = fv.location;
+      repeats;
+    }
+
+
   type msg =
     | InputChanged of ((t, string) Lens.t * string)
     | SetAllDay of bool
+    | Submit
 
-  let update model = function
+  let update csrf model = function
     | InputChanged (lens, value) ->
         Lens.set lens model value
     | SetAllDay value ->
         { model with all_day = value }
+    | Submit ->
+        let _ = Protocol.Rpc.newEvent
+          ~csrf
+          (make_protocol_new_event model)
+        in
+        (* TODO: check the response, and forward. *)
+        model
 
   let date_prefill_now () = Js.Date.(
       let now = make () in
@@ -223,7 +261,7 @@ module Lenses = struct
 end
 
 let update model msg =
-  Lens.modify Lenses.form_values model (fun fv -> FormValues.update fv msg)
+  Lens.modify Lenses.form_values model (fun fv -> FormValues.update model.csrf_token fv msg)
 
 let view model =
   let module Lenses = FormValues.Lenses in
@@ -275,6 +313,7 @@ let view model =
     ; button
         [ type' "submit"
         ; Attributes.disabled (not (FormValues.valid fv))
+        ; onClick FormValues.Submit
         ]
         [ text model.submit_text ]
     ]

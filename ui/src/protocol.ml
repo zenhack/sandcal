@@ -175,3 +175,10 @@ module EditTemplate = struct
       )
     )
 end
+
+module Rpc = struct
+  let newEvent ~csrf ev =
+    NewEvent.encode ev
+    |> Js.Json.stringify
+    |> JsFunctions.postJsonWithCSRF "/event/new" csrf
+end

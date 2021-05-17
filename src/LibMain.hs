@@ -19,20 +19,20 @@ import qualified Forms.NewEvent
 
 import Util.TZ (TZLabel)
 
+import qualified DB
 import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Map.Strict         as M
 import qualified Data.Text.Lazy.Encoding as LTE
 import qualified Data.Time               as Time
 import qualified Data.UUID.V4            as UUID
-import qualified DB
 import qualified Occurrences
 import qualified Route
 import qualified Sandstorm
 import qualified Util.CSRF               as CSRF
 import qualified Util.ICal               as ICal
 import qualified Util.Scotty.Cookie      as Cookie
-import qualified Util.Time               as UT
 import qualified Util.TZ                 as TZ
+import qualified Util.Time               as UT
 import qualified View
 import qualified View.Import
 
@@ -212,7 +212,7 @@ importICS db = do
 postNewEvent db = do
     utcNow <- liftIO $ Time.getCurrentTime
     uuid <- liftIO $ UUID.nextRandom
-    form <- Forms.NewEvent.getForm
+    form <- jsonData
     let vEvent = Forms.NewEvent.toVEvent utcNow uuid form
     evId <- DB.runQuery db $ DB.addEvent vEvent
     Route.redirectGet $ Route.Event (DB.unEventID evId) Nothing
