@@ -434,7 +434,7 @@ makeRRule RepeatRule{frequency, interval} = ICal.RRule
         , recurByWeekNo = def
         , recurByMonth = def
         , recurBySetPos = def
-        , recurWkSt = ICal.Sunday
+        , recurWkSt = ICal.Monday
           -- ^ Does this matter? Not for our current usage,
           -- but we should research what it means.
         }
