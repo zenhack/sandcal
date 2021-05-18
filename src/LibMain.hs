@@ -53,8 +53,8 @@ main = do
         Route.scottyM $ \rt -> do
             perm <- Sandstorm.getPermissions
             case rt of
-                Route.Get Route.StyleCss -> file "style.css"
-                Route.Get Route.SandstormJS -> file "sandstorm.js"
+                Route.Get Route.StyleCss -> typedFile "text/css" "style.css"
+                Route.Get Route.SandstormJS -> jsFile "sandstorm.js"
 
                 Route.Get Route.Home -> viewHome perm db
                 Route.Get (Route.Week refDay) -> viewWeek perm db refDay
@@ -106,8 +106,14 @@ main = do
                         Route.PostDeleteOccurrence eid zot -> do
                             _ <- liftIO $ DB.runQuery db $ deleteOccurrence (DB.eventID eid) zot
                             Route.redirectGet Route.Home
-        get "/bundle.min.js" $ file "ui/bundle.min.js"
+        get "/bundle.min.js" $ jsFile "ui/bundle.min.js"
         notFound $ do404
+
+jsFile = typedFile "application/javascript"
+
+typedFile contentType path = do
+    setHeader "Content-Type" contentType
+    file path
 
 viewNewEvent csrfKey perm = do
     uid <- Sandstorm.maybeGetUserId
