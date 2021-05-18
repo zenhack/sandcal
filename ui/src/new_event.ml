@@ -168,8 +168,18 @@ module FormValues = struct
           ~csrf
           ~action:action_
           (make_protocol_new_event model)
+          |> Js.Promise.then_
+              (fun r ->
+                if not r.Browser.Response.ok then
+                  failwith "TODO: handle failures"
+                else
+                  begin
+                    JsFunctions.setLocation r.Browser.Response.url;
+                    Js.Promise.resolve ()
+                  end
+              )
         in
-        (* TODO: check the response, and forward. *)
+        (* TODO: mark the state as loading & indicate this to the user somehow? *)
         model
 
   let date_prefill_now () = Js.Date.(

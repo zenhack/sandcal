@@ -11,6 +11,10 @@ window.postJsonWithCSRF = function(path, csrf, jsonAsString) {
   })
 }
 
+window.setLocation = function(location) {
+  window.location = location;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   var browserTz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
   var elem = document.getElementById('bs-form');
