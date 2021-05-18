@@ -158,14 +158,15 @@ module FormValues = struct
     | SetAllDay of bool
     | Submit
 
-  let update csrf model = function
+  let update csrf action_ model = function
     | InputChanged (lens, value) ->
         Lens.set lens model value
     | SetAllDay value ->
         { model with all_day = value }
     | Submit ->
-        let _ = Protocol.Rpc.newEvent
+        let _ = Protocol.Rpc.postEvent
           ~csrf
+          ~action:action_
           (make_protocol_new_event model)
         in
         (* TODO: check the response, and forward. *)
@@ -261,7 +262,9 @@ module Lenses = struct
 end
 
 let update model msg =
-  Lens.modify Lenses.form_values model (fun fv -> FormValues.update model.csrf_token fv msg)
+  Lens.modify Lenses.form_values model (fun fv ->
+    FormValues.update model.csrf_token model.action_ fv msg
+  )
 
 let view model =
   let module Lenses = FormValues.Lenses in
@@ -275,8 +278,7 @@ let view model =
     let event = onInput (fun value -> FormValues.InputChanged(lens, value)) in
     labeled_input ~typ key [event; value (Lens.get lens fv)]
   in
-  form
-    [ method' "post"; action model.action_ ]
+  div [ class' "form" ]
     [ form_block (
         [ input' [ type' "hidden"; name "csrfToken"; value model.csrf_token ] []
         ; tracked_input ~typ:"text" "Summary" FormValues.Lenses.summary
@@ -311,8 +313,7 @@ let view model =
         ]
       )
     ; button
-        [ type' "submit"
-        ; Attributes.disabled (not (FormValues.valid fv))
+        [ Attributes.disabled (not (FormValues.valid fv))
         ; onClick FormValues.Submit
         ]
         [ text model.submit_text ]

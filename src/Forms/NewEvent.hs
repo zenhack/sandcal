@@ -9,15 +9,12 @@
 module Forms.NewEvent
     ( NewEvent(..)
     , NewEventTime(..)
-    , getForm
     , fromVEvent
     , toVEvent
     , patchVEvent
     ) where
 
 import Zhp
-
-import Web.Scotty
 
 import Forms.Common
 
@@ -27,7 +24,6 @@ import GHC.Generics             (Generic)
 
 import qualified Data.Aeson              as Aeson
 import qualified Data.ByteString.Lazy    as LBS
-import qualified Data.Map.Strict         as M
 import qualified Data.Set                as S
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
@@ -70,85 +66,6 @@ data NewEventTime
     deriving(Show, Generic)
 instance Aeson.ToJSON NewEventTime
 instance Aeson.FromJSON NewEventTime
-
-
-getForm :: ActionM NewEvent
-getForm = do
-    summary <- param "Summary"
-    description <- param "Description"
-    location <- param "Location"
-    date <- DP.toStdDay <$> param "Date"
-    time <- getTime
-    repeats <- param "Repeats"
-    let repeatsFreq = M.lookup repeats freqNames
-    pure NewEvent
-        { summary
-        , description
-        , location
-        , date
-        , time
-        , repeats = case repeatsFreq of
-            Nothing -> []
-            Just frequency ->
-                [ RepeatRule
-                    { frequency
-                    , interval = 1
-                    }
-                ]
-        }
-
-{-
-toFields :: NewEvent -> [(LT.Text, LT.Text)]
-toFields form =
-    -- TODO/FIXME: make sure the time format strings are right
-    [ ("Summary", summary form)
-    , ("Description", description form)
-    , ("Location", location form)
-    , ("Date", formatTime "%Y-%m-%d" (date form))
-    , ("Repeats", case repeats form of
-            Nothing   -> "Never"
-            Just freq -> fromString $ show freq
-      )
-    ]
-    <> case time form of
-        AllDay -> [("All Day", "on")]
-        StartEnd {startTime, endTime, timeZone} ->
-            [ ("Start Time", formatTime "%H:%M" startTime)
-            , ("End Time", formatTime "%H:%M" endTime)
-            , ("Time Zone", encodeTZLabel timeZone)
-            ]
-  where
-    formatTime fmt val = fromString $ Time.formatTime Time.defaultTimeLocale fmt val
--}
-
-getTime :: ActionM NewEventTime
-getTime =
-    (AllDay <$ (param "All Day" :: ActionM String))
-    `rescue`
-    (\_ -> do
-        startTime <- param "Start Time"
-        endTime <- param "End Time"
-        tzName <- param "Time Zone"
-        tzLabel <- decodeTZLabelOr400 tzName
-        pure StartEnd
-            { startTime
-            , endTime
-            , timeZone = tzLabel
-            }
-    )
-
-freqNames :: M.Map String ICal.Frequency
-freqNames =
-    [ ICal.Secondly
-    , ICal.Minutely
-    , ICal.Hourly
-    , ICal.Daily
-    , ICal.Weekly
-    , ICal.Monthly
-    , ICal.Yearly
-    ]
-    & map (\freq -> (show freq, freq))
-    & M.fromList
 
 getStartEnd :: NewEvent -> (ICal.DTStart, ICal.DTEnd)
 getStartEnd form = case time form of

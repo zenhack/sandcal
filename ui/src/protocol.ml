@@ -177,8 +177,8 @@ module EditTemplate = struct
 end
 
 module Rpc = struct
-  let newEvent ~csrf ev =
+  let postEvent ~csrf ~action ev =
     NewEvent.encode ev
     |> Js.Json.stringify
-    |> JsFunctions.postJsonWithCSRF "/event/new" csrf
+    |> JsFunctions.postJsonWithCSRF action csrf
 end

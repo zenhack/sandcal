@@ -225,7 +225,7 @@ postNewEvent db = do
 
 postEditEvent db eid = do
     utcNow <- liftIO $ Time.getCurrentTime
-    form <- Forms.NewEvent.getForm
+    form <- jsonData
     maybeEv <- DB.runQuery db $
         DB.updateEvent (DB.eventID eid) $ Forms.NewEvent.patchVEvent utcNow form
     case maybeEv of
