@@ -33,6 +33,7 @@ clean:
 	rm -f ui/bundle.js
 	rm -f ui/bundle.min.js
 	rm -f .build-ml
+	rm -f .build-hs
 
 $(gen_ocaml_files): .build-hs
 	cabal v2-run gen-caml
