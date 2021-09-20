@@ -14,9 +14,7 @@ module FormValues = struct
   }
 
   module Repeat = struct
-    type t = string
-
-    let never = "Never"
+    type t = Protocol.Repeat.t
 
     let options = [
       "Daily";
@@ -49,7 +47,7 @@ module FormValues = struct
     *)
 
     time_zone: string;
-    repeat: Repeat.t;
+    repeat: Repeat.t list;
   }
 
   let valid m =
@@ -116,7 +114,7 @@ module FormValues = struct
           set = (fun v -> { m with time_zone = v });
         }
 
-    let repeat : (t, Repeat.t) Lens.t =
+    let repeat : (t, Repeat.t list) Lens.t =
       fun m -> Lens.{
           get = (fun () -> m.repeat);
           set = (fun v -> { m with repeat = v });
@@ -124,17 +122,7 @@ module FormValues = struct
   end
 
   let make_protocol_new_event fv =
-    let repeats =
-      if String.equal fv.repeat Repeat.never then
-        []
-      else
-        [
-          Protocol.Repeat.{
-            frequency = fv.repeat;
-            interval = 1;
-          }
-        ]
-    in
+    let repeats = fv.repeat in
     Protocol.NewEvent.{
       summary = fv.summary;
       date = fv.date;
@@ -156,6 +144,7 @@ module FormValues = struct
   type msg =
     | InputChanged of ((t, string) Lens.t * string)
     | SetAllDay of bool
+    | NewRepeat
     | Submit
 
   let update csrf action_ model = function
@@ -163,6 +152,8 @@ module FormValues = struct
         Lens.set lens model value
     | SetAllDay value ->
         { model with all_day = value }
+    | NewRepeat ->
+        Lens.modify Lenses.repeat model (fun xs -> xs @ [{frequency = "Daily"; interval = 1}])
     | Submit ->
         let _ = Protocol.Rpc.postEvent
           ~csrf
@@ -214,7 +205,7 @@ module FormValues = struct
             all_day = false;
             time = default_time;
             time_zone = user_tz;
-            repeat = Repeat.never;
+            repeat = [];
           }
         | Some fd -> {
             summary = fd.summary;
@@ -235,11 +226,7 @@ module FormValues = struct
                 | AllDay -> user_tz
                 | StartEnd {time_zone; _} -> time_zone
               end;
-            repeat =
-              begin match fd.repeats with
-                | [] -> Repeat.never
-                | [v] -> v.frequency
-              end;
+            repeat = fd.repeats;
           }
 end
 
@@ -310,14 +297,17 @@ let view model =
           ]
         )
         @
-        [
-          begin
-            labeled_select "Repeats"
-              (List.map
-                (fun name -> (name, String.equal name fv.repeat))
-                FormValues.Repeat.(never :: options)
-              )
-          end
+        (fv.repeat
+          |> List.map (fun r ->
+              labeled_select "Repeats"
+                (List.map
+                  (fun name -> (name, String.equal name r.Protocol.Repeat.frequency))
+                  FormValues.Repeat.options
+                )
+          )
+         )
+        @
+        [ button [ onClick FormValues.NewRepeat ] [ text "New repeat rule" ]
         ; tracked_input ~typ:"text" "Location" Lenses.location
         ; tracked_textarea "Description" Lenses.description
         ]
