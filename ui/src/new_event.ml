@@ -119,6 +119,20 @@ module FormValues = struct
           get = (fun () -> m.repeat);
           set = (fun v -> { m with repeat = v });
         }
+
+    module Repeat = struct
+      let frequency : (Repeat.t, string) Lens.t =
+        fun {frequency; interval} -> Lens.{
+            get = (fun () -> frequency);
+            set = (fun frequency -> {frequency; interval})
+          }
+
+      let interval : (Repeat.t, int) Lens.t =
+        fun {frequency; interval} -> Lens.{
+            get = (fun () -> interval);
+            set = (fun interval -> {frequency; interval})
+          }
+    end
   end
 
   let make_protocol_new_event fv =
@@ -271,15 +285,15 @@ let view model =
     let event = onInput (fun value -> FormValues.InputChanged(lens , value)) in
     labeled_elem textarea key [event; value content] []
   in
-  let tracked_input ~typ key lens =
+  let tracked_input ~typ attrs key lens =
     let event = onInput (fun value -> FormValues.InputChanged(lens, value)) in
-    labeled_input ~typ key [event; value (Lens.get lens fv)]
+    labeled_input ~typ key (value (Lens.get lens fv) :: event :: attrs)
   in
   div [ class' "form" ]
     [ form_block (
         [ input' [ type' "hidden"; name "csrfToken"; value model.csrf_token ] []
-        ; tracked_input ~typ:"text" "Summary" FormValues.Lenses.summary
-        ; tracked_input ~typ:"date" "Date" FormValues.Lenses.date
+        ; tracked_input ~typ:"text" [] "Summary" FormValues.Lenses.summary
+        ; tracked_input ~typ:"date" [] "Date" FormValues.Lenses.date
         ; labeled_input ~typ:"checkbox" "All Day" [ onCheck (fun value -> FormValues.SetAllDay(value)) ]
         ] @
         (if model.form_values.all_day then
@@ -287,10 +301,12 @@ let view model =
         else
           [ tracked_input
               ~typ:"time"
+              []
               "Start Time"
               Lens.(Lenses.(time >>> Range.start))
           ; tracked_input
               ~typ:"time"
+              []
               "End Time"
               Lens.(Lenses.(time >>> Range.stop))
           ; labeled_tz_select "Time Zone" (Some fv.time_zone)
@@ -298,17 +314,31 @@ let view model =
         )
         @
         (fv.repeat
-          |> List.map (fun r ->
-              labeled_select "Repeats"
-                (List.map
-                  (fun name -> (name, String.equal name r.Protocol.Repeat.frequency))
-                  FormValues.Repeat.options
-                )
+          |> List.mapi (fun i r ->
+            div []
+              [ tracked_input
+                  ~typ:"number"
+                  [] (* TODO: set min and step. On firefox 92 they do the right
+                        thing anyway, but we shouldn't assume all browsers will. *)
+                  "Every"
+                  Lens.(Lenses.(
+                      repeat
+                      >>> List.nth i
+                      >>> Repeat.interval
+                      >>> from_funs ~to_:string_of_int ~from:int_of_string
+                    ))
+              ; text " "
+              ; labeled_select "Repeats"
+                  (List.map
+                    (fun name -> (name, String.equal name r.Protocol.Repeat.frequency))
+                    FormValues.Repeat.options
+                  )
+              ]
           )
          )
         @
         [ button [ onClick FormValues.NewRepeat ] [ text "New repeat rule" ]
-        ; tracked_input ~typ:"text" "Location" Lenses.location
+        ; tracked_input ~typ:"text" [] "Location" Lenses.location
         ; tracked_textarea "Description" Lenses.description
         ]
       )

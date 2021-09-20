@@ -28,3 +28,25 @@ let compose f g = fun c ->
 
 let ( <<< ) f g = compose f g
 let ( >>> ) g f = compose f g
+
+let from_funs ~to_ ~from = fun c -> {
+    get = (fun () -> to_ c);
+    set = (fun v -> from v);
+  }
+
+module List = struct
+  let nth : int -> ('a list, 'a) t =
+    fun i l ->
+      let v = lazy (List.nth l i) in
+      {
+        get = (fun () -> Lazy.force v);
+        set = (fun v ->
+          let rec set_nth i l = match i, l with
+            | 0, (_ :: vs) -> v :: vs
+            | _, (x :: xs) -> x :: (set_nth (i - 1) xs)
+            | _, [] -> failwith "Out of bounds."
+          in
+          set_nth i l
+        );
+      }
+end
