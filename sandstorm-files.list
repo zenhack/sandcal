@@ -31,7 +31,6 @@ usr/lib/libpthread.so.0
 usr/lib/librt-2.33.so
 usr/lib/librt.so.1
 usr/lib/libstdc++.so.6
-usr/lib/libstdc++.so.6.0.28
 usr/lib/libutil-2.33.so
 usr/lib/libutil.so.1
 usr/lib/libz.so.1
