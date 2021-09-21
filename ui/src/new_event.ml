@@ -16,11 +16,16 @@ module FormValues = struct
   module Repeat = struct
     type t = Protocol.Repeat.t
 
+    type option = {
+      opt_freq: string;
+      opt_plural_noun: string;
+    }
+
     let options = [
-      "Daily";
-      "Weekly";
-      "Monthly";
-      "Yearly";
+      { opt_freq = "Daily";   opt_plural_noun = "days"   };
+      { opt_freq = "Weekly";  opt_plural_noun = "weeks"  };
+      { opt_freq = "Monthly"; opt_plural_noun = "months" };
+      { opt_freq = "Yearly";  opt_plural_noun = "years"  };
     ]
   end
 
@@ -278,7 +283,8 @@ let update model msg =
   )
 
 let view_repeat_rule lens i r =
-  let lens_frequency = Lens.(lens >>> FormValues.Lenses.Repeat.frequency) in
+  let module FV = FormValues in
+  let lens_frequency = Lens.(lens >>> FV.Lenses.Repeat.frequency) in
   let lens_interval =
     Lens.(lens
           >>> FormValues.Lenses.Repeat.interval
@@ -292,19 +298,37 @@ let view_repeat_rule lens i r =
              ; Attributes.min "0"
              ; Attributes.step "1"
              ; value (string_of_int r.Protocol.Repeat.interval)
-             ; onInput (fun value -> FormValues.InputChanged(lens_interval, value))
+             ; onInput (fun value -> FV.InputChanged(lens_interval, value))
              ]
              []
     ; select
-        [ onChange (fun value -> FormValues.InputChanged(lens_frequency, value))
+        [ onChange
+            (fun value ->
+                let opt =
+                  List.find
+                    (fun o -> String.equal o.FV.Repeat.opt_plural_noun value)
+                    FV.Repeat.options
+                in
+                FormValues.InputChanged(lens_frequency, opt.FV.Repeat.opt_freq))
         ]
-        (List.map
-          (fun name ->
+        (let current_opt =
+           List.find
+             (fun o -> String.equal o.FV.Repeat.opt_freq r.Protocol.Repeat.frequency)
+             FV.Repeat.options
+         in
+         List.map
+          (fun opt ->
             option'
-              [ value name
-              ; Attributes.selected (String.equal name r.Protocol.Repeat.frequency)
+              [ value opt.FV.Repeat.opt_plural_noun
+              ; Attributes.selected
+                  (let open FV.Repeat in
+                    String.equal
+                      opt.opt_plural_noun
+                      current_opt.opt_plural_noun)
               ]
-              [ text name ]
+              [ text opt.FV.Repeat.opt_plural_noun ]
+              (* TODO: check: can we just do this here and use freq directly elsewhere?
+                 That would make things easier. *)
           )
           FormValues.Repeat.options
         )
@@ -346,15 +370,18 @@ let view model =
           ]
         )
         @
+        [ tracked_input ~typ:"text" [] "Location" Lenses.location
+        ; tracked_textarea "Description" Lenses.description
+        ]
+        @
+        [ h2 [] [ text "Repeats" ] ]
+        @
         (List.mapi
            (fun i r -> view_repeat_rule Lens.(Lenses.(repeat >>> List.nth i)) i r)
            fv.repeat
         )
         @
-        [ button [ onClick FormValues.NewRepeat ] [ text "New repeat rule" ]
-        ; tracked_input ~typ:"text" [] "Location" Lenses.location
-        ; tracked_textarea "Description" Lenses.description
-        ]
+        [ button [ onClick FormValues.NewRepeat ] [ text "New repeat rule" ] ]
       )
     ; button
         [ Attributes.disabled (not (FormValues.valid fv))
