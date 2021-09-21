@@ -302,33 +302,18 @@ let view_repeat_rule lens i r =
              ]
              []
     ; select
-        [ onChange
-            (fun value ->
-                let opt =
-                  List.find
-                    (fun o -> String.equal o.FV.Repeat.opt_plural_noun value)
-                    FV.Repeat.options
-                in
-                FormValues.InputChanged(lens_frequency, opt.FV.Repeat.opt_freq))
+        [ onChange (fun value -> FormValues.InputChanged(lens_frequency, value))
         ]
-        (let current_opt =
-           List.find
-             (fun o -> String.equal o.FV.Repeat.opt_freq r.Protocol.Repeat.frequency)
-             FV.Repeat.options
-         in
-         List.map
+        (List.map
           (fun opt ->
             option'
-              [ value opt.FV.Repeat.opt_plural_noun
+              [ value opt.FV.Repeat.opt_freq
               ; Attributes.selected
-                  (let open FV.Repeat in
-                    String.equal
-                      opt.opt_plural_noun
-                      current_opt.opt_plural_noun)
+                  (String.equal
+                      opt.FV.Repeat.opt_freq
+                      r.Protocol.Repeat.frequency)
               ]
               [ text opt.FV.Repeat.opt_plural_noun ]
-              (* TODO: check: can we just do this here and use freq directly elsewhere?
-                 That would make things easier. *)
           )
           FormValues.Repeat.options
         )
