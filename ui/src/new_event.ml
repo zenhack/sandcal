@@ -296,7 +296,8 @@ let view_repeat_rule lens i r =
              ]
              []
     ; select
-        []
+        [ onChange (fun value -> FormValues.InputChanged(lens_frequency, value))
+        ]
         (List.map
           (fun name ->
             option'
