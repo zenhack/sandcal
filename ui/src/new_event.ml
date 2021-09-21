@@ -277,12 +277,44 @@ let update model msg =
     FormValues.update model.csrf_token model.action_ fv msg
   )
 
+let view_repeat_rule lens i r =
+  let lens_frequency = Lens.(lens >>> FormValues.Lenses.Repeat.frequency) in
+  let lens_interval =
+    Lens.(lens
+          >>> FormValues.Lenses.Repeat.interval
+          >>> from_funs ~to_:string_of_int ~from:int_of_string)
+  in
+  let label_name =  "repeatInterval" ^ string_of_int i in
+  div []
+    [ label [ for' label_name ] [ text "Every " ]
+    ; input' [ name label_name
+             ; type' "number"
+             ; Attributes.min "0"
+             ; Attributes.step "1"
+             ; value (string_of_int r.Protocol.Repeat.interval)
+             ; onInput (fun value -> FormValues.InputChanged(lens_interval, value))
+             ]
+             []
+    ; select
+        []
+        (List.map
+          (fun name ->
+            option'
+              [ value name
+              ; Attributes.selected (String.equal name r.Protocol.Repeat.frequency)
+              ]
+              [ text name ]
+          )
+          FormValues.Repeat.options
+        )
+    ]
+
 let view model =
   let module Lenses = FormValues.Lenses in
   let fv = model.form_values in
   let tracked_textarea key lens =
     let content = Lens.get lens fv in
-    let event = onInput (fun value -> FormValues.InputChanged(lens , value)) in
+    let event = onInput (fun value -> FormValues.InputChanged(lens, value)) in
     labeled_elem textarea key [event; value content] []
   in
   let tracked_input ~typ attrs key lens =
@@ -313,29 +345,10 @@ let view model =
           ]
         )
         @
-        (fv.repeat
-          |> List.mapi (fun i r ->
-            div []
-              [ tracked_input
-                  ~typ:"number"
-                  [] (* TODO: set min and step. On firefox 92 they do the right
-                        thing anyway, but we shouldn't assume all browsers will. *)
-                  "Every"
-                  Lens.(Lenses.(
-                      repeat
-                      >>> List.nth i
-                      >>> Repeat.interval
-                      >>> from_funs ~to_:string_of_int ~from:int_of_string
-                    ))
-              ; text " "
-              ; labeled_select "Repeats"
-                  (List.map
-                    (fun name -> (name, String.equal name r.Protocol.Repeat.frequency))
-                    FormValues.Repeat.options
-                  )
-              ]
-          )
-         )
+        (List.mapi
+           (fun i r -> view_repeat_rule Lens.(Lenses.(repeat >>> List.nth i)) i r)
+           fv.repeat
+        )
         @
         [ button [ onClick FormValues.NewRepeat ] [ text "New repeat rule" ]
         ; tracked_input ~typ:"text" [] "Location" Lenses.location
