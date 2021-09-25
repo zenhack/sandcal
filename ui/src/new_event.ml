@@ -299,7 +299,13 @@ let view_repeat_rule lens i r =
   let lens_interval =
     Lens.(lens
           >>> FormValues.Lenses.Repeat.interval
-          >>> from_funs ~to_:string_of_int ~from:int_of_string)
+          >>> from_funs
+            ~to_:string_of_int
+            ~from:(fun s -> match int_of_string_opt s with
+              | None -> 1
+              | Some n -> n
+            )
+        )
   in
   let label_name =  "repeatInterval" ^ string_of_int i in
   div []
