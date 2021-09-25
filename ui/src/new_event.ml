@@ -175,6 +175,7 @@ module FormValues = struct
     | InputChanged of ((t, string) Lens.t * string)
     | SetAllDay of bool
     | NewRepeat
+    | DeleteRepeat of int
     | Submit
 
   let update csrf action_ model = function
@@ -184,6 +185,8 @@ module FormValues = struct
         { model with all_day = value }
     | NewRepeat ->
         Lens.modify Lenses.repeat model (fun xs -> xs @ [{frequency = "Daily"; interval = 1}])
+    | DeleteRepeat i ->
+        Lens.modify Lenses.repeat model (Util.List.delete_nth i)
     | Submit ->
         let _ = Protocol.Rpc.postEvent
           ~csrf
@@ -337,6 +340,7 @@ let view_repeat_rule lens i r =
           )
           FormValues.Repeat.options
         )
+    ; button [ onClick (FormValues.DeleteRepeat i) ] [ text "Delete" ]
     ]
 
 let view model =
