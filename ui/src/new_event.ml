@@ -312,7 +312,7 @@ let view_repeat_rule lens i r =
     [ label [ for' label_name ] [ text "Every " ]
     ; input' [ name label_name
              ; type' "number"
-             ; Attributes.min "0"
+             ; Attributes.min "1"
              ; Attributes.step "1"
              ; value (string_of_int r.Protocol.Repeat.interval)
              ; onInput (fun value -> FV.InputChanged(lens_interval, value))
