@@ -3,6 +3,17 @@ open Tea.Html
 
 open Common
 
+(* Pluralize the word if n is not 1. Note: this currently only tacks on
+   an 's', which is all we need here, but obviously isn't correct in
+   the general case.
+
+   TODO: this doesn't really belong here; move it somewhere more sensible. *)
+let maybe_plural n word =
+  if n == 1 then
+    word
+  else
+    word ^ "s"
+
 let choose_tz user_tz browser_tz = match user_tz with
   | Some tz -> tz
   | None -> browser_tz
@@ -18,14 +29,14 @@ module FormValues = struct
 
     type option = {
       opt_freq: string;
-      opt_plural_noun: string;
+      opt_noun: string;
     }
 
     let options = [
-      { opt_freq = "Daily";   opt_plural_noun = "days"   };
-      { opt_freq = "Weekly";  opt_plural_noun = "weeks"  };
-      { opt_freq = "Monthly"; opt_plural_noun = "months" };
-      { opt_freq = "Yearly";  opt_plural_noun = "years"  };
+      { opt_freq = "Daily";   opt_noun = "day"   };
+      { opt_freq = "Weekly";  opt_noun = "week"  };
+      { opt_freq = "Monthly"; opt_noun = "month" };
+      { opt_freq = "Yearly";  opt_noun = "year"  };
     ]
   end
 
@@ -313,7 +324,10 @@ let view_repeat_rule lens i r =
                       opt.FV.Repeat.opt_freq
                       r.Protocol.Repeat.frequency)
               ]
-              [ text opt.FV.Repeat.opt_plural_noun ]
+              [ text (maybe_plural
+                      r.Protocol.Repeat.interval
+                      opt.FV.Repeat.opt_noun)
+              ]
           )
           FormValues.Repeat.options
         )
