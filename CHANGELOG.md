@@ -1,5 +1,10 @@
 # 0.3
 
+* Allow specifying intervals for repeat rules, e.g. "every 2 weeks"
+  instead of just "every week." We could already display these correctly
+  if they were imported via an .ics, but there was no UI for adding
+  them.
+* Allow adding multiple repeat rules for an event.
 * Fixed a spelling error in some of the UI text.
 
 # 0.2
