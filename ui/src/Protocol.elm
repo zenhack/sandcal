@@ -45,11 +45,14 @@ decodeRepeat =
 
 type EventTime
     = AllDay
-    | StartEnd
-        { startTime : String
-        , endTime : String
-        , timeZone : String
-        }
+    | StartEnd StartEndFields
+
+
+type alias StartEndFields =
+    { startTime : String
+    , endTime : String
+    , timeZone : String
+    }
 
 
 encodeEventTime : EventTime -> E.Value
@@ -65,3 +68,34 @@ encodeEventTime t =
                 , ( "endTime", E.string endTime )
                 , ( "timeZone", E.string timeZone )
                 ]
+
+
+decodeEventTime : D.Decoder EventTime
+decodeEventTime =
+    D.field "tag" D.string
+        |> D.andThen
+            (\tag ->
+                case tag of
+                    "AllDay" ->
+                        D.succeed AllDay
+
+                    "StartEnd" ->
+                        D.map StartEnd <|
+                            D.map3 StartEndFields
+                                (D.field "startTime" D.string)
+                                (D.field "endTime" D.string)
+                                (D.field "timeZone" D.string)
+
+                    _ ->
+                        D.fail ("Unknown tag: " ++ tag)
+            )
+
+
+type alias NewEvent =
+    { summary : String
+    , description : String
+    , location : String
+    , date : String
+    , time : EventTime
+    , repeats : List Repeat
+    }
