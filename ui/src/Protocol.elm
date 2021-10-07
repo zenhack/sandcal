@@ -99,3 +99,15 @@ type alias NewEvent =
     , time : EventTime
     , repeats : List Repeat
     }
+
+
+encodeNewEvent : NewEvent -> E.Value
+encodeNewEvent v =
+    E.object
+        [ ( "summary", E.string v.summary )
+        , ( "description", E.string v.description )
+        , ( "location", E.string v.location )
+        , ( "date", E.string v.date )
+        , ( "time", encodeEventTime v.time )
+        , ( "repeats", E.list encodeRepeat v.repeats )
+        ]
