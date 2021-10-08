@@ -111,3 +111,35 @@ encodeNewEvent v =
         , ( "time", encodeEventTime v.time )
         , ( "repeats", E.list encodeRepeat v.repeats )
         ]
+
+
+decodeNewEvent : D.Decoder NewEvent
+decodeNewEvent =
+    D.map6 NewEvent
+        (D.field "summary" D.string)
+        (D.field "description" D.string)
+        (D.field "location" D.string)
+        (D.field "date" D.string)
+        (D.field "time" decodeEventTime)
+        (D.field "repeats" (D.list decodeRepeat))
+
+
+type alias EditTemplate =
+    { title : String
+    , submitText : String
+    , userTz : Maybe String
+    , action : String
+    , formData : Maybe NewEvent
+    , csrfToken : String
+    }
+
+
+decodeEditTemplate : D.Decoder EditTemplate
+decodeEditTemplate =
+    D.map6 EditTemplate
+        (D.field "title" D.string)
+        (D.field "submitText" D.string)
+        (D.field "userTz" (D.maybe D.string))
+        (D.field "action" D.string)
+        (D.field "formData" (D.nullable decodeNewEvent))
+        (D.field "csrfToken" D.string)
