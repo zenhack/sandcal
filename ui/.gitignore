@@ -1,5 +1,9 @@
 # Elm stuff:
 elm-stuff
+index.html
+
+# Generated code:
+/gen
 
 # OCaml Stuff:
 *.exe

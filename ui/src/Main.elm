@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Accessors
 import Browser
 import Html exposing (..)
 
@@ -13,7 +14,11 @@ type Model
 
 
 type Msg
-    = Msg
+    = InputChanged (Accessors.Relation Model String String) String
+    | SetAllDay Bool
+    | NewRepeat
+    | DeleteRepeat Int
+    | Submit
 
 
 init : {} -> ( Model, Cmd Msg )
@@ -33,7 +38,7 @@ view _ =
 -- UPDATE
 
 
-update Msg Model =
+update _ Model =
     ( Model, Cmd.none )
 
 

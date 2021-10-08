@@ -1,4 +1,20 @@
-module Protocol exposing (Frequency)
+module Protocol exposing
+    ( EditTemplate
+    , EventTime(..)
+    , Frequency
+    , NewEvent
+    , Repeat
+    , StartEndFields
+    , decodeEditTemplate
+    , decodeEventTime
+    , decodeFrequency
+    , decodeNewEvent
+    , decodeRepeat
+    , encodeEventTime
+    , encodeFrequency
+    , encodeNewEvent
+    , encodeRepeat
+    )
 
 import Json.Decode as D
 import Json.Encode as E
