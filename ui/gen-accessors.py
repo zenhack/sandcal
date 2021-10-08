@@ -14,6 +14,7 @@ ALL_LABELS = [
     'repeat',
     'frequency',
     'interval',
+    'formValues',
 ]
 
 

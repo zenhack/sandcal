@@ -2,32 +2,59 @@ module Main exposing (main)
 
 import Accessors
 import Browser
+import FormValues
 import Html exposing (..)
+import Json.Decode as D
+import Json.Encode as E
+import Protocol
 
 
 
 -- MODEL
 
 
-type Model
-    = Model
+type alias Model =
+    { userTz : String
+    , formValues : FormValues.Model
+    , formValuesInit : FormValues.Model
+    , action : String
+    , submitText : String
+    , csrfToken : String
+    }
 
 
-type Msg
-    = InputChanged (Accessors.Relation Model String String) String
-    | SetAllDay Bool
-    | NewRepeat
-    | DeleteRepeat Int
-    | Submit
+type alias Msg =
+    FormValues.Msg
 
 
-init : {} -> ( Model, Cmd Msg )
-init _ =
-    ( Model, Cmd.none )
+type alias Flags =
+    E.Value
+
+
+init : Flags -> ( Model, Cmd Msg )
+init flagsValue =
+    case D.decodeValue FormValues.decodeFlags flagsValue of
+        Err _ ->
+            Debug.todo "Failed to parse flags"
+
+        Ok flags ->
+            let
+                formValues =
+                    FormValues.init flags
+            in
+            ( { formValues = formValues
+              , formValuesInit = formValues
+              , userTz = FormValues.chooseTz flags
+              , action = flags.action
+              , submitText = flags.tpl.submitText
+              , csrfToken = flags.tpl.csrfToken
+              }
+            , Cmd.none
+            )
 
 
 
--- VIEW
+-- VIEW (TODO)
 
 
 view _ =
@@ -35,11 +62,11 @@ view _ =
 
 
 
--- UPDATE
+-- UPDATE (TODO)
 
 
-update _ Model =
-    ( Model, Cmd.none )
+update _ model =
+    ( model, Cmd.none )
 
 
 
