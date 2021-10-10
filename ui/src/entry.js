@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   Elm.Main.init({
     node: elem,
     flags: {
-      tpl: template,
+      tpl: JSON.parse(template),
       browserTz: browserTz,
     },
   })

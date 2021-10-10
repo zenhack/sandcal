@@ -34,8 +34,8 @@ type alias Flags =
 init : Flags -> ( Model, Cmd Msg )
 init flagsValue =
     case D.decodeValue FormValues.decodeFlags flagsValue of
-        Err _ ->
-            Debug.todo "Failed to parse flags"
+        Err e ->
+            Debug.todo <| "Failed to parse flags: " ++ Debug.toString e
 
         Ok flags ->
             let
