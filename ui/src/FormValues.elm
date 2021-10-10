@@ -81,14 +81,48 @@ type Msg
 type alias Flags =
     { tpl : Protocol.EditTemplate
     , browserTz : String
+    , now : Date
+    }
+
+
+type alias Date =
+    { year : Int
+    , month : Int
+    , day : Int
     }
 
 
 decodeFlags : D.Decoder Flags
 decodeFlags =
-    D.map2 Flags
+    D.map3 Flags
         (D.field "tpl" Protocol.decodeEditTemplate)
         (D.field "browserTz" D.string)
+        (D.field "now" decodeDate)
+
+
+decodeDate : D.Decoder Date
+decodeDate =
+    D.map3 Date
+        (D.field "year" D.int)
+        (D.field "month" D.int)
+        (D.field "day" D.int)
+
+
+formatDate : Date -> String
+formatDate d =
+    let
+        str n =
+            let
+                ret =
+                    String.fromInt n
+            in
+            if n < 10 then
+                "0" ++ ret
+
+            else
+                ret
+    in
+    str d.year ++ "-" ++ str (d.month + 1) ++ "-" ++ str d.day
 
 
 valid m =
@@ -192,7 +226,7 @@ init flags =
             { summary = ""
             , description = ""
             , location = ""
-            , date = Debug.todo "date_prefill_now ()"
+            , date = formatDate flags.now
             , allDay = False
             , time = defaultTime
             , timeZone = chooseTz flags
