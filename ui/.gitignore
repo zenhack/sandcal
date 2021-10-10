@@ -1,6 +1,7 @@
 # Elm stuff:
 elm-stuff
-index.html
+/index.html
+/elm.js
 
 # Generated code:
 /gen

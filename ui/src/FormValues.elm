@@ -81,16 +81,14 @@ type Msg
 type alias Flags =
     { tpl : Protocol.EditTemplate
     , browserTz : String
-    , action : String
     }
 
 
 decodeFlags : D.Decoder Flags
 decodeFlags =
-    D.map3 Flags
+    D.map2 Flags
         (D.field "tpl" Protocol.decodeEditTemplate)
         (D.field "browserTz" D.string)
-        (D.field "action" D.string)
 
 
 valid m =

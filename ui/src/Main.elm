@@ -45,7 +45,7 @@ init flagsValue =
             ( { formValues = formValues
               , formValuesInit = formValues
               , userTz = FormValues.chooseTz flags
-              , action = flags.action
+              , action = flags.tpl.action
               , submitText = flags.tpl.submitText
               , csrfToken = flags.tpl.csrfToken
               }

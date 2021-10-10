@@ -21,32 +21,27 @@ sandcal: .build-hs
 sandcal.spk: all
 	spk pack $@
 
-gen_ocaml_files := \
-	ui/src/gen_tz.ml
+gen_elm_files :=
+#gen_ocaml_files := \
+#	ui/src/gen_tz.ml
 
-# TODO: avoid listing gen_ocaml_files twice if they've already been generated.
-ocaml_files := $(shell find ui/src/ -type f -name '*.ml') $(gen_ocaml_files)
-bs_files := $(ocaml_files:.ml=.bs.js)
+# TODO: avoid listing gen_elm_files twice if they've already been generated.
+elm_files := $(shell find ui/src/ -type f -name '*.elm') $(gen_elm_files)
 
 clean:
 	cd ui && bsb -clean-world
 	rm -f ui/bundle.js
 	rm -f ui/bundle.min.js
-	rm -f .build-ml
 	rm -f .build-hs
 
 $(gen_ocaml_files): .build-hs
 	cabal v2-run gen-caml
 
-.build-ml: $(ocaml_files)
-	cd ui && npx bsb -make-world
-	@# Conceptually the output here is $(bs_files), but specifying that
-	@# reuslts in this rule being run multiple times for reasons I(zenhack)
-	@# don't fully understand, so we use a sentinel file instead:
-	touch .build-ml
+ui/elm.js: $(elm_files)
+	cd ui && elm make src/Main.elm --output=elm.js
 ui/bundle.min.js: ui/bundle.js
-	(cd ui && npx uglifyjs --compress --mangle) < $< > $@
-ui/bundle.js: .build-ml ui/src/entry.js ui/package.json ui/rollup.config.js
-	cd ui && npx rollup --config
+	(cd ui && uglifyjs --compress --mangle) < $< > $@
+ui/bundle.js: ui/elm.js ui/src/entry.js
+	cat ui/elm.js ui/src/entry.js > $@
 
 .PHONY: all clean run dev pack check
