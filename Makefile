@@ -22,9 +22,8 @@ sandcal.spk: all
 	spk pack $@
 
 gen_elm_files := \
-	ui/gen/GenAccessors.elm
-#gen_ocaml_files := \
-#	ui/src/gen_tz.ml
+	ui/gen/GenAccessors.elm \
+	ui/gen/GenTz.elm
 
 elm_files := $(shell find ui/src/ -type f -name '*.elm') $(gen_elm_files)
 
@@ -34,11 +33,11 @@ clean:
 	rm -f ui/bundle.min.js
 	rm -f .build-hs
 
-$(gen_ocaml_files): .build-hs
-	cabal v2-run gen-caml
-
+ui/gen/GenTz.elm: .build-hs
+	cabal v2-run gen-elm
 ui/gen/GenAccessors.elm: ui/gen-accessors.py
 	cd ui && python gen-accessors.py
+
 ui/elm.js: $(elm_files)
 	cd ui && elm make src/Main.elm --output=elm.js
 ui/bundle.min.js: ui/bundle.js

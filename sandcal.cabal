@@ -113,9 +113,9 @@ executable sandcal
   build-depends: libsandcal
   hs-source-dirs: exe
 
-executable gen-caml
+executable gen-elm
   import: shared-opts
-  main-is: GenCaml.hs
+  main-is: GenElm.hs
   hs-source-dirs: exe
 
 test-suite tests
