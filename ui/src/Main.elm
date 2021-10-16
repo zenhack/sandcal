@@ -4,9 +4,10 @@ import Accessors
 import Browser
 import FormValues
 import GenAccessors as GA
+import GenTz
 import Html exposing (..)
-import Html.Attributes exposing (class, for, name, type_, value)
-import Html.Events exposing (onCheck, onInput)
+import Html.Attributes as Attributes exposing (class, for, name, type_, value)
+import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as D
 import Json.Encode as E
 import Protocol
@@ -92,16 +93,74 @@ view model =
             , trackedInput "text" [] "Summary" GA.summary []
             , trackedInput "date" [] "Date" GA.date []
             , labeledInput "checkbox" "All Day" [ onCheck FormValues.SetAllDay ] []
-
-            -- TODO
             ]
+                ++ (if model.formValues.allDay then
+                        []
 
-        -- TODO
+                    else
+                        [ trackedInput "time" [] "Start Time" (GA.time << GA.start) []
+                        , trackedInput "time" [] "End Time" (GA.time << GA.stop) []
+                        , labeledTzSelect "Time Zone" (Just model.formValues.timeZone)
+                        ]
+                   )
+                ++ [ trackedInput "text" [] "Location" GA.location []
+                   , trackedTextArea "Description" GA.description
+                   , h2 [] [ text "Repeats" ]
+                   ]
+                ++ List.indexedMap
+                    (\i r ->
+                        viewRepeatRule (GA.repeat << nth i) i r
+                    )
+                    model.formValues.repeat
+                ++ [ button [ onClick FormValues.NewRepeat ] [ text "New repeat rule" ] ]
+        , button
+            [ Attributes.disabled (not (FormValues.valid model.formValues))
+            , onClick FormValues.Submit
+            ]
+            [ text model.submitText ]
         ]
+
+
+nth _ =
+    Debug.todo
+
+
+viewRepeatRule accessor i r =
+    text "TODO"
 
 
 formBlock =
     div [ class "formBlock" ]
+
+
+labeledTzSelect selectName userTz =
+    labeledSelect selectName
+        (List.map
+            (\tzName ->
+                ( tzName
+                , userTz
+                    |> Maybe.map (\s -> s == tzName)
+                    |> Maybe.withDefault False
+                )
+            )
+            GenTz.tzLabels
+        )
+
+
+labeledSelect selectName options =
+    labeledElem select
+        selectName
+        []
+        (List.map
+            (\( name, selected ) ->
+                option
+                    [ value name
+                    , Attributes.selected selected
+                    ]
+                    [ text name ]
+            )
+            options
+        )
 
 
 labeledInput typ labelName attrs =
