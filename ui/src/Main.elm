@@ -3,7 +3,10 @@ module Main exposing (main)
 import Accessors
 import Browser
 import FormValues
+import GenAccessors as GA
 import Html exposing (..)
+import Html.Attributes exposing (class, for, name, type_, value)
+import Html.Events exposing (onCheck, onInput)
 import Json.Decode as D
 import Json.Encode as E
 import Protocol
@@ -54,11 +57,63 @@ init flagsValue =
 
 
 
--- VIEW (TODO)
+-- VIEW
 
 
-view _ =
-    text "Hello, World!"
+view : Model -> Html Msg
+view model =
+    let
+        trackedTextArea key accessor =
+            let
+                content =
+                    Accessors.get accessor model.formValues
+
+                event =
+                    onInput (FormValues.InputChanged accessor)
+            in
+            labeledElem textarea key [ event, value content ] []
+
+        trackedInput typ attrs key accessor =
+            let
+                event =
+                    onInput (FormValues.InputChanged accessor)
+            in
+            labeledInput typ
+                key
+                (value (Accessors.get accessor model.formValues)
+                    :: event
+                    :: attrs
+                )
+    in
+    div
+        [ class "form" ]
+        [ formBlock <|
+            [ input [ type_ "hidden", name "csrfToken", value model.csrfToken ] []
+            , trackedInput "text" [] "Summary" GA.summary []
+            , trackedInput "date" [] "Date" GA.date []
+            , labeledInput "checkbox" "All Day" [ onCheck FormValues.SetAllDay ] []
+
+            -- TODO
+            ]
+
+        -- TODO
+        ]
+
+
+formBlock =
+    div [ class "formBlock" ]
+
+
+labeledInput typ labelName attrs =
+    labeledElem input labelName (type_ typ :: attrs)
+
+
+labeledElem elem labelName attrs kids =
+    div
+        [ class "labeledInput" ]
+        [ label [ for labelName ] [ text labelName ]
+        , elem (name labelName :: attrs) kids
+        ]
 
 
 
