@@ -10,15 +10,16 @@ module FormValues exposing
     , init
     , makeProtocolNewEvent
     , repeatOptions
-    , update
     , valid
     )
 
 import Accessors
 import GenAccessors as GA
+import Http
 import Json.Decode as D
 import List.Extra
 import Protocol
+import Protocol.Rpc as Rpc
 
 
 type alias Range a =
@@ -76,6 +77,7 @@ type Msg
     | NewRepeat
     | DeleteRepeat Int
     | Submit
+    | SubmitResult (Result Http.Error String)
 
 
 type alias Flags =
@@ -154,35 +156,35 @@ makeProtocolNewEvent fv =
     }
 
 
-update csrf action_ msg model =
-    case msg of
-        InputChanged rel value ->
-            ( Accessors.set rel value model
-            , Cmd.none
-            )
 
-        SetAllDay value ->
-            ( { model | allDay = value }
-            , Cmd.none
-            )
+{-
+   update csrf action_ msg model =
+       case msg of
+           InputChanged rel value ->
+               ( Accessors.set rel value model
+               , Cmd.none
+               )
 
-        NewRepeat ->
-            ( model
-                |> Accessors.over GA.repeat (\xs -> xs ++ [ { frequency = "Daily", interval = 1 } ])
-            , Cmd.none
-            )
+           SetAllDay value ->
+               ( { model | allDay = value }
+               , Cmd.none
+               )
 
-        DeleteRepeat i ->
-            ( model
-                |> Accessors.over GA.repeat (List.Extra.removeAt i)
-            , Cmd.none
-            )
+           NewRepeat ->
+               ( model
+                   |> Accessors.over GA.repeat (\xs -> xs ++ [ { frequency = "Daily", interval = 1 } ])
+               , Cmd.none
+               )
 
-        Submit ->
-            Debug.todo "Port from OCaml, below"
+           DeleteRepeat i ->
+               ( model
+                   |> Accessors.over GA.repeat (List.Extra.removeAt i)
+               , Cmd.none
+               )
 
-
-
+           Submit ->
+               Debug.todo "Port from OCaml, below"
+-}
 {- Old OCaml for the submit case:
 
    let _ = Protocol.Rpc.postEvent

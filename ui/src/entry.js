@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var elem = document.getElementById('bs-form');
   var template = elem.attributes['data-sandcal-template'].nodeValue;
   var now = new Date();
-  Elm.Main.init({
+  var app = Elm.Main.init({
     node: elem,
     flags: {
       tpl: JSON.parse(template),
@@ -14,5 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
         day: now.getDate(),
       },
     },
-  })
+  });
+  app.ports.setLocation.subscribe(function(loc) {
+    console.log("port setLocation: ", loc);
+    window.location = loc;
+  });
 })

@@ -11,7 +11,9 @@ import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as D
 import Json.Encode as E
 import List.Extra
+import Ports
 import Protocol
+import Protocol.Rpc as Rpc
 import Utils.Accessors
 import Utils.Events exposing (onChange)
 
@@ -263,7 +265,22 @@ update msg model =
             )
 
         FormValues.Submit ->
-            Debug.todo "Submit"
+            ( model
+            , Rpc.postEvent
+                model.csrfToken
+                model.action
+                (FormValues.makeProtocolNewEvent model.formValues)
+                FormValues.SubmitResult
+            )
+
+        FormValues.SubmitResult (Ok loc) ->
+            ( model
+            , Ports.setLocation loc
+            )
+
+        FormValues.SubmitResult (Err _) ->
+            -- TODO: report the error somehow.
+            ( model, Cmd.none )
 
 
 
