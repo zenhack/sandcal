@@ -10,6 +10,7 @@ import Html.Attributes as Attributes exposing (class, for, name, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as D
 import Json.Encode as E
+import List.Extra
 import Protocol
 import Utils.Accessors
 import Utils.Events exposing (onChange)
@@ -234,8 +235,35 @@ labeledElem elem labelName attrs kids =
 -- UPDATE (TODO)
 
 
-update _ model =
-    ( model, Cmd.none )
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        FormValues.InputChanged accessor value ->
+            ( Accessors.set (GA.formValues << accessor) value model
+            , Cmd.none
+            )
+
+        FormValues.SetAllDay value ->
+            ( Accessors.set (GA.formValues << GA.allDay) value model
+            , Cmd.none
+            )
+
+        FormValues.NewRepeat ->
+            ( Accessors.over (GA.formValues << GA.repeat)
+                (\xs -> xs ++ [ { frequency = "Daily", interval = 1 } ])
+                model
+            , Cmd.none
+            )
+
+        FormValues.DeleteRepeat i ->
+            ( Accessors.over (GA.formValues << GA.repeat)
+                (List.Extra.removeAt i)
+                model
+            , Cmd.none
+            )
+
+        FormValues.Submit ->
+            Debug.todo "Submit"
 
 
 
