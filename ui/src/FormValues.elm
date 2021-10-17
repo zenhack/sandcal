@@ -156,57 +156,6 @@ makeProtocolNewEvent fv =
     }
 
 
-
-{-
-   update csrf action_ msg model =
-       case msg of
-           InputChanged rel value ->
-               ( Accessors.set rel value model
-               , Cmd.none
-               )
-
-           SetAllDay value ->
-               ( { model | allDay = value }
-               , Cmd.none
-               )
-
-           NewRepeat ->
-               ( model
-                   |> Accessors.over GA.repeat (\xs -> xs ++ [ { frequency = "Daily", interval = 1 } ])
-               , Cmd.none
-               )
-
-           DeleteRepeat i ->
-               ( model
-                   |> Accessors.over GA.repeat (List.Extra.removeAt i)
-               , Cmd.none
-               )
-
-           Submit ->
-               Debug.todo "Port from OCaml, below"
--}
-{- Old OCaml for the submit case:
-
-   let _ = Protocol.Rpc.postEvent
-     ~csrf
-     ~action:action_
-     (make_protocol_new_event model)
-     |> Js.Promise.then_
-         (fun r ->
-           if not r.Browser.Response.ok then
-             failwith "TODO: handle failures"
-           else
-             begin
-               JsFunctions.setLocation r.Browser.Response.url;
-               Js.Promise.resolve ()
-             end
-         )
-   in
-   -- TODO: mark the state as loading & indicate this to the user somehow?
-   model
--}
-
-
 chooseTz : Flags -> String
 chooseTz flags =
     flags.tpl.userTz |> Maybe.withDefault flags.browserTz

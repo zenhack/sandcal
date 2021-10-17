@@ -234,11 +234,12 @@ labeledElem elem labelName attrs kids =
 
 
 
--- UPDATE (TODO)
+-- UPDATE
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    -- TODO: most of this logic should really go in FormValues.
     case msg of
         FormValues.InputChanged accessor value ->
             ( Accessors.set (GA.formValues << accessor) value model
