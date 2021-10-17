@@ -11,6 +11,8 @@ import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as D
 import Json.Encode as E
 import Protocol
+import Utils.Accessors
+import Utils.Events exposing (onChange)
 
 
 
@@ -109,7 +111,7 @@ view model =
                    ]
                 ++ List.indexedMap
                     (\i r ->
-                        viewRepeatRule (GA.repeat << nth i) i r
+                        viewRepeatRule (GA.repeat << Utils.Accessors.nth i r) i r
                     )
                     model.formValues.repeat
                 ++ [ button [ onClick FormValues.NewRepeat ] [ text "New repeat rule" ] ]
@@ -121,12 +123,65 @@ view model =
         ]
 
 
-nth _ =
-    Debug.todo
-
-
 viewRepeatRule accessor i r =
-    text "TODO"
+    let
+        freqAccessor =
+            accessor << GA.frequency
+
+        intervalAccessor =
+            accessor
+                << GA.interval
+                << Accessors.makeOneToOne
+                    String.fromInt
+                    (\change n ->
+                        String.fromInt n
+                            |> change
+                            |> String.toInt
+                            |> Maybe.withDefault 1
+                    )
+
+        labelName =
+            "repeatInterval" ++ String.fromInt i
+    in
+    div []
+        [ label [ for labelName ] [ text "Every " ]
+        , input
+            [ Attributes.name labelName
+            , type_ "number"
+            , Attributes.min "1"
+            , Attributes.step "1"
+            , Attributes.value (String.fromInt r.interval)
+            , onInput (FormValues.InputChanged intervalAccessor)
+            ]
+            []
+        , select [ onChange (D.map (FormValues.InputChanged freqAccessor) D.string) ]
+            (List.map
+                (\opt ->
+                    option
+                        [ Attributes.value opt.freq
+                        , Attributes.selected (opt.freq == r.frequency)
+                        ]
+                        [ text (maybePlural r.interval opt.noun) ]
+                )
+                FormValues.repeatOptions
+            )
+        , button [ onClick (FormValues.DeleteRepeat i) ] [ text "Delete" ]
+        ]
+
+
+{-| Pluralize the word if n is not 1. Note: this currently only tacks on
+an 's', which is all we need here, but obviously isn't correct in
+the general case.
+
+TODO: this doesn't really belong here; move it somewhere more sensible.
+
+-}
+maybePlural n word =
+    if n == 1 then
+        word
+
+    else
+        word ++ "s"
 
 
 formBlock =
