@@ -12,6 +12,7 @@ import           Data.List                   (intersperse)
 import qualified Data.Set                    as S
 import qualified Data.Text.Lazy              as LT
 import qualified Data.Time                   as Time
+import qualified FindLinks
 import qualified Occurrences                 as Oc
 import qualified Route
 import qualified Sandstorm
@@ -97,6 +98,17 @@ viewDescription :: LT.Text -> H.Html
 viewDescription descr =
     H.div ! A.class_ "eventDescription" $
         LT.lines descr
-        & map H.toHtml
+        & map (FindLinks.renderWithLinks linkRenderer)
         & intersperse H.br
         & mconcat
+
+
+linkRenderer :: FindLinks.Renderer H.Html
+linkRenderer = FindLinks.Renderer
+    { FindLinks.renderText = H.toHtml
+    , FindLinks.renderLink = \url text ->
+        H.a ! A.href (H.toValue url)
+            ! A.target "_blank"
+            ! A.rel "noopener"
+            $ H.toHtml text
+    }

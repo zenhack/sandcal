@@ -105,6 +105,7 @@ library libsandcal
     , Util.Scotty.DateParsers
     , Util.Time
     , Util.TZ
+    , FindLinks
   hs-source-dirs: src
 
 executable sandcal
