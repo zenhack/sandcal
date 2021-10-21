@@ -54,12 +54,12 @@ renderNode r node =
         Email  -> renderLink r ("mailto:" <> v) v
 
 chain :: Monoid a => [Parser a] -> Parser a
-chain ps = mconcat <$> sequence ps
+chain ps = mconcat <$> try (traverse try ps)
 
 btChoice = choice . map try
 
 chainMany :: Monoid a => Parser a -> Parser a
-chainMany = fmap mconcat . many . try
+chainMany = fmap mconcat . try . many . try
 
 sepByKeep :: Monoid a => Parser a -> Parser a -> Parser a
 sepByKeep elt sep = opt (sepBy1Keep (try elt) sep)
@@ -118,7 +118,7 @@ httpUrlTail = chain
     ]
 
 opt :: Monoid a => Parser a -> Parser a
-opt = fmap (fromMaybe mempty) . optional
+opt = fmap (fromMaybe mempty) . optional . try
 
 pNode :: Parser Node
 pNode = try pUrl <|> (Node Text <$> stringP (const True))
@@ -126,7 +126,7 @@ pNode = try pUrl <|> (Node Text <$> stringP (const True))
 pUrl :: Parser Node
 pUrl = btChoice
     [ Node HTTP <$> httpUrl
-    , Node WWW <$> chain [ try (string "www."), httpUrlTail ]
+    , Node WWW <$> chain [string "www.", httpUrlTail]
     , Node Mailto <$> mailtoUrl
     ]
 
@@ -136,7 +136,7 @@ host = btChoice
     ]
 
 hostname = chain
-    [ chainMany (chain [ domainlabel, string "."])
+    [ chainMany (chain [domainlabel, string "."])
     , toplabel
     ]
 
