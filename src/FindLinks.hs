@@ -86,11 +86,11 @@ uchar = stringP isUnreserved <|> chain [ string "%", hex, hex ]
 
 hex = stringP isHexDigit
 
-segSearchChar :: Parser LT.Text
-segSearchChar = uchar <|> stringP (`elem` (";:@&=" :: String))
+segChar :: Parser LT.Text
+segChar = uchar <|> stringP (`elem` (";:@&=" :: String))
 
-segChar = segSearchChar
-searchChar = segSearchChar
+searchChar = segChar
+fragmentChar = segChar
 
 manyP = takeWhileP Nothing
 
@@ -110,6 +110,10 @@ httpUrlTail = chain
             [ string "?"
             , chainMany searchChar
             ]
+        ]
+    , opt $ chain
+        [ string "#"
+        , chainMany fragmentChar
         ]
     ]
 
