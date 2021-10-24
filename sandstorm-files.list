@@ -19,13 +19,15 @@ usr/lib/libc-2.33.so
 usr/lib/libc.so.6
 usr/lib/libdl-2.33.so
 usr/lib/libdl.so.2
-usr/lib/libffi.so.7
-usr/lib/libffi.so.7.1.0
+usr/lib/libffi.so.8
+usr/lib/libffi.so.8.1.0
 usr/lib/libgcc_s.so.1
 usr/lib/libgmp.so.10
 usr/lib/libgmp.so.10.4.1
 usr/lib/libm-2.33.so
 usr/lib/libm.so.6
+usr/lib/libnuma.so.1
+usr/lib/libnuma.so.1.0.0
 usr/lib/libpthread-2.33.so
 usr/lib/libpthread.so.0
 usr/lib/librt-2.33.so
