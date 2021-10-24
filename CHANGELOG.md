@@ -1,6 +1,7 @@
 # 0.4
 
-* In event descriptions, mark up URLs as actual links.
+* In event descriptions, mark up email addresses and URLs as actual
+  links.
 
 # 0.3
 
