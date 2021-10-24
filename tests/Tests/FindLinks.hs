@@ -68,10 +68,19 @@ examples =
         , Text "; we'd love to hear from you."
         ]
       )
+    , ( "Check a direct mailto url: mailto:alice@example.org"
+      , [ Text "Check a direct mailto url: "
+        , Link "mailto:alice@example.org" "mailto:alice@example.org"
+        ]
+      )
     ]
 
 
 prop_noTextChange = do
+    -- TODO: this generator is probably not good enough to cover cases that
+    -- actually have URLs in them well, since the probability of randomly
+    -- getting valid url prefix is quite low. Write a custom generator that
+    -- is more useful.
     input <- LT.fromStrict <$> forAll (Gen.text (Range.linear 0 4000) Gen.unicode)
     let output = renderWithLinks ignoreRenderer input
     input === output

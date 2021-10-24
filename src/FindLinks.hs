@@ -189,7 +189,7 @@ pMailAddr typ prefix = do
             [ TB.singleton <$> char '@'
             , pHost
             ]
-        pure (Node typ (prefix <> p <> addrTail))
+        pure (Node typ (p <> addrTail))
   where
     pWord = TB.fromLazyText <$> takeWhile1P
         (Just "Email username")
