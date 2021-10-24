@@ -169,11 +169,37 @@ pFragment typ prefix = do
     fragment <- takeWhilePOrEscaped "URL fragment" isFragmentChar
     pure (Node typ (prefix <> "#" <> fragment))
 
+
+pMailAddr :: NodeParser
+pMailAddr typ prefix = do
+    ws <- pWord `sepBy1` "."
+    breakPoint Text (prefix <> mconcat (intersperse "." ws)) $ \_ p -> do
+        addrTail <- chain
+            [ TB.singleton <$> char '@'
+            , pHost
+            ]
+        pure (Node typ (prefix <> p <> addrTail))
+  where
+    pWord = TB.fromLazyText <$> takeWhile1P
+        (Just "Email username")
+        (not . (`elem` illegalWordChars))
+    illegalWordChars :: String
+    illegalWordChars = " ()<>@,;:\\\".[]"
+
+pMailtoUrl :: Parser Node
+pMailtoUrl = try $ do
+    prefix <- TB.fromLazyText <$> string "mailto:"
+    pMailAddr Mailto prefix
+
+pEmailUrl :: Parser Node
+pEmailUrl = try $ pMailAddr Email ""
+
 pNode :: Parser Node
 pNode = choice
     [ pHttpUrl
     , pWWWUrl
-    -- TODO: mailto
+    , pMailtoUrl
+    , pEmailUrl
     , pChar
     ]
 

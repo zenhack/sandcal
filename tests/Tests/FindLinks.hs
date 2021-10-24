@@ -52,6 +52,17 @@ examples =
         , Text "; isn't that cool?"
         ]
       )
+    , ( "Reach out at alice@example.com."
+      , [ Text "Reach out at "
+        , Link "mailto:alice@example.com." "alice@example.com."
+        ]
+      )
+    , ( "Reach out at bob.+.alice@foo.example.net; we'd love to hear from you."
+      , [ Text "Reach out at "
+        , Link "mailto:bob.+.alice@foo.example.net" "bob.+.alice@foo.example.net"
+        , Text "; we'd love to hear from you."
+        ]
+      )
     ]
 
 
