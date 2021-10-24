@@ -1,3 +1,7 @@
+# 0.4
+
+* In event descriptions, mark up URLs as actual links.
+
 # 0.3
 
 * Allow specifying intervals for repeat rules, e.g. "every 2 weeks"
