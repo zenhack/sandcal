@@ -28,7 +28,8 @@ gen_elm_files := \
 elm_files := $(shell find ui/src/ -type f -name '*.elm') $(gen_elm_files)
 
 clean:
-	cd ui && bsb -clean-world
+	rm -rf ui/elm-stuff
+	rm -rf ui/gen
 	rm -f ui/bundle.js
 	rm -f ui/bundle.min.js
 	rm -f .build-hs
