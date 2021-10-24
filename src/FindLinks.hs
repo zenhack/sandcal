@@ -94,7 +94,7 @@ pEscaped = try $ chain [ TB.singleton <$> char '%', pHex, pHex ]
 isSegChar, isSearchChar, isFragmentChar :: Char -> Bool
 isSegChar c =
     isUnreserved c
-    || c `elem` (";:@^=" :: String)
+    || c `elem` (";:@^&=" :: String)
 isSearchChar = isSegChar
 isFragmentChar = isSegChar
 

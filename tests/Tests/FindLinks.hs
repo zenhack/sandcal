@@ -52,6 +52,11 @@ examples =
         , Text "; isn't that cool?"
         ]
       )
+    , ( "A link with query parameters: https://example.com/foo?bar=baz&quux=fff"
+      , [ Text "A link with query parameters: "
+        , Link "https://example.com/foo?bar=baz&quux=fff" "https://example.com/foo?bar=baz&quux=fff"
+        ]
+      )
     , ( "Reach out at alice@example.com."
       , [ Text "Reach out at "
         , Link "mailto:alice@example.com." "alice@example.com."
