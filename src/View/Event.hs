@@ -66,10 +66,10 @@ event csrfKey permissions userId eid tzLabel ev zot =
                 H.h2 "Participants"
                 for_ participants $ \p -> H.ul $ do
                     for_ (ICal.attendeeCN p) $ \name ->
-                        H.li $ maybeLink name (ICal.attendeeDir p)
+                        H.li $ markupLinks name
             for_ (ICal.veLocation ev) $ \loc -> do
                 H.h2 "Location"
-                H.p $ H.toHtml $ ICal.locationValue loc
+                markupLinks $ ICal.locationValue loc
         }
 
 viewRRule :: ICal.RRule -> H.Html
@@ -96,11 +96,14 @@ viewLocalOCTime = \case
 
 viewDescription :: LT.Text -> H.Html
 viewDescription descr =
-    H.div ! A.class_ "eventDescription" $
-        LT.lines descr
-        & map (FindLinks.renderWithLinks linkRenderer)
-        & intersperse H.br
-        & mconcat
+    H.div ! A.class_ "eventDescription" $ markupLinks descr
+
+markupLinks :: LT.Text -> H.Html
+markupLinks =
+    LT.lines
+    >>> map (FindLinks.renderWithLinks linkRenderer)
+    >>> intersperse H.br
+    >>> mconcat
 
 
 linkRenderer :: FindLinks.Renderer H.Html
@@ -109,6 +112,6 @@ linkRenderer = FindLinks.Renderer
     , FindLinks.renderLink = \url text ->
         H.a ! A.href (H.toValue url)
             ! A.target "_blank"
-            ! A.rel "noopener"
+            ! A.rel "noreferrer noopener"
             $ H.toHtml text
     }

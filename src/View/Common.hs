@@ -12,12 +12,9 @@ module View.Common
     , labeledTzSelect
     , labeledSelect
     , eventSummary
-    , maybeLink
     ) where
 
 import Zhp
-
-import Network.URI (URI)
 
 import qualified Route
 import qualified Util.CSRF as CSRF
@@ -132,12 +129,3 @@ navigation permissions =
             [ (Route.Home, "Upcoming Events")
             , (Route.ImportICS, "Export")
             ]
-
-maybeLink :: H.ToMarkup a => a -> Maybe URI -> H.Html
-maybeLink content = \case
-    Nothing -> H.toHtml content
-    Just url ->
-        H.a
-            ! A.href (H.toValue $ show url)
-            ! A.rel "noreferrer noopener"
-            $ H.toHtml content
