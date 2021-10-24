@@ -1,4 +1,15 @@
 -- | Find and mark up links inside of plain text.
+--
+-- We recognize the following:
+--
+-- * http and https urls
+-- * http urls where the http(s):// is missing, if the first part of the
+--   host is www.
+-- * mailto: links
+-- * bare email addresses (interpreted as mailto: links).
+--
+-- The syntax recognized is based on RFC1738, but we are a bit more
+-- permissive in a few places.
 module FindLinks
     ( Renderer(..)
     , renderWithLinks
