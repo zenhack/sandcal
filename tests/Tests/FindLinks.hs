@@ -34,19 +34,18 @@ examples =
     , ( "http://zenhack.net/foo/bar#baz"
       , [Link "http://zenhack.net/foo/bar#baz" "http://zenhack.net/foo/bar#baz"]
       )
-{- -- These currently fail; the . at the end of the address seems to cause the
-   -- whole parse to fail, and instead of breaking the input there it backtracks
-   -- and treats the whole URL as a Text.
     , ( "www.gnu.org."
-      , [Link "https://www.gnu.org" "www.gnu.org", Text "."]
+      , [Link "https://www.gnu.org." "www.gnu.org."]
       )
     , ( "Hey look, www.itsawebsite.com. isn't that cool?"
       , [ Text "Hey look, "
-        , Link "https://www.itsawebsite.com" "www.itsawebsite.com"
-        , Text ". isn't that cool?"
+        , Link "https://www.itsawebsite.com." "www.itsawebsite.com."
+        , Text " isn't that cool?"
         ]
       )
--}
+    , ( "https://gnu.org."
+      , [Link "https://gnu.org." "https://gnu.org."]
+      )
     , ( "Hey look, www.itsawebsite.com; isn't that cool?"
       , [ Text "Hey look, "
         , Link "https://www.itsawebsite.com" "www.itsawebsite.com"
