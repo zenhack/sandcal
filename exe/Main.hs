@@ -1,2 +1,4 @@
 module Main (main) where
-import LibMain (main)
+import qualified LibMain
+
+main = LibMain.main
