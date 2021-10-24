@@ -14,12 +14,13 @@ import qualified Data.Text.Lazy as LT
 
 import FindLinks
 
-tests =
-    describe "Tests for FindLinks" $ do
+tests = do
+    describe "Tests for FindLinks" $
         it "Should never change the underlying text" $
             hedgehog prop_noTextChange
-        it "Should be correct on examples" $ do
-            for_ examples $ \(input, output) ->
+    describe "Hand-picked examples" $
+        for_ examples $ \(input, output) ->
+            it ("Should be correct on input: " <> show input) $
                 renderWithLinks testRenderer input `shouldBe` output
 
 examples :: [(LT.Text, [TestNode])]
