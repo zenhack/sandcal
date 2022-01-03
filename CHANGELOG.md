@@ -1,3 +1,7 @@
+# 0.5
+
+* Slightly better app icon.
+
 # 0.4
 
 * When displaying events, mark up email addresses and URLs as actual
