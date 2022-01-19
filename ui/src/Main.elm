@@ -6,7 +6,7 @@ import FormValues
 import GenAccessors as GA
 import GenTz
 import Html exposing (..)
-import Html.Attributes as Attributes exposing (class, for, name, type_, value)
+import Html.Attributes as Attributes exposing (checked, class, for, name, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as D
 import Json.Encode as E
@@ -97,7 +97,12 @@ view model =
             [ input [ type_ "hidden", name "csrfToken", value model.csrfToken ] []
             , trackedInput "text" [] "Summary" GA.summary []
             , trackedInput "date" [] "Date" GA.date []
-            , labeledInput "checkbox" "All Day" [ onCheck FormValues.SetAllDay ] []
+            , labeledInput "checkbox"
+                "All Day"
+                [ onCheck FormValues.SetAllDay
+                , checked model.formValues.allDay
+                ]
+                []
             ]
                 ++ (if model.formValues.allDay then
                         []

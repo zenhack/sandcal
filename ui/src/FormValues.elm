@@ -178,7 +178,18 @@ init flags =
             , description = ""
             , location = ""
             , date = formatDate flags.now
-            , allDay = False
+            , allDay =
+                case flags.tpl.formData of
+                    Nothing ->
+                        False
+
+                    Just ev ->
+                        case ev.time of
+                            Protocol.AllDay ->
+                                True
+
+                            Protocol.StartEnd _ ->
+                                False
             , time = defaultTime
             , timeZone = chooseTz flags
             , repeat = []
