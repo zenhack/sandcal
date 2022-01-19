@@ -1,6 +1,8 @@
 # 0.5
 
 * Slightly better app icon.
+* Fix a minor display bug with all-day events
+  (<https://github.com/zenhack/sandcal/issues/26>)
 
 # 0.4
 
