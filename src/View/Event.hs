@@ -20,6 +20,7 @@ import qualified Text.Blaze.Html5.Attributes as A
 import qualified Util.CSRF as CSRF
 import qualified Util.ICal as ICal
 import qualified Util.TZ as TZ
+import Util.Time (addICalDuration)
 import View.Common
 import Zhp
 
@@ -47,7 +48,8 @@ event csrfKey permissions userId eid tzLabel ev zot =
                                       for_ zot $ \z ->
                                           H.li $ postLink (Route.PostDeleteOccurrence eid z) $ "Delete (this occurrence only)"
               -}
-              H.toHtml $ viewLocalOCTime $ Oc.ocTimeInZoneFudge (TZ.tzByLabel tzLabel) zot'
+              let locTime = Oc.ocTimeInZoneFudge (TZ.tzByLabel tzLabel) zot'
+              viewTime locTime (ICal.veventDuration ev)
               for_ (ICal.veDescription ev) $ \de -> do
                 H.h2 "Description"
                 viewDescription $ ICal.descriptionValue de
@@ -82,20 +84,33 @@ viewRRule rr =
         1 -> "every " <> freq
         interval -> "every " <> show interval <> " " <> freq <> "s"
 
-viewLocalOCTime :: Oc.LocalOCTime -> H.Html
-viewLocalOCTime = \case
-  Oc.LocalOCAllDay day ->
+viewTime :: Oc.LocalOCTime -> Maybe ICal.Duration -> H.Html
+viewTime locTime dur = case locTime of
+  Oc.LocalOCAllDay day -> do
     H.toHtml $
       Time.formatTime
         Time.defaultTimeLocale
         "%a %e %b %Y"
         day
   Oc.LocalOCAtTime localTime ->
-    H.toHtml $
-      Time.formatTime
-        Time.defaultTimeLocale
-        "%a %e %b %Y, %l:%M %p"
-        localTime
+    let start =
+          Time.formatTime
+            Time.defaultTimeLocale
+            "%a %e %b %Y, %l:%M %p"
+            localTime
+     in case dur of
+          Nothing -> H.toHtml start
+          Just d ->
+            let localTime' = addICalDuration d localTime
+                end =
+                  Time.formatTime
+                    Time.defaultTimeLocale
+                    ( if Time.localDay localTime == Time.localDay localTime'
+                        then "%l:%M %p"
+                        else "%a %e %b %Y, %l:%M %p"
+                    )
+                    localTime'
+             in H.toHtml $ start <> " - " <> end
 
 viewDescription :: LT.Text -> H.Html
 viewDescription descr =

@@ -6,6 +6,7 @@
 module Util.ICal
   ( module Text.ICalendar,
     veventTZLabel,
+    veventDuration,
     freqUnitName,
   )
 where
@@ -21,6 +22,7 @@ import qualified Data.CaseInsensitive as CI
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as LT
+import qualified Data.Time as Time
 import Network.URI (URI, URIAuth)
 import Text.ICalendar
 import qualified Util.TZ as TZ
@@ -34,6 +36,50 @@ veventTZLabel ve = do
     UTCDateTime {} -> Just TZ.Etc__UTC
     ZonedDateTime {dateTimeZone} ->
       TZ.fromTZName $ TE.encodeUtf8 $ LT.toStrict dateTimeZone
+
+-- | Extract a duration from the event, in a best-effort fashion.
+veventDuration :: VEvent -> Maybe Duration
+veventDuration ev =
+  case veDTEndDuration ev of
+    Nothing -> Nothing
+    Just (Right (DurationProp v _)) -> Just v
+    Just (Left dtEnd) -> do
+      dtStart <- veDTStart ev
+      case (dtStart, dtEnd) of
+        (DTStartDateTime dts _, DTEndDateTime dte _) -> dte `diffDateTime` dts
+        _ -> Nothing
+
+diffDateTime :: DateTime -> DateTime -> Maybe Duration
+end `diffDateTime` start =
+  case (start, end) of
+    (FloatingDateTime s, FloatingDateTime e) -> Just $ e `diffLocalTime` s
+    (ZonedDateTime s zoneS, ZonedDateTime e zoneE)
+      | zoneS == zoneE -> Just $ e `diffLocalTime` s
+    (UTCDateTime s, UTCDateTime e) ->
+      Just $
+        Time.utcToLocalTime Time.utc e
+          `diffLocalTime` Time.utcToLocalTime Time.utc s
+    _ -> Nothing
+
+diffLocalTime :: Time.LocalTime -> Time.LocalTime -> Duration
+end `diffLocalTime` start =
+  if end < start
+    then (start `diffLocalTime` end) {durSign = Negative}
+    else
+      let todDiff =
+            Time.timeOfDayToTime (Time.localTimeOfDay end)
+              - Time.timeOfDayToTime (Time.localTimeOfDay start)
+          pico = Time.diffTimeToPicoseconds todDiff
+          totalSec = pico `div` (10 ^ 12)
+          totalMin = totalSec `div` 60
+          totalHour = totalMin `div` 60
+       in DurationDate
+            { durSign = Positive,
+              durDay = fromIntegral $ Time.localDay end `Time.diffDays` Time.localDay start,
+              durHour = fromIntegral $ totalHour,
+              durMinute = fromIntegral $ totalMin `mod` 60,
+              durSecond = fromIntegral $ totalSec `mod` 60
+            }
 
 deriving instance Read Frequency
 
