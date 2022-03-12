@@ -1,3 +1,8 @@
+# 0.6
+
+* Event end times are now displayed on the event page and on the
+  upcoming page.
+
 # 0.5
 
 * Slightly better app icon.

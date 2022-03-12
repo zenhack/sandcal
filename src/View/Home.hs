@@ -13,7 +13,9 @@ import qualified Route
 import Text.Blaze.Html5 ((!))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
+import Util.ICal (veventDuration)
 import Util.TZ (TZLabel, tzByLabel)
+import Util.Time (addICalDuration)
 import View.Common
 import Zhp
 
@@ -58,12 +60,17 @@ viewItem today (DayHeading day) =
     when (day == succ today) " (Tomorrow)"
 -- TODO: we should group events in a day into list elements.
 viewItem _ (Occurrence Oc.Occurrence {Oc.ocItem, Oc.ocTimeStamp = zot}) =
-  let title = eventSummary $ DB.eeVEvent ocItem
-      timeStamp = case Oc.octTime zot of
-        Oc.LocalOCAllDay _ ->
-          H.span ! A.class_ "eventTime" $ "All Day"
-        Oc.LocalOCAtTime Time.LocalTime {Time.localTimeOfDay} ->
-          viewLocalTimeOfDay localTimeOfDay
+  let vEvent = DB.eeVEvent ocItem
+      title = eventSummary vEvent
+      timeStamp = H.span ! A.class_ "eventTime" $
+        case Oc.octTime zot of
+          Oc.LocalOCAllDay _ -> "All Day"
+          Oc.LocalOCAtTime lt@Time.LocalTime {Time.localTimeOfDay} -> do
+            viewLocalTimeOfDay localTimeOfDay
+            for_ (veventDuration vEvent) $ \dur -> do
+              let lt' = addICalDuration dur lt
+              " - "
+              viewLocalTimeOfDay (Time.localTimeOfDay lt')
    in H.div ! A.class_ "upcomingEvent" $ do
         H.p $ timeStamp
         H.p $
