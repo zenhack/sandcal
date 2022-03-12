@@ -219,9 +219,9 @@ mergeOn f (x : xs) (y : ys)
   | f x < f y = x : mergeOn f xs (y : ys)
   | otherwise = y : mergeOn f (x : xs) ys
 
--- | De-duplicate duplicate occurrences. Assumes duplicates will already
--- be adjacent.
-dedup :: Eq a => [Occurrence a] -> [Occurrence a]
+-- | De-duplicate list items. Assumes duplicates will already be adjacent.
+-- TODO: this probably belongs in some more general utility module.
+dedup :: Eq a => [a] -> [a]
 dedup (x : y : zs)
   | x == y = dedup (y : zs)
   | otherwise = x : dedup (y : zs)
