@@ -219,7 +219,7 @@ mergeOn f (x : xs) (y : ys)
   | f x < f y = x : mergeOn f xs (y : ys)
   | otherwise = y : mergeOn f (x : xs) ys
 
--- | De-duplicate list items. Assumes duplicates will already be adjacent.
+-- | Lazily de-duplicate adjacent list items.
 -- TODO: this probably belongs in some more general utility module.
 dedup :: Eq a => [a] -> [a]
 dedup (x : y : zs)
