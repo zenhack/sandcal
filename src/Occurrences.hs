@@ -240,7 +240,7 @@ firstOccurrence lbl ev =
         (oc : _) -> Just oc
 
 -- | @'eventOccurrences' defaultTz start event@ returns a (possibly infinite) list
--- of occurrences of the event @event@ which end after @utc@ (so, ongoing events as
+-- of occurrences of the event @event@ which end after @start@ (so, ongoing events as
 -- well as future events). If the event's time zone is unspecified, it will be
 -- assumed to be @defaultTz@.
 eventOccurrences :: TZ.TZLabel -> Time.UTCTime -> VEvent -> [Occurrence VEvent]
