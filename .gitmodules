@@ -1,0 +1,3 @@
+[submodule "deps/iCalendar"]
+	path = deps/iCalendar
+	url = git@github.com:zenhack/iCalendar
