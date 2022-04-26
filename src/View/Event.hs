@@ -7,6 +7,7 @@ module View.Event
 where
 
 import Data.List (intersperse)
+import Data.Maybe (fromJust)
 import qualified Data.Set as S
 import qualified Data.Text.Lazy as LT
 import qualified Data.Time as Time
@@ -29,8 +30,9 @@ event csrfKey permissions userId eid tzLabel ev zot =
   let title = case ICal.veSummary ev of
         Nothing -> "Untitled Event"
         Just ICal.Summary {ICal.summaryValue} -> summaryValue
-      Just zot' =
-        zot <|> (fmap Oc.ocTimeStamp (Oc.firstOccurrence tzLabel ev))
+      zot' =
+        fromJust $
+          zot <|> (fmap Oc.ocTimeStamp (Oc.firstOccurrence tzLabel ev))
    in docToHtml
         Document
           { permissions,

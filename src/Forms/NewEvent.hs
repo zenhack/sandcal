@@ -98,7 +98,11 @@ getStartEnd form = case time form of
             { ICal.dateTimeFloating = floatingStart,
               ICal.dateTimeZone = encodeTZLabel timeZone
             }
-        dtEnd = dtStart {ICal.dateTimeFloating = floatingEnd}
+        dtEnd =
+          ICal.ZonedDateTime
+            { ICal.dateTimeFloating = floatingEnd,
+              ICal.dateTimeZone = encodeTZLabel timeZone
+            }
      in ( ICal.DTStartDateTime
             { ICal.dtStartOther = def,
               ICal.dtStartDateTimeValue = dtStart
