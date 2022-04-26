@@ -311,7 +311,7 @@ expandFreq defaultTz viewStart ev freq interval =
 
 -- | @findStartPoint p@ efficiently finds the first non-negative
 -- integer @i@ for which @p i == True@, where @p@ must be monotonically
--- increasing, i.e. if @i > j@ and @p i@, then @p j@.
+-- increasing, i.e. if @i < j@ and @p i@, then @p j@.
 --
 -- Running time is @O(log(firstStartPoint p))@.
 findStartPoint :: (Int -> Bool) -> Int
