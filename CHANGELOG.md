@@ -1,3 +1,8 @@
+# 0.6.1
+
+* Events with the empty string (`""`) as a summary are displayed as
+  "Untitled event" -- just like events with *no* summary.
+
 # 0.6
 
 * Event end times are now displayed on the event page and on the
