@@ -36,8 +36,12 @@ data Document = Document
 
 eventSummary :: ICal.VEvent -> H.Html
 eventSummary ev = case ICal.veSummary ev of
-  Just summary -> H.toHtml $ ICal.summaryValue summary
-  Nothing -> "Untitled event"
+  -- Depressingly, the Maybe type does not save us here from having to remember
+  -- to check if the summary is not only present, but non-empty:
+  Just ICal.Summary { ICal.summaryValue = summary } | not (LT.null summary) ->
+    H.toHtml summary
+  _ ->
+    "Untitled event"
 
 docToHtml :: Document -> H.Html
 docToHtml Document {title, body, permissions} = H.docTypeHtml $ do
