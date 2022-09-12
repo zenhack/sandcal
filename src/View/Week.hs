@@ -21,11 +21,15 @@ import Zhp
 minutesPerCell :: Int
 minutesPerCell = 30
 
+-- | A location on our weekly grid.
 data GridLoc = GridLoc
-  { dayOfWeek :: Time.DayOfWeek,
-    -- TODO: is this interval open/closed on which ends?
+  { -- | The day of the week this goes under.
+    dayOfWeek :: Time.DayOfWeek,
+    -- | Zero-indexed row of the start of the item, with each row representing
+    -- @minutesPerCell@ minutes.
     rowStart :: !Int,
-    rowEnd :: !Int
+    -- | Number of rows the item takes up.
+    rowCount :: !Int
   }
   deriving (Show, Read, Eq)
 
@@ -54,10 +58,10 @@ occurRowStart tz occur =
   occurRow' tz occur 2 $ \Time.TimeOfDay {todHour, todMin} ->
     (todHour * 60 + todMin) `div` minutesPerCell
 
-occurRowEnd :: TZ -> Oc.Occurrence DB.EventEntry -> Int
-occurRowEnd tz occur =
+occurRowCount :: TZ -> Oc.Occurrence DB.EventEntry -> Int
+occurRowCount _tz _occur =
   -- TODO: fill this in properly
-  occurRowStart tz occur + 1
+  1
 
 dayStyleValue :: Time.DayOfWeek -> Time.DayOfWeek -> String
 dayStyleValue startOfWeek day =
@@ -69,10 +73,10 @@ dayStyle startOfWeek day =
   A.style $ H.toValue $ dayStyleValue startOfWeek day
 
 locStyle :: Time.DayOfWeek -> GridLoc -> H.Attribute
-locStyle startOfWeek GridLoc {dayOfWeek, rowStart, rowEnd} =
+locStyle startOfWeek GridLoc {dayOfWeek, rowStart, rowCount} =
   -- Add 1 for the heading, and 1 for the fact that css grids start at 1, not 0.
   let start = rowStart + 2
-      end = rowEnd + 2
+      end = start + rowCount
    in mconcat
         [ A.class_ "week-item",
           A.style $
@@ -141,7 +145,7 @@ week permissions startOfWeek now occurs =
                                 GridLoc
                                   { dayOfWeek = toEnum dow,
                                     rowStart = occurRowStart tz o,
-                                    rowEnd = occurRowEnd tz o
+                                    rowCount = occurRowCount tz o
                                   },
                               eventOccur = o
                             }
@@ -173,9 +177,11 @@ fillMissing :: [Item] -> [MaybeItem]
 fillMissing = go (toEnum 0) 0
   where
     go dow row (item@(Event ei) : items) =
-      if row < rowStart (eventLoc ei)
-        then noItem dow row : go dow (row + 1) (item : items)
-        else Item item : go dow (rowEnd (eventLoc ei) + 1) items
+      let start = rowStart (eventLoc ei)
+          count = rowCount (eventLoc ei)
+       in if row < start
+            then noItem dow row : go dow (row + 1) (item : items)
+            else Item item : go dow (start + count) items
     go dow row (item@(DayStart dow') : items) =
       padDay dow row <> (Item item : go dow' 0 items)
     go dow row [] =
@@ -191,5 +197,5 @@ fillMissing = go (toEnum 0) 0
         GridLoc
           { dayOfWeek = dow,
             rowStart = row,
-            rowEnd = row + 1
+            rowCount = 1
           }
