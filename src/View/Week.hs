@@ -9,6 +9,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text.Lazy as LT
 import qualified Data.Time as Time
 import qualified Occurrences as Oc
+import qualified Route
 -- import qualified Util.Time           as UT
 import Text.Blaze.Html5 ((!))
 import qualified Text.Blaze.Html5 as H
@@ -109,8 +110,12 @@ viewItem startOfWeek (NoItem loc) =
           else ""
 
 viewOccur :: Oc.Occurrence DB.EventEntry -> H.Html
-viewOccur Oc.Occurrence {ocItem = DB.EventEntry {eeVEvent}} =
-  H.h3 $ eventSummary eeVEvent
+viewOccur Oc.Occurrence {ocItem = DB.EventEntry {eeVEvent, eeId}, ocTimeStamp} =
+  H.h3
+    $ H.a
+      ! A.href
+        (H.toValue $ Route.Event eeId (Just ocTimeStamp))
+    $ eventSummary eeVEvent
 
 ocDay :: TZ -> Oc.ZonedOCTime -> Time.Day
 ocDay tz zot = case Oc.ocTimeInZoneFudge tz zot of
