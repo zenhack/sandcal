@@ -70,17 +70,20 @@ dayStyle startOfWeek day =
 
 locStyle :: Time.DayOfWeek -> GridLoc -> H.Attribute
 locStyle startOfWeek GridLoc {dayOfWeek, rowStart, rowEnd} =
-  mconcat
-    [ A.class_ "week-item",
-      A.style $
-        H.toValue $
-          dayStyleValue startOfWeek dayOfWeek
-            <> "grid-row: "
-            <> ( if rowStart == rowEnd
-                   then show rowStart
-                   else show rowStart <> " / " <> show rowEnd
-               )
-    ]
+  -- Add 1 for the heading, and 1 for the fact that css grids start at 1, not 0.
+  let start = rowStart + 2
+      end = rowEnd + 2
+   in mconcat
+        [ A.class_ "week-item",
+          A.style $
+            H.toValue $
+              dayStyleValue startOfWeek dayOfWeek
+                <> "grid-row: "
+                <> ( if start == end
+                       then show start
+                       else show start <> " / " <> show end
+                   )
+        ]
 
 viewItem :: Time.DayOfWeek -> MaybeItem -> H.Html
 viewItem startOfWeek (Item (DayStart day)) =

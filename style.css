@@ -102,7 +102,7 @@ textarea {
 .week-grid {
 	display: grid;
 	grid-template-columns: repeat(7, 1fr);
-	grid-template-rows: repeat(48, 1fr);
+	grid-template-rows: repeat(49, 1fr); /* 24 hours * 2 cells per hour + 1 row for the headings = 49 cells */
 }
 
 .week-day-heading {
