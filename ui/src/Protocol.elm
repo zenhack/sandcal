@@ -3,17 +3,20 @@ module Protocol exposing
     , EventTime(..)
     , Frequency
     , NewEvent
-    , Repeat
+    , RepeatInterval
+    , RepeatRule(..)
     , StartEndFields
     , decodeEditTemplate
     , decodeEventTime
     , decodeFrequency
     , decodeNewEvent
-    , decodeRepeat
+    , decodeRepeatInterval
+    , decodeRepeatRule
     , encodeEventTime
     , encodeFrequency
     , encodeNewEvent
-    , encodeRepeat
+    , encodeRepeatInterval
+    , encodeRepeatRule
     )
 
 import Json.Decode as D
@@ -38,23 +41,37 @@ decodeFrequency =
     D.string
 
 
-type alias Repeat =
+type RepeatRule
+    = RRInterval RepeatInterval
+
+
+type alias RepeatInterval =
     { frequency : Frequency
     , interval : Int
     }
 
 
-encodeRepeat : Repeat -> E.Value
-encodeRepeat r =
+encodeRepeatRule : RepeatRule -> E.Value
+encodeRepeatRule (RRInterval r) =
+    encodeRepeatInterval r
+
+
+encodeRepeatInterval : RepeatInterval -> E.Value
+encodeRepeatInterval r =
     E.object
         [ ( "frequency", encodeFrequency r.frequency )
         , ( "interval", E.int r.interval )
         ]
 
 
-decodeRepeat : D.Decoder Repeat
-decodeRepeat =
-    D.map2 Repeat
+decodeRepeatRule : D.Decoder RepeatRule
+decodeRepeatRule =
+    D.map RRInterval decodeRepeatInterval
+
+
+decodeRepeatInterval : D.Decoder RepeatInterval
+decodeRepeatInterval =
+    D.map2 RepeatInterval
         (D.field "frequency" decodeFrequency)
         (D.field "interval" D.int)
 
@@ -113,7 +130,7 @@ type alias NewEvent =
     , location : String
     , date : String
     , time : EventTime
-    , repeats : List Repeat
+    , repeats : List RepeatRule
     }
 
 
@@ -125,7 +142,7 @@ encodeNewEvent v =
         , ( "location", E.string v.location )
         , ( "date", E.string v.date )
         , ( "time", encodeEventTime v.time )
-        , ( "repeats", E.list encodeRepeat v.repeats )
+        , ( "repeats", E.list encodeRepeatRule v.repeats )
         ]
 
 
@@ -137,7 +154,7 @@ decodeNewEvent =
         (D.field "location" D.string)
         (D.field "date" D.string)
         (D.field "time" decodeEventTime)
-        (D.field "repeats" (D.list decodeRepeat))
+        (D.field "repeats" (D.list decodeRepeatRule))
 
 
 type alias EditTemplate =

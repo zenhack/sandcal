@@ -131,7 +131,8 @@ view model =
         ]
 
 
-viewRepeatRule accessor i r =
+viewRepeatRule : FormValues.Accessor Protocol.RepeatRule FormValues.Model -> Int -> Protocol.RepeatRule -> Html Msg
+viewRepeatRule accessor i (Protocol.RRInterval r) =
     let
         freqAccessor =
             accessor << GA.frequency
@@ -258,7 +259,7 @@ update msg model =
 
         FormValues.NewRepeat ->
             ( Accessors.over (GA.formValues << GA.repeat)
-                (\xs -> xs ++ [ { frequency = "Daily", interval = 1 } ])
+                (\xs -> xs ++ [ Protocol.RRInterval { frequency = "Daily", interval = 1 } ])
                 model
             , Cmd.none
             )

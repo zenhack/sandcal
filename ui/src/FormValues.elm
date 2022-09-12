@@ -63,7 +63,7 @@ type alias Model =
     -}
     , time : Range String
     , timeZone : String
-    , repeat : List Protocol.Repeat
+    , repeat : List Protocol.RepeatRule
     }
 
 
