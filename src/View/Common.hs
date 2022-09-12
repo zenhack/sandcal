@@ -126,14 +126,18 @@ navigation permissions =
   where
     navItem (rt, label) =
       H.li $ H.a ! A.href (H.toValue rt) $ label
+    commonItems =
+      [ (Route.Home, "Upcoming Events"),
+        (Route.ThisWeek, "Week")
+      ]
     items =
       if "editor" `elem` permissions
         then
-          [ (Route.Home, "Upcoming Events"),
-            (Route.NewEvent, "New Event"),
-            (Route.ImportICS, "Import/Export")
-          ]
+          commonItems
+            <> [ (Route.NewEvent, "New Event"),
+                 (Route.ImportICS, "Import/Export")
+               ]
         else
-          [ (Route.Home, "Upcoming Events"),
-            (Route.ImportICS, "Export")
-          ]
+          commonItems
+            <> [ (Route.ImportICS, "Export")
+               ]
