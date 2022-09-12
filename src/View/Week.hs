@@ -23,16 +23,24 @@ minutesPerCell = 30
 
 data GridLoc = GridLoc
   { dayOfWeek :: Time.DayOfWeek,
+    -- TODO: is this interval open/closed on which ends?
     rowStart :: !Int,
     rowEnd :: !Int
   }
+  deriving (Show, Read, Eq)
+
+data MaybeItem
+  = Item Item
+  | NoItem GridLoc
 
 data Item
   = DayStart Time.DayOfWeek
-  | Event
-      { eventLoc :: GridLoc,
-        eventOccur :: Oc.Occurrence DB.EventEntry
-      }
+  | Event EventItem
+
+data EventItem = EventItem
+  { eventLoc :: GridLoc,
+    eventOccur :: Oc.Occurrence DB.EventEntry
+  }
 
 occurRow' :: TZ -> Oc.Occurrence DB.EventEntry -> Int -> (Time.TimeOfDay -> Int) -> Int
 occurRow' tz occur def f =
@@ -74,16 +82,21 @@ locStyle startOfWeek GridLoc {dayOfWeek, rowStart, rowEnd} =
                )
     ]
 
-viewItem :: Time.DayOfWeek -> Item -> H.Html
-viewItem startOfWeek (DayStart day) =
+viewItem :: Time.DayOfWeek -> MaybeItem -> H.Html
+viewItem startOfWeek (Item (DayStart day)) =
   H.h2
     ! dayStyle startOfWeek day
     ! A.class_ "week-day-heading"
     $ H.toHtml
     $ show day
-viewItem startOfWeek Event {eventLoc, eventOccur} =
+viewItem startOfWeek (Item (Event EventItem {eventLoc, eventOccur})) =
   H.div ! locStyle startOfWeek eventLoc $ do
     viewOccur eventOccur
+viewItem startOfWeek (NoItem loc) =
+  H.div ! locStyle startOfWeek loc $
+    H.toHtml $
+      show $
+        rowStart loc * minutesPerCell
 
 viewOccur :: Oc.Occurrence DB.EventEntry -> H.Html
 viewOccur Oc.Occurrence {ocItem = DB.EventEntry {eeVEvent}} =
@@ -120,14 +133,15 @@ week permissions startOfWeek now occurs =
                   & map
                     ( \o ->
                         Event
-                          { eventLoc =
-                              GridLoc
-                                { dayOfWeek = toEnum dow,
-                                  rowStart = occurRowStart tz o,
-                                  rowEnd = occurRowEnd tz o
-                                },
-                            eventOccur = o
-                          }
+                          EventItem
+                            { eventLoc =
+                                GridLoc
+                                  { dayOfWeek = toEnum dow,
+                                    rowStart = occurRowStart tz o,
+                                    rowEnd = occurRowEnd tz o
+                                  },
+                              eventOccur = o
+                            }
                     )
             )
           & ( \m ->
@@ -140,6 +154,7 @@ week permissions startOfWeek now occurs =
             )
           & map (\(d, os) -> DayStart d : os)
           & mconcat
+          & fillMissing
    in docToHtml $
         Document
           { permissions,
@@ -148,4 +163,30 @@ week permissions startOfWeek now occurs =
               H.div
                 ! A.class_ "week-grid"
                 $ for_ items (viewItem startOfWeek)
+          }
+
+-- | Fill in any time slots that don't have events in them with NoItem entries..
+fillMissing :: [Item] -> [MaybeItem]
+fillMissing = go (toEnum 0) 0
+  where
+    go dow row (item@(Event ei) : items) =
+      if row < rowStart (eventLoc ei)
+        then noItem dow row : go dow (row + 1) (item : items)
+        else Item item : go dow (rowEnd (eventLoc ei) + 1) items
+    go dow row (item@(DayStart dow') : items) =
+      padDay dow row <> (Item item : go dow' 0 items)
+    go dow row [] =
+      padDay dow row
+
+    padDay dow row =
+      if row * minutesPerCell < 24 * 60
+        then noItem dow row : padDay dow (row + 1)
+        else []
+
+    noItem dow row =
+      NoItem
+        GridLoc
+          { dayOfWeek = dow,
+            rowStart = row,
+            rowEnd = row + 1
           }
