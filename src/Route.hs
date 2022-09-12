@@ -25,6 +25,7 @@ data Route
 data GetRoute
   = Home
   | Week Time.Day
+  | ThisWeek
   | Event Int64 (Maybe Oc.ZonedOCTime)
   | NewEvent
   | EditEvent Int64
@@ -77,6 +78,7 @@ renderGet Home = "/"
 renderGet (Week day) =
   let (y, m, d) = Time.toGregorian day
    in fromString $ "/week/" <> show y <> "/" <> show m <> "/" <> show d
+renderGet ThisWeek = "/week"
 renderGet (Event eid zot) =
   fromString $
     mconcat
@@ -107,6 +109,7 @@ scottyM route = do
   get "/" $
     route $
       Get Home
+  get "/week" $ route $ Get ThisWeek
   get "/week/:y/:m/:d" $ do
     y <- param "y"
     m <- param "m"

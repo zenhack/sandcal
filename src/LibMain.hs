@@ -51,6 +51,9 @@ main = do
         Route.Get Route.StyleCss -> typedFile "text/css" "style.css"
         Route.Get Route.SandstormJS -> jsFile "sandstorm.js"
         Route.Get Route.Home -> viewHome perm db
+        Route.Get Route.ThisWeek -> do
+          now <- liftIO $ Time.getCurrentTime
+          Route.redirectGet $ Route.Week (Time.utctDay now)
         Route.Get (Route.Week refDay) -> viewWeek perm db refDay
         Route.Get Route.NewEvent -> viewNewEvent csrfKey perm
         Route.Get (Route.Event eid zot) -> getEvent csrfKey perm db eid zot
