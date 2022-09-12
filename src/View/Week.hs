@@ -10,7 +10,6 @@ import qualified Data.Text.Lazy as LT
 import qualified Data.Time as Time
 import qualified Occurrences as Oc
 import qualified Route
--- import qualified Util.Time           as UT
 import Text.Blaze.Html5 ((!))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
