@@ -35,7 +35,8 @@ importICS csrfKey permissions userId =
                       "is alpha quality; SandCal may not interpret all ics data correctly."
                     ]
                 formBlock $
-                  labeledInput "Calendar File" $ A.type_ "file" <> A.accept "text/calendar"
+                  labeledInput "Calendar File" $
+                    A.type_ "file" <> A.accept "text/calendar"
                 H.button ! A.type_ "submit" $ "Upload"
           H.h1 "Export Calendar"
           H.a ! (A.href $ H.toValue Route.ExportICS) $ "Download"

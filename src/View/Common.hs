@@ -38,8 +38,9 @@ eventSummary :: ICal.VEvent -> H.Html
 eventSummary ev = case ICal.veSummary ev of
   -- Depressingly, the Maybe type does not save us here from having to remember
   -- to check if the summary is not only present, but non-empty:
-  Just ICal.Summary { ICal.summaryValue = summary } | not (LT.null summary) ->
-    H.toHtml summary
+  Just ICal.Summary {ICal.summaryValue = summary}
+    | not (LT.null summary) ->
+        H.toHtml summary
   _ ->
     "Untitled event"
 
@@ -51,7 +52,8 @@ docToHtml Document {title, body, permissions} = H.docTypeHtml $ do
   H.body $ do
     navigation permissions
     H.div ! A.class_ "mainContentContainer" $
-      H.div ! A.class_ "mainContent" $ body
+      H.div ! A.class_ "mainContent" $
+        body
 
 labeledInput :: T.Text -> H.Attribute -> H.Html
 labeledInput name attrs =
@@ -74,7 +76,8 @@ postForm csrfKey cap attrs contents =
 postLink :: CSRF.Key -> CSRF.PostCap -> String -> H.Html
 postLink key cap label =
   postForm key cap (A.class_ "postLink") $
-    H.button ! A.type_ "submit" $ H.toHtml label
+    H.button ! A.type_ "submit" $
+      H.toHtml label
 
 formBlock :: H.Html -> H.Html
 formBlock body = do

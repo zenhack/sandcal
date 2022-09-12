@@ -79,7 +79,8 @@ viewItem startOfWeek (DayStart day) =
   H.h2
     ! dayStyle startOfWeek day
     ! A.class_ "week-day-heading"
-    $ H.toHtml $ show day
+    $ H.toHtml
+    $ show day
 viewItem startOfWeek Event {eventLoc, eventOccur} =
   H.div ! locStyle startOfWeek eventLoc $ do
     viewOccur eventOccur

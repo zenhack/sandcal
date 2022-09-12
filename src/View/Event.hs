@@ -130,7 +130,8 @@ linkRenderer =
   FindLinks.Renderer
     { FindLinks.renderText = H.toHtml,
       FindLinks.renderLink = \url text ->
-        H.a ! A.href (H.toValue url)
+        H.a
+          ! A.href (H.toValue url)
           ! A.target "_blank"
           ! A.rel "noreferrer noopener"
           $ H.toHtml text

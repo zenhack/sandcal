@@ -228,7 +228,8 @@ postEditEvent db eid = do
   form <- jsonData
   maybeEv <-
     DB.runQuery db $
-      DB.updateEvent (DB.eventID eid) $ Forms.NewEvent.patchVEvent utcNow form
+      DB.updateEvent (DB.eventID eid) $
+        Forms.NewEvent.patchVEvent utcNow form
   case maybeEv of
     Nothing -> do404
     Just () -> Route.redirectGet $ Route.Event eid Nothing

@@ -73,20 +73,21 @@ viewItem _ (Occurrence Oc.Occurrence {Oc.ocItem, Oc.ocTimeStamp = zot}) =
               viewLocalTimeOfDay (Time.localTimeOfDay lt')
    in H.div ! A.class_ "upcomingEvent" $ do
         H.p $ timeStamp
-        H.p $
-          H.a
+        H.p
+          $ H.a
             ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
-            $ title
+          $ title
 
 viewLocalTimeOfDay :: Time.TimeOfDay -> H.Html
 viewLocalTimeOfDay localTimeOfDay =
-  H.time ! A.class_ "eventTime"
+  H.time
+    ! A.class_ "eventTime"
     ! A.datetime (H.toValue $ show localTimeOfDay)
-    $ H.toHtml $
-      Time.formatTime
-        Time.defaultTimeLocale
-        "%l:%M %p"
-        localTimeOfDay
+    $ H.toHtml
+    $ Time.formatTime
+      Time.defaultTimeLocale
+      "%l:%M %p"
+      localTimeOfDay
 
 home :: [LT.Text] -> Time.Day -> TZLabel -> [Oc.Occurrence DB.EventEntry] -> H.Html
 home permissions today targetZone entries =

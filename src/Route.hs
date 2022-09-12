@@ -105,14 +105,16 @@ redirectGet rt = do
 scottyM :: (Route -> ActionM ()) -> ScottyM ()
 scottyM route = do
   get "/" $
-    route $ Get Home
+    route $
+      Get Home
   get "/week/:y/:m/:d" $ do
     y <- param "y"
     m <- param "m"
     d <- param "d"
     route $ Get $ Week $ Time.fromGregorian y m d
   get "/event/new" $
-    route $ Get NewEvent
+    route $
+      Get NewEvent
   get "/event/:eid" $ do
     eid <- param "eid"
     occurStr <- (fmap Just (param "occurrence")) `rescue` (const $ pure Nothing)
@@ -124,17 +126,23 @@ scottyM route = do
     eid <- param "eid"
     route $ Post $ PostEditEvent eid
   get "/style.css" $
-    route $ Get StyleCss
+    route $
+      Get StyleCss
   get "/sandstorm.js" $
-    route $ Get SandstormJS
+    route $
+      Get SandstormJS
   get "/import" $
-    route $ Get ImportICS
+    route $
+      Get ImportICS
   get "/export.ics" $
-    route $ Get ExportICS
+    route $
+      Get ExportICS
   post "/event/new" $
-    route $ Post PostNewEvent
+    route $
+      Post PostNewEvent
   post "/import.ics" $
-    route $ Post PostImportICS
+    route $
+      Post PostImportICS
   post "/event/:eid/delete" $ do
     eid <- param "eid"
     occurStr <- (fmap Just (param "occurrence")) `rescue` (const $ pure Nothing)
