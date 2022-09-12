@@ -101,9 +101,12 @@ viewItem startOfWeek (Item (Event EventItem {eventLoc, eventOccur})) =
     viewOccur eventOccur
 viewItem startOfWeek (NoItem loc) =
   H.div ! locStyle startOfWeek loc $
-    H.toHtml $
-      show $
-        rowStart loc * minutesPerCell
+    let minute = rowStart loc * minutesPerCell
+     in if minute `mod` 60 == 0
+          then
+            H.toHtml $
+              show (minute `div` 60) <> ":00"
+          else ""
 
 viewOccur :: Oc.Occurrence DB.EventEntry -> H.Html
 viewOccur Oc.Occurrence {ocItem = DB.EventEntry {eeVEvent}} =
