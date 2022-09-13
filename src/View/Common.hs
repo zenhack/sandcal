@@ -13,12 +13,14 @@ module View.Common
     labeledTzSelect,
     labeledSelect,
     eventSummary,
+    viewTimeOfDay,
   )
 where
 
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
+import qualified Data.Time as Time
 import qualified Route
 import Text.Blaze.Html5 ((!))
 import qualified Text.Blaze.Html5 as H
@@ -119,6 +121,9 @@ labeledSelect selectName options =
                 then opt' ! A.selected ""
                 else opt'
          in opt'' $ H.toHtml name
+
+viewTimeOfDay :: Time.TimeOfDay -> H.Html
+viewTimeOfDay = H.toHtml . Time.formatTime Time.defaultTimeLocale "%l:%M %p"
 
 navigation :: [LT.Text] -> H.Html
 navigation permissions =

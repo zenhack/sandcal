@@ -83,11 +83,7 @@ viewLocalTimeOfDay localTimeOfDay =
   H.time
     ! A.class_ "eventTime"
     ! A.datetime (H.toValue $ show localTimeOfDay)
-    $ H.toHtml
-    $ Time.formatTime
-      Time.defaultTimeLocale
-      "%l:%M %p"
-      localTimeOfDay
+    $ viewTimeOfDay localTimeOfDay
 
 home :: [LT.Text] -> Time.Day -> TZLabel -> [Oc.Occurrence DB.EventEntry] -> H.Html
 home permissions today targetZone entries =

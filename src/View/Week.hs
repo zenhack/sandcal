@@ -102,9 +102,7 @@ viewItem startOfWeek (NoItem loc) =
   H.div ! locStyle startOfWeek loc $
     let minute = rowStart loc * minutesPerCell
      in if minute `mod` 60 == 0
-          then
-            H.toHtml $
-              show (minute `div` 60) <> ":00"
+          then viewTimeOfDay (Time.TimeOfDay (minute `div` 60) 0 0)
           else ""
 
 viewDayName :: Time.DayOfWeek -> H.Html
