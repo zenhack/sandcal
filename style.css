@@ -94,6 +94,9 @@ textarea {
 	 * helper function forces us to always supply a type, so that's
 	 * fine. */
 	flex: 1 1 auto;
+
+	/* So iOS doesn't zoom: */
+	font-size: 16px;
 }
 .labeledInput > label, .labeledInput > input, .labeledInput > select {
 	margin-bottom: 0.5rem;
