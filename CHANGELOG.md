@@ -1,3 +1,7 @@
+# 0.7
+
+* Add an extremely rudimentary week view.
+
 # 0.6.1
 
 * Events with the empty string (`""`) as a summary are displayed as
