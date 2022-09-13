@@ -108,8 +108,8 @@ textarea {
 .week-day-heading {
 	grid-row: 1;
 	text-align: center;
-	padding-right: 2rem;
-	padding-left: 2rem;
+	padding-right: 0.5em;
+	padding-left: 0.5em;
 }
 
 .week-item {
@@ -132,4 +132,12 @@ iframe {
 	height: 55px;
 	margin: 0;
 	border: 0;
+}
+
+@media(max-width: 500px) {
+	.dayname-mid { display: none; }
+}
+
+@media(max-width: 850px) {
+	.dayname-tail { display: none; }
 }

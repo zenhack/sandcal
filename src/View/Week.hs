@@ -94,8 +94,7 @@ viewItem startOfWeek (Item (DayStart day)) =
   H.h2
     ! dayStyle startOfWeek day
     ! A.class_ "week-day-heading"
-    $ H.toHtml
-    $ show day
+    $ viewDayName day
 viewItem startOfWeek (Item (Event EventItem {eventLoc, eventOccur})) =
   H.div ! locStyle startOfWeek eventLoc $ do
     viewOccur eventOccur
@@ -107,6 +106,21 @@ viewItem startOfWeek (NoItem loc) =
             H.toHtml $
               show (minute `div` 60) <> ":00"
           else ""
+
+viewDayName :: Time.DayOfWeek -> H.Html
+viewDayName day = do
+  a
+  H.span ! A.class_ "dayname-mid" $ b
+  H.span ! A.class_ "dayname-tail" $ c
+  where
+    (a, b, c) = case day of
+      Time.Monday -> ("M", "on", "day")
+      Time.Tuesday -> ("T", "ues", "day")
+      Time.Wednesday -> ("W", "ed", "nesday")
+      Time.Thursday -> ("T", "hu", "rsday")
+      Time.Friday -> ("F", "ri", "day")
+      Time.Saturday -> ("S", "at", "urday")
+      Time.Sunday -> ("S", "un", "day")
 
 viewOccur :: Oc.Occurrence DB.EventEntry -> H.Html
 viewOccur Oc.Occurrence {ocItem = DB.EventEntry {eeVEvent, eeId}, ocTimeStamp} =
