@@ -133,8 +133,8 @@ ocDay tz zot = case Oc.ocTimeInZoneFudge tz zot of
   Oc.LocalOCAllDay day -> day
   Oc.LocalOCAtTime localTime -> Time.localDay localTime
 
-week :: [LT.Text] -> Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
-week permissions startOfWeek now occurs =
+week :: Time.Day -> [LT.Text] -> Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
+week refDay permissions startOfWeek now occurs =
   let tz = TZ.tzByLabel $ Oc.octZone now
       items =
         occurs
@@ -185,11 +185,21 @@ week permissions startOfWeek now occurs =
         Document
           { permissions,
             title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now),
-            body =
+            body = do
+              weekNav refDay
               H.div
                 ! A.class_ "week-grid"
                 $ for_ items (viewItem startOfWeek)
+              weekNav refDay
           }
+
+weekNav :: Time.Day -> H.Html
+weekNav refDay =
+  H.nav $ H.ul $ do
+    let item diff label =
+          H.li $ H.a ! A.href (H.toValue (Route.Week (Time.addDays diff refDay))) $ label
+    item (-7) "Previous Week"
+    item 7 "Next Week"
 
 -- | Fill in any time slots that don't have events in them with NoItem entries..
 fillMissing :: [Item] -> [MaybeItem]

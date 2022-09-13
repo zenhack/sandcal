@@ -150,7 +150,7 @@ viewWeek perm db refDay = do
   occurs <-
     takeWhile (`occursBefore` utcEnd)
       <$> getOccursSince db utcStart
-  blaze $ View.week perm firstDayOfWeek zonedOCTime occurs
+  blaze $ View.week refDay perm firstDayOfWeek zonedOCTime occurs
 
 getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
 getOccursSince db utc = do
