@@ -136,6 +136,7 @@ ocDay tz zot = case Oc.ocTimeInZoneFudge tz zot of
 week :: Time.Day -> [LT.Text] -> Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
 week refDay permissions startOfWeek now occurs =
   let tz = TZ.tzByLabel $ Oc.octZone now
+      title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now)
       items =
         occurs
           & map (\o -> (ocDay (TZ.tzByLabel $ Oc.octZone now) (Oc.ocTimeStamp o), o))
@@ -184,8 +185,9 @@ week refDay permissions startOfWeek now occurs =
    in docToHtml $
         Document
           { permissions,
-            title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now),
+            title = title,
             body = do
+              H.h1 $ H.toHtml title
               weekNav refDay
               H.div
                 ! A.class_ "week-grid"
