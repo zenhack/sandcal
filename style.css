@@ -63,6 +63,7 @@ textarea {
 	/* Center the content of the page. */
 	display: flex;
 	justify-content: space-around;
+	max-width: 100%;
 }
 
 .eventDescription {
@@ -115,6 +116,7 @@ textarea {
 .week-item {
 	border: 1px solid gray;
 	padding: 0.25rem;
+	overflow: hidden;
 }
 
 .postLink button {
@@ -136,6 +138,10 @@ iframe {
 
 @media(max-width: 600px) {
 	.dayname-mid { display: none; }
+
+	/* Text can get *very* cramped at small sizes; prefer odd hyphenation to
+	 * just clipping: */
+	.week-item { overflow-wrap: anywhere; }
 }
 
 @media(max-width: 850px) {
