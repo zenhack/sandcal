@@ -54,14 +54,25 @@ occurRow' tz occur def f =
       f localTimeOfDay
 
 occurRowStart :: TZ -> Oc.Occurrence DB.EventEntry -> Int
-occurRowStart tz occur =
-  occurRow' tz occur 2 $ \Time.TimeOfDay {todHour, todMin} ->
-    (todHour * 60 + todMin) `div` minutesPerCell
+occurRowStart tz occur = occurRow' tz occur 2 todCells
 
-occurRowCount :: TZ -> Oc.Occurrence DB.EventEntry -> Int
-occurRowCount _tz _occur =
-  -- TODO: fill this in properly
-  1
+todCells :: Time.TimeOfDay -> Int
+todCells Time.TimeOfDay {todHour, todMin} =
+  (todHour * 60 + todMin) `div` minutesPerCell
+
+occurRowCount :: TZ.TZLabel -> Oc.Occurrence DB.EventEntry -> Int
+occurRowCount tzLabel occur =
+  let event = DB.eeVEvent $ Oc.ocItem occur
+      tz = TZ.tzByLabel tzLabel
+      start = Oc.ocTimeInZoneFudge tz $ Oc.zonedStartTime tzLabel event
+      end = Oc.ocTimeInZoneFudge tz $ Oc.zonedEndTime tzLabel event
+      -- XXX: this is a bit messy because this result is actually different than occurRowStart,
+      -- which includes an offset into the table. We should clean up this logic at some point.
+      startCell = maybe 0 todCells (getTod start)
+      endCell = maybe (24 * 60 `div` minutesPerCell) todCells (getTod end)
+      getTod (Oc.LocalOCAllDay _) = Nothing
+      getTod (Oc.LocalOCAtTime Time.LocalTime {localTimeOfDay = tod}) = Just tod
+   in endCell - startCell
 
 dayStyleValue :: Time.DayOfWeek -> Time.DayOfWeek -> String
 dayStyleValue startOfWeek day =
@@ -135,7 +146,8 @@ ocDay tz zot = case Oc.ocTimeInZoneFudge tz zot of
 
 week :: Time.Day -> [LT.Text] -> Time.DayOfWeek -> Oc.ZonedOCTime -> [Oc.Occurrence DB.EventEntry] -> H.Html
 week refDay permissions startOfWeek now occurs =
-  let tz = TZ.tzByLabel $ Oc.octZone now
+  let tzLabel = Oc.octZone now
+      tz = TZ.tzByLabel tzLabel
       title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now)
       items =
         occurs
@@ -165,7 +177,7 @@ week refDay permissions startOfWeek now occurs =
                                 GridLoc
                                   { dayOfWeek = toEnum dow,
                                     rowStart = occurRowStart tz o,
-                                    rowCount = occurRowCount tz o
+                                    rowCount = occurRowCount tzLabel o
                                   },
                               eventOccur = o
                             }
