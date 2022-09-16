@@ -1,3 +1,7 @@
+# 0.9
+
+* Use a lighter gray for the weekly view's grid.
+
 # 0.8
 
 * Increase font size on inputs to avoid zoom on iOS

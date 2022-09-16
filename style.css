@@ -118,7 +118,7 @@ textarea {
 }
 
 .week-item {
-	border: 1px solid gray;
+	border: 1px solid lightgray;
 	padding: 0.25rem;
 	overflow: hidden;
 }
