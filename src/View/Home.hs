@@ -19,15 +19,25 @@ import Util.Time (addICalDuration)
 import View.Common
 import Zhp
 
-data Item
-  = DayHeading Time.Day
-  | Occurrence (Oc.Occurrence DB.EventEntry)
+data EventSet = EventSet
+  { esDay :: Time.Day,
+    esOccurrences :: [Oc.Occurrence DB.EventEntry]
+  }
 
-makeItems :: [Oc.Occurrence DB.EventEntry] -> [Item]
-makeItems [] = []
-makeItems (o@Oc.Occurrence {Oc.ocTimeStamp} : os) =
+makeEventSets :: [Oc.Occurrence DB.EventEntry] -> [EventSet]
+makeEventSets [] = []
+makeEventSets os@(Oc.Occurrence {Oc.ocTimeStamp} : _) =
   let day = Oc.zonedOCTimeDay ocTimeStamp
-   in DayHeading day : Occurrence o : makeItems' day os
+   in go (EventSet day []) os
+  where
+    finalizeEs :: EventSet -> EventSet
+    finalizeEs es = es {esOccurrences = reverse (esOccurrences es)}
+    go e [] = [finalizeEs e]
+    go e (o@Oc.Occurrence {Oc.ocTimeStamp} : os) =
+      let day' = Oc.zonedOCTimeDay ocTimeStamp
+       in if esDay e /= day'
+            then finalizeEs e : go (EventSet day' [o]) os
+            else go e {esOccurrences = o : esOccurrences e} os
 
 normalizeTime :: TZLabel -> Oc.Occurrence a -> Oc.Occurrence a
 normalizeTime targetZone oc@Oc.Occurrence {Oc.ocTimeStamp = zot} =
@@ -40,16 +50,9 @@ normalizeTime targetZone oc@Oc.Occurrence {Oc.ocTimeStamp = zot} =
               }
         }
 
-makeItems' :: Time.Day -> [Oc.Occurrence DB.EventEntry] -> [Item]
-makeItems' _ [] = []
-makeItems' day (o@Oc.Occurrence {Oc.ocTimeStamp} : os) =
-  let day' = Oc.zonedOCTimeDay ocTimeStamp
-   in if day /= day'
-        then DayHeading day' : Occurrence o : makeItems' day' os
-        else Occurrence o : makeItems' day os
-
-viewItem :: Time.Day -> Item -> H.Html
-viewItem today (DayHeading day) =
+viewEventSet :: Time.Day -> EventSet -> H.Html
+viewEventSet today es = do
+  let day = esDay es
   H.h2 ! A.class_ "upcomingDayHeading" $ do
     H.toHtml $
       Time.formatTime
@@ -58,25 +61,24 @@ viewItem today (DayHeading day) =
         day
     when (day == today) " (Today)"
     when (day == succ today) " (Tomorrow)"
--- TODO: we should group events in a day into list elements.
-viewItem _ (Occurrence Oc.Occurrence {Oc.ocItem, Oc.ocTimeStamp = zot}) =
-  let vEvent = DB.eeVEvent ocItem
-      title = eventSummary vEvent
-      timeStamp = H.span ! A.class_ "eventTime" $
-        case Oc.octTime zot of
-          Oc.LocalOCAllDay _ -> "All Day"
-          Oc.LocalOCAtTime lt@Time.LocalTime {Time.localTimeOfDay} -> do
-            viewLocalTimeOfDay localTimeOfDay
-            for_ (veventDuration vEvent) $ \dur -> do
-              let lt' = addICalDuration dur lt
-              " - "
-              viewLocalTimeOfDay (Time.localTimeOfDay lt')
-   in H.div ! A.class_ "upcomingEvent" $ do
-        H.p $ timeStamp
-        H.p
-          $ H.a
-            ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
-          $ title
+  for_ (esOccurrences es) $ \Oc.Occurrence {Oc.ocItem, Oc.ocTimeStamp = zot} -> do
+    let vEvent = DB.eeVEvent ocItem
+        title = eventSummary vEvent
+        timeStamp = H.span ! A.class_ "eventTime" $
+          case Oc.octTime zot of
+            Oc.LocalOCAllDay _ -> "All Day"
+            Oc.LocalOCAtTime lt@Time.LocalTime {Time.localTimeOfDay} -> do
+              viewLocalTimeOfDay localTimeOfDay
+              for_ (veventDuration vEvent) $ \dur -> do
+                let lt' = addICalDuration dur lt
+                " - "
+                viewLocalTimeOfDay (Time.localTimeOfDay lt')
+    H.div ! A.class_ "upcomingEvent" $ do
+      H.p $ timeStamp
+      H.p
+        $ H.a
+          ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
+        $ title
 
 viewLocalTimeOfDay :: Time.TimeOfDay -> H.Html
 viewLocalTimeOfDay localTimeOfDay =
@@ -93,5 +95,5 @@ home permissions today targetZone entries =
         title = "Upcoming Events",
         body = do
           H.h1 "Upcoming Events"
-          traverse_ (viewItem today) (makeItems $ map (normalizeTime targetZone) entries)
+          traverse_ (viewEventSet today) (makeEventSets $ map (normalizeTime targetZone) entries)
       }
