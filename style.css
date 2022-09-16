@@ -104,6 +104,8 @@ textarea {
 }
 
 .week-grid {
+	border-right: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
 	width: 100vw;
 	display: grid;
 	grid-template-columns: repeat(7, 1fr);
@@ -118,7 +120,9 @@ textarea {
 }
 
 .week-item {
-	border: 1px solid lightgray;
+	border-top: 1px solid lightgray;
+	border-left: 1px solid lightgray;
+	color: grey;
 	padding: 0.25rem;
 	overflow: hidden;
 }
