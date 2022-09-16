@@ -54,11 +54,17 @@ occurRow' tz occur def f =
       f localTimeOfDay
 
 occurRowStart :: TZ -> Oc.Occurrence DB.EventEntry -> Int
-occurRowStart tz occur = occurRow' tz occur 2 todCells
+occurRowStart tz occur = occurRow' tz occur 0 todCells
 
 todCells :: Time.TimeOfDay -> Int
 todCells Time.TimeOfDay {todHour, todMin} =
-  (todHour * 60 + todMin) `div` minutesPerCell
+  (todHour * 60 + todMin) `divRoundUp` minutesPerCell
+  where
+    x `divRoundUp` y =
+      let ret = x `div` y
+       in if x `mod` y == 0
+            then ret
+            else (ret + 1)
 
 occurRowCount :: TZ.TZLabel -> Oc.Occurrence DB.EventEntry -> Int
 occurRowCount tzLabel occur =
@@ -66,8 +72,6 @@ occurRowCount tzLabel occur =
       tz = TZ.tzByLabel tzLabel
       start = Oc.ocTimeInZoneFudge tz $ Oc.zonedStartTime tzLabel event
       end = Oc.ocTimeInZoneFudge tz $ Oc.zonedEndTime tzLabel event
-      -- XXX: this is a bit messy because this result is actually different than occurRowStart,
-      -- which includes an offset into the table. We should clean up this logic at some point.
       startCell = maybe 0 todCells (getTod start)
       endCell = maybe (24 * 60 `div` minutesPerCell) todCells (getTod end)
       getTod (Oc.LocalOCAllDay _) = Nothing
