@@ -1,1 +1,9 @@
 packages: *.cabal deps/*/*.cabal
+
+package sandcal
+  ghc-options:
+    -Wall
+    -Wno-missing-signatures
+    -Wno-orphans
+    -Wno-type-defaults
+    -Werror
