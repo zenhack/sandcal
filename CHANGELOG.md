@@ -1,3 +1,12 @@
+# 0.8
+
+* Increase font size on inputs to avoid zoom on iOS
+* Improvements to the week view
+  * Add a heading with the date for the week being shown
+  * Make events take up space proportional to their length
+  * Always expand the grid to fill horizontal space; this avoids
+    changing size from week to week.
+
 # 0.7
 
 * Add an extremely rudimentary week view.
