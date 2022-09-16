@@ -136,11 +136,10 @@ viewDayName day = do
       Time.Sunday -> ("S", "un", "day")
 
 viewOccur :: Oc.Occurrence DB.EventEntry -> H.Html
-viewOccur Oc.Occurrence {ocItem = DB.EventEntry {eeVEvent, eeId}, ocTimeStamp} =
-  H.h3
-    $ H.a
-      ! A.href
-        (H.toValue $ Route.Event eeId (Just ocTimeStamp))
+viewOccur Oc.Occurrence {ocItem = DB.EventEntry {eeVEvent, eeId}, ocTimeStamp} = do
+  H.a
+    ! A.href
+      (H.toValue $ Route.Event eeId (Just ocTimeStamp))
     $ eventSummary eeVEvent
 
 ocDay :: TZ -> Oc.ZonedOCTime -> Time.Day
