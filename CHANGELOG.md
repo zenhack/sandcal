@@ -1,6 +1,6 @@
 # 0.9
 
-* Use a lighter gray for the weekly view's grid.
+* Misc. style changes to make parts of the UI less heavy.
 
 # 0.8
 
