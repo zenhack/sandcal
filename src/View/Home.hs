@@ -61,24 +61,25 @@ viewEventSet today es = do
         day
     when (day == today) " (Today)"
     when (day == succ today) " (Tomorrow)"
-  for_ (esOccurrences es) $ \Oc.Occurrence {Oc.ocItem, Oc.ocTimeStamp = zot} -> do
-    let vEvent = DB.eeVEvent ocItem
-        title = eventSummary vEvent
-        timeStamp = H.span ! A.class_ "eventTime" $
-          case Oc.octTime zot of
-            Oc.LocalOCAllDay _ -> "All Day"
-            Oc.LocalOCAtTime lt@Time.LocalTime {Time.localTimeOfDay} -> do
-              viewLocalTimeOfDay localTimeOfDay
-              for_ (veventDuration vEvent) $ \dur -> do
-                let lt' = addICalDuration dur lt
-                " - "
-                viewLocalTimeOfDay (Time.localTimeOfDay lt')
-    H.div ! A.class_ "upcomingEvent" $ do
-      H.p $ timeStamp
-      H.p
-        $ H.a
-          ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
-        $ title
+  H.div ! A.class_ "upcomingEventSet" $ do
+    for_ (esOccurrences es) $ \Oc.Occurrence {Oc.ocItem, Oc.ocTimeStamp = zot} -> do
+      let vEvent = DB.eeVEvent ocItem
+          title = eventSummary vEvent
+          timeStamp = H.span ! A.class_ "eventTime" $
+            case Oc.octTime zot of
+              Oc.LocalOCAllDay _ -> "All Day"
+              Oc.LocalOCAtTime lt@Time.LocalTime {Time.localTimeOfDay} -> do
+                viewLocalTimeOfDay localTimeOfDay
+                for_ (veventDuration vEvent) $ \dur -> do
+                  let lt' = addICalDuration dur lt
+                  " - "
+                  viewLocalTimeOfDay (Time.localTimeOfDay lt')
+      H.div ! A.class_ "upcomingEvent" $ do
+        H.p $ timeStamp
+        H.p
+          $ H.a
+            ! A.href (H.toValue $ Route.Event (DB.eeId ocItem) (Just zot))
+          $ title
 
 viewLocalTimeOfDay :: Time.TimeOfDay -> H.Html
 viewLocalTimeOfDay localTimeOfDay =

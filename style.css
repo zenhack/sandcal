@@ -46,9 +46,14 @@ textarea {
 	text-transform: uppercase;
 	font-size: 12pt;
 }
+.upcomingEventSet {
+	border-left: 1px solid darkgrey;
+	border-right: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+}
 .upcomingEvent {
 	font-size: 16pt;
-	border: 1px solid darkgrey;
+	border-top: 1px solid darkgrey;
 	padding: 0.5rem;
 }
 .upcomingEvent p {
