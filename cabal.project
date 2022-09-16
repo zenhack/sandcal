@@ -6,4 +6,5 @@ package sandcal
     -Wno-missing-signatures
     -Wno-orphans
     -Wno-type-defaults
+    -Wno-name-shadowing
     -Werror
