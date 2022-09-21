@@ -199,7 +199,12 @@ week refDay permissions startOfWeek now occurs =
                       Nothing -> (d, [])
                       Just os -> (d, os)
                   )
-                  (take 7 [startOfWeek ..])
+                  ( [0 .. 6]
+                      & map toEnum
+                      & cycle
+                      & drop (fromEnum startOfWeek)
+                      & take 7
+                  )
             )
           & map
             ( \(d, os) ->
