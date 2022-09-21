@@ -49,7 +49,7 @@ viewDay startOfWeek DayData {day, items} = do
     ! dayStyle startOfWeek day
     ! A.class_ "week-day-heading"
     $ viewDayName day
-  traverse_ (viewItem day) items
+  traverse_ (viewItem startOfWeek) items
 
 viewItem :: Time.DayOfWeek -> Item (Maybe (Oc.Occurrence DB.EventEntry)) -> H.Html
 viewItem startOfWeek (Item loc val) =
