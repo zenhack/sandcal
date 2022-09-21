@@ -109,10 +109,9 @@ textarea {
 }
 
 .week-grid {
-	border-right: 1px solid lightgrey;
-	border-bottom: 1px solid lightgrey;
-	width: 100vw;
+	width: 97vw;
 	display: grid;
+	border-bottom: 1px solid lightgray;
 	grid-template-columns: repeat(7, 1fr);
 	grid-template-rows: repeat(49, 1fr); /* 24 hours * 2 cells per hour + 1 row for the headings = 49 cells */
 }
@@ -126,10 +125,14 @@ textarea {
 
 .week-item {
 	border-top: 1px solid lightgray;
-	border-left: 1px solid lightgray;
+	border-right: 1px solid lightgray;
 	color: grey;
 	padding: 0.25rem;
 	overflow: hidden;
+}
+
+.week-item--col-0 {
+	border-left: 1px solid lightgray;
 }
 
 .postLink button {

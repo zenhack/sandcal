@@ -95,9 +95,13 @@ occurRowCount tzLabel occur =
       getTod (Oc.LocalOCAtTime Time.LocalTime {localTimeOfDay = tod}) = Just tod
    in endCell - startCell
 
+dayColumn :: Time.DayOfWeek -> Time.DayOfWeek -> Int
+dayColumn startOfWeek day =
+  (fromEnum startOfWeek + fromEnum day) `mod` 7
+
 dayStyleValue :: Time.DayOfWeek -> Time.DayOfWeek -> String
 dayStyleValue startOfWeek day =
-  let col = (fromEnum startOfWeek + fromEnum day) `mod` 7
+  let col = dayColumn startOfWeek day
    in "grid-column: " <> show (col + 1) <> ";"
 
 dayStyle :: Time.DayOfWeek -> Time.DayOfWeek -> H.Attribute
@@ -110,7 +114,10 @@ locStyle startOfWeek GridLoc {dayOfWeek, rowStart, rowCount} =
   let start = rowStart + 2
       end = start + rowCount
    in mconcat
-        [ A.class_ "week-item",
+        [ A.class_ $
+            fromString $
+              "week-item week-item--col-"
+                <> show (dayColumn startOfWeek dayOfWeek),
           A.style $
             H.toValue $
               dayStyleValue startOfWeek dayOfWeek
