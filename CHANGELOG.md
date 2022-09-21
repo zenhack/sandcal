@@ -1,3 +1,8 @@
+# 0.9.1
+
+* Introduce a small margin around the week view, to avoid text being cut
+  off.
+
 # 0.9
 
 * Misc. style changes to make parts of the UI less heavy.
