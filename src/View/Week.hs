@@ -97,12 +97,11 @@ occurRowCount tzLabel occur =
 
 dayColumn :: Time.DayOfWeek -> Time.DayOfWeek -> Int
 dayColumn startOfWeek day =
-  (fromEnum startOfWeek + fromEnum day) `mod` 7
+  1 + ((fromEnum startOfWeek + fromEnum day) `mod` 7)
 
 dayStyleValue :: Time.DayOfWeek -> Time.DayOfWeek -> String
 dayStyleValue startOfWeek day =
-  let col = dayColumn startOfWeek day
-   in "grid-column: " <> show (col + 1) <> ";"
+  "grid-column: " <> show (dayColumn startOfWeek day) <> ";"
 
 dayStyle :: Time.DayOfWeek -> Time.DayOfWeek -> H.Attribute
 dayStyle startOfWeek day =
