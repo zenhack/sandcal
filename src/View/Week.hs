@@ -33,18 +33,35 @@ data GridLoc = GridLoc
   }
   deriving (Show, Read, Eq)
 
-data MaybeItem
-  = Item Item
-  | NoItem GridLoc
-
-data Item
-  = DayStart Time.DayOfWeek
-  | Event EventItem
-
-data EventItem = EventItem
-  { eventLoc :: GridLoc,
-    eventOccur :: Oc.Occurrence DB.EventEntry
+data DayData a = DayData
+  { day :: Time.DayOfWeek,
+    items :: [Item a]
   }
+
+data Item a = Item
+  { itemLoc :: GridLoc,
+    itemValue :: a
+  }
+
+viewDay :: Time.DayOfWeek -> DayData (Maybe (Oc.Occurrence DB.EventEntry)) -> H.Html
+viewDay startOfWeek DayData {day, items} = do
+  H.h2
+    ! dayStyle startOfWeek day
+    ! A.class_ "week-day-heading"
+    $ viewDayName day
+  traverse_ (viewItem day) items
+
+viewItem :: Time.DayOfWeek -> Item (Maybe (Oc.Occurrence DB.EventEntry)) -> H.Html
+viewItem startOfWeek (Item loc val) =
+  case val of
+    Just occur ->
+      H.div ! locStyle startOfWeek loc $ viewOccur occur
+    Nothing ->
+      H.div ! locStyle startOfWeek loc $
+        let minute = rowStart loc * minutesPerCell
+         in if minute `mod` 60 == 0
+              then viewTimeOfDay (Time.TimeOfDay (minute `div` 60) 0 0)
+              else ""
 
 occurRow' :: TZ -> Oc.Occurrence DB.EventEntry -> Int -> (Time.TimeOfDay -> Int) -> Int
 occurRow' tz occur def f =
@@ -104,22 +121,6 @@ locStyle startOfWeek GridLoc {dayOfWeek, rowStart, rowCount} =
                    )
         ]
 
-viewItem :: Time.DayOfWeek -> MaybeItem -> H.Html
-viewItem startOfWeek (Item (DayStart day)) =
-  H.h2
-    ! dayStyle startOfWeek day
-    ! A.class_ "week-day-heading"
-    $ viewDayName day
-viewItem startOfWeek (Item (Event EventItem {eventLoc, eventOccur})) =
-  H.div ! locStyle startOfWeek eventLoc $ do
-    viewOccur eventOccur
-viewItem startOfWeek (NoItem loc) =
-  H.div ! locStyle startOfWeek loc $
-    let minute = rowStart loc * minutesPerCell
-     in if minute `mod` 60 == 0
-          then viewTimeOfDay (Time.TimeOfDay (minute `div` 60) 0 0)
-          else ""
-
 viewDayName :: Time.DayOfWeek -> H.Html
 viewDayName day = do
   a
@@ -152,7 +153,7 @@ week refDay permissions startOfWeek now occurs =
   let tzLabel = Oc.octZone now
       tz = TZ.tzByLabel tzLabel
       title = fromString $ "Week of " <> show (Oc.zonedOCTimeDay now)
-      items =
+      days =
         occurs
           & map (\o -> (ocDay (TZ.tzByLabel $ Oc.octZone now) (Oc.ocTimeStamp o), o))
           & foldl'
@@ -174,16 +175,15 @@ week refDay permissions startOfWeek now occurs =
                 os
                   & map
                     ( \o ->
-                        Event
-                          EventItem
-                            { eventLoc =
-                                GridLoc
-                                  { dayOfWeek = toEnum dow,
-                                    rowStart = occurRowStart tz o,
-                                    rowCount = occurRowCount tzLabel o
-                                  },
-                              eventOccur = o
-                            }
+                        Item
+                          { itemLoc =
+                              GridLoc
+                                { dayOfWeek = toEnum dow,
+                                  rowStart = occurRowStart tz o,
+                                  rowCount = occurRowCount tzLabel o
+                                },
+                            itemValue = o
+                          }
                     )
             )
           & ( \m ->
@@ -194,9 +194,13 @@ week refDay permissions startOfWeek now occurs =
                   )
                   (take 7 [startOfWeek ..])
             )
-          & map (\(d, os) -> DayStart d : os)
-          & mconcat
-          & fillMissing
+          & map
+            ( \(d, os) ->
+                DayData
+                  { day = d,
+                    items = fillMissing d os
+                  }
+            )
    in docToHtml $
         Document
           { permissions,
@@ -206,7 +210,7 @@ week refDay permissions startOfWeek now occurs =
               weekNav refDay
               H.div
                 ! A.class_ "week-grid"
-                $ for_ items (viewItem startOfWeek)
+                $ for_ days (viewDay startOfWeek)
               weekNav refDay
           }
 
@@ -219,29 +223,30 @@ weekNav refDay =
     item 7 "Next Week"
 
 -- | Fill in any time slots that don't have events in them with NoItem entries..
-fillMissing :: [Item] -> [MaybeItem]
-fillMissing = go (toEnum 0) 0
+fillMissing :: Time.DayOfWeek -> [Item a] -> [Item (Maybe a)]
+fillMissing dow = go 0
   where
-    go dow row (item@(Event ei) : items) =
-      let start = rowStart (eventLoc ei)
-          count = rowCount (eventLoc ei)
+    go row (item@Item {itemLoc, itemValue} : items) =
+      let start = rowStart itemLoc
+          count = rowCount itemLoc
        in if row < start
-            then noItem dow row : go dow (row + 1) (item : items)
-            else Item item : go dow (start + count) items
-    go dow row (item@(DayStart dow') : items) =
-      padDay dow row <> (Item item : go dow' 0 items)
-    go dow row [] =
-      padDay dow row
+            then noItem row : go (row + 1) (item : items)
+            else
+              Item {itemLoc, itemValue = Just itemValue}
+                : go (start + count) items
+    go row [] =
+      padDay row
 
-    padDay dow row =
+    padDay row =
       if row * minutesPerCell < 24 * 60
-        then noItem dow row : padDay dow (row + 1)
+        then noItem row : padDay (row + 1)
         else []
 
-    noItem dow row =
-      NoItem
+    noItem row =
+      Item
         GridLoc
           { dayOfWeek = dow,
             rowStart = row,
             rowCount = 1
           }
+        Nothing
