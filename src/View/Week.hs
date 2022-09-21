@@ -175,7 +175,7 @@ week refDay permissions startOfWeek now occurs =
             )
             M.empty
           & M.toList
-          & map (\(day, os) -> (fromEnum $ Time.dayOfWeek day, reverse os))
+          & map (\(day, os) -> (Time.dayOfWeek day, reverse os))
           & M.fromList
           & M.mapWithKey
             ( \dow os ->
@@ -185,7 +185,7 @@ week refDay permissions startOfWeek now occurs =
                         Item
                           { itemLoc =
                               GridLoc
-                                { dayOfWeek = toEnum dow,
+                                { dayOfWeek = dow,
                                   rowStart = occurRowStart tz o,
                                   rowCount = occurRowCount tzLabel o
                                 },
@@ -195,7 +195,7 @@ week refDay permissions startOfWeek now occurs =
             )
           & ( \m ->
                 map
-                  ( \d -> case M.lookup (fromEnum d) m of
+                  ( \d -> case M.lookup d m of
                       Nothing -> (d, [])
                       Just os -> (d, os)
                   )
