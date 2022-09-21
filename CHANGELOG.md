@@ -1,3 +1,7 @@
+# 0.9.2
+
+* Fix regressions introduced in 0.9.1
+
 # 0.9.1
 
 * Introduce a small margin around the week view, to avoid text being cut
