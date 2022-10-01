@@ -76,6 +76,7 @@ type Msg
     | SetAllDay Bool
     | NewRepeat
     | DeleteRepeat Int
+    | SetRepeat Int Protocol.RepeatRule
     | Submit
     | SubmitResult (Result Http.Error String)
 

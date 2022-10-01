@@ -117,10 +117,7 @@ view model =
                    , trackedTextArea "Description" GA.description
                    , h2 [] [ text "Repeats" ]
                    ]
-                ++ List.indexedMap
-                    (\i r ->
-                        viewRepeatRule (GA.repeat << Utils.Accessors.nth i r) i r
-                    )
+                ++ List.indexedMap viewRepeatRule
                     model.formValues.repeat
                 ++ [ button [ onClick FormValues.NewRepeat ] [ text "New repeat rule" ] ]
         , button
@@ -131,24 +128,14 @@ view model =
         ]
 
 
-viewRepeatRule : FormValues.Accessor Protocol.RepeatRule FormValues.Model -> Int -> Protocol.RepeatRule -> Html Msg
-viewRepeatRule accessor i (Protocol.RRInterval r) =
+viewRepeatRule : Int -> Protocol.RepeatRule -> Html Msg
+viewRepeatRule i (Protocol.RRInterval r) =
+    viewRepeatInterval i r
+
+
+viewRepeatInterval : Int -> Protocol.RepeatInterval -> Html Msg
+viewRepeatInterval i r =
     let
-        freqAccessor =
-            accessor << GA.frequency
-
-        intervalAccessor =
-            accessor
-                << GA.interval
-                << Accessors.makeOneToOne
-                    String.fromInt
-                    (\change n ->
-                        String.fromInt n
-                            |> change
-                            |> String.toInt
-                            |> Maybe.withDefault 1
-                    )
-
         labelName =
             "repeatInterval" ++ String.fromInt i
     in
@@ -160,10 +147,24 @@ viewRepeatRule accessor i (Protocol.RRInterval r) =
             , Attributes.min "1"
             , Attributes.step "1"
             , Attributes.value (String.fromInt r.interval)
-            , onInput (FormValues.InputChanged intervalAccessor)
+            , onInput
+                (\s ->
+                    FormValues.SetRepeat i <|
+                        Protocol.RRInterval
+                            { r | interval = String.toInt s |> Maybe.withDefault 1 }
+                )
             ]
             []
-        , select [ onChange (D.map (FormValues.InputChanged freqAccessor) D.string) ]
+        , select
+            [ onChange
+                (D.map
+                    (\s ->
+                        FormValues.SetRepeat i <|
+                            Protocol.RRInterval { r | frequency = s }
+                    )
+                    D.string
+                )
+            ]
             (List.map
                 (\opt ->
                     option
@@ -249,6 +250,13 @@ update msg model =
     case msg of
         FormValues.InputChanged accessor value ->
             ( Accessors.set (GA.formValues << accessor) value model
+            , Cmd.none
+            )
+
+        FormValues.SetRepeat i value ->
+            ( Accessors.over (GA.formValues << GA.repeat)
+                (List.Extra.setAt i value)
+                model
             , Cmd.none
             )
 
