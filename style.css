@@ -46,9 +46,14 @@ textarea {
 	text-transform: uppercase;
 	font-size: 12pt;
 }
+.upcomingEventSet {
+	border-left: 1px solid darkgrey;
+	border-right: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+}
 .upcomingEvent {
 	font-size: 16pt;
-	border: 1px solid darkgrey;
+	border-top: 1px solid darkgrey;
 	padding: 0.5rem;
 }
 .upcomingEvent p {
@@ -63,6 +68,7 @@ textarea {
 	/* Center the content of the page. */
 	display: flex;
 	justify-content: space-around;
+	max-width: 100%;
 }
 
 .eventDescription {
@@ -93,6 +99,9 @@ textarea {
 	 * helper function forces us to always supply a type, so that's
 	 * fine. */
 	flex: 1 1 auto;
+
+	/* So iOS doesn't zoom: */
+	font-size: 16px;
 }
 .labeledInput > label, .labeledInput > input, .labeledInput > select {
 	margin-bottom: 0.5rem;
@@ -100,21 +109,30 @@ textarea {
 }
 
 .week-grid {
+	width: 97vw;
 	display: grid;
+	border-bottom: 1px solid lightgray;
 	grid-template-columns: repeat(7, 1fr);
-	grid-template-rows: repeat(48, 1fr);
+	grid-template-rows: repeat(49, 1fr); /* 24 hours * 2 cells per hour + 1 row for the headings = 49 cells */
 }
 
 .week-day-heading {
 	grid-row: 1;
 	text-align: center;
-	padding-right: 2rem;
-	padding-left: 2rem;
+	padding-right: 0.5em;
+	padding-left: 0.5em;
 }
 
 .week-item {
-	border: 1px solid gray;
-	border-radius: 5px;
+	border-top: 1px solid lightgray;
+	border-right: 1px solid lightgray;
+	color: grey;
+	padding: 0.25rem;
+	overflow: hidden;
+}
+
+.week-item--col-1 {
+	border-left: 1px solid lightgray;
 }
 
 .postLink button {
@@ -132,4 +150,16 @@ iframe {
 	height: 55px;
 	margin: 0;
 	border: 0;
+}
+
+@media(max-width: 600px) {
+	.dayname-mid { display: none; }
+
+	/* Text can get *very* cramped at small sizes; prefer odd hyphenation to
+	 * just clipping: */
+	.week-item { overflow-wrap: anywhere; }
+}
+
+@media(max-width: 850px) {
+	.dayname-tail { display: none; }
 }

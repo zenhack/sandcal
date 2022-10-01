@@ -13,12 +13,14 @@ module View.Common
     labeledTzSelect,
     labeledSelect,
     eventSummary,
+    viewTimeOfDay,
   )
 where
 
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
+import qualified Data.Time as Time
 import qualified Route
 import Text.Blaze.Html5 ((!))
 import qualified Text.Blaze.Html5 as H
@@ -36,8 +38,13 @@ data Document = Document
 
 eventSummary :: ICal.VEvent -> H.Html
 eventSummary ev = case ICal.veSummary ev of
-  Just summary -> H.toHtml $ ICal.summaryValue summary
-  Nothing -> "Untitled event"
+  -- Depressingly, the Maybe type does not save us here from having to remember
+  -- to check if the summary is not only present, but non-empty:
+  Just ICal.Summary {ICal.summaryValue = summary}
+    | not (LT.null summary) ->
+        H.toHtml summary
+  _ ->
+    "Untitled event"
 
 docToHtml :: Document -> H.Html
 docToHtml Document {title, body, permissions} = H.docTypeHtml $ do
@@ -47,7 +54,8 @@ docToHtml Document {title, body, permissions} = H.docTypeHtml $ do
   H.body $ do
     navigation permissions
     H.div ! A.class_ "mainContentContainer" $
-      H.div ! A.class_ "mainContent" $ body
+      H.div ! A.class_ "mainContent" $
+        body
 
 labeledInput :: T.Text -> H.Attribute -> H.Html
 labeledInput name attrs =
@@ -70,7 +78,8 @@ postForm csrfKey cap attrs contents =
 postLink :: CSRF.Key -> CSRF.PostCap -> String -> H.Html
 postLink key cap label =
   postForm key cap (A.class_ "postLink") $
-    H.button ! A.type_ "submit" $ H.toHtml label
+    H.button ! A.type_ "submit" $
+      H.toHtml label
 
 formBlock :: H.Html -> H.Html
 formBlock body = do
@@ -113,20 +122,27 @@ labeledSelect selectName options =
                 else opt'
          in opt'' $ H.toHtml name
 
+viewTimeOfDay :: Time.TimeOfDay -> H.Html
+viewTimeOfDay = H.toHtml . Time.formatTime Time.defaultTimeLocale "%l:%M %p"
+
 navigation :: [LT.Text] -> H.Html
 navigation permissions =
   H.nav $ H.ul $ traverse_ navItem items
   where
     navItem (rt, label) =
       H.li $ H.a ! A.href (H.toValue rt) $ label
+    commonItems =
+      [ (Route.Home, "Upcoming Events"),
+        (Route.ThisWeek, "Week")
+      ]
     items =
       if "editor" `elem` permissions
         then
-          [ (Route.Home, "Upcoming Events"),
-            (Route.NewEvent, "New Event"),
-            (Route.ImportICS, "Import/Export")
-          ]
+          commonItems
+            <> [ (Route.NewEvent, "New Event"),
+                 (Route.ImportICS, "Import/Export")
+               ]
         else
-          [ (Route.Home, "Upcoming Events"),
-            (Route.ImportICS, "Export")
-          ]
+          commonItems
+            <> [ (Route.ImportICS, "Export")
+               ]

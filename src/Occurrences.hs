@@ -12,6 +12,8 @@ module Occurrences
     zonedOCTimeDay,
     zonedOCTimeToUTCFudge,
     ocTimeInZoneFudge,
+    zonedStartTime,
+    zonedEndTime,
     merge,
   )
 where

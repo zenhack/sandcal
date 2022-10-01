@@ -1,3 +1,34 @@
+# 0.9.2
+
+* Fix regressions introduced in 0.9.1
+
+# 0.9.1
+
+* Introduce a small margin around the week view, to avoid text being cut
+  off.
+
+# 0.9
+
+* Misc. style changes to make parts of the UI less heavy.
+
+# 0.8
+
+* Increase font size on inputs to avoid zoom on iOS
+* Improvements to the week view
+  * Add a heading with the date for the week being shown
+  * Make events take up space proportional to their length
+  * Always expand the grid to fill horizontal space; this avoids
+    changing size from week to week.
+
+# 0.7
+
+* Add an extremely rudimentary week view.
+
+# 0.6.1
+
+* Events with the empty string (`""`) as a summary are displayed as
+  "Untitled event" -- just like events with *no* summary.
+
 # 0.6
 
 * Event end times are now displayed on the event page and on the

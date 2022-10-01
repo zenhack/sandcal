@@ -6,11 +6,11 @@ run: all
 dev: all
 	spk dev
 check:
-	cabal v2-run sandcal:test:tests
+	cabal run sandcal:test:tests
 pack: sandcal.spk
 
 .build-hs: cabal.project $(wildcard *.cabal) $(hs_src)
-	cabal v2-build all
+	cabal build all
 	@# Create a sentinel file, so we can depend on this without
 	@# having to specify the path the binary, which is deep under
 	@# dist-newstyle.
@@ -35,7 +35,7 @@ clean:
 	rm -f .build-hs
 
 ui/gen/GenTz.elm: .build-hs
-	cabal v2-run gen-elm
+	cabal run gen-elm
 ui/gen/GenAccessors.elm: ui/gen-accessors.py
 	cd ui && python gen-accessors.py
 

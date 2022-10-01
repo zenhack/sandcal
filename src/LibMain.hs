@@ -51,6 +51,9 @@ main = do
         Route.Get Route.StyleCss -> typedFile "text/css" "style.css"
         Route.Get Route.SandstormJS -> jsFile "sandstorm.js"
         Route.Get Route.Home -> viewHome perm db
+        Route.Get Route.ThisWeek -> do
+          now <- liftIO $ Time.getCurrentTime
+          Route.redirectGet $ Route.Week (Time.utctDay now)
         Route.Get (Route.Week refDay) -> viewWeek perm db refDay
         Route.Get Route.NewEvent -> viewNewEvent csrfKey perm
         Route.Get (Route.Event eid zot) -> getEvent csrfKey perm db eid zot
@@ -147,7 +150,7 @@ viewWeek perm db refDay = do
   occurs <-
     takeWhile (`occursBefore` utcEnd)
       <$> getOccursSince db utcStart
-  blaze $ View.week perm firstDayOfWeek zonedOCTime occurs
+  blaze $ View.week refDay perm firstDayOfWeek zonedOCTime occurs
 
 getOccursSince :: DB.Conn -> Time.UTCTime -> ActionM [Occurrences.Occurrence DB.EventEntry]
 getOccursSince db utc = do
@@ -228,7 +231,8 @@ postEditEvent db eid = do
   form <- jsonData
   maybeEv <-
     DB.runQuery db $
-      DB.updateEvent (DB.eventID eid) $ Forms.NewEvent.patchVEvent utcNow form
+      DB.updateEvent (DB.eventID eid) $
+        Forms.NewEvent.patchVEvent utcNow form
   case maybeEv of
     Nothing -> do404
     Just () -> Route.redirectGet $ Route.Event eid Nothing
