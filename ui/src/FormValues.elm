@@ -58,7 +58,7 @@ type alias Model =
        want the settings to revert to what they were before the check -- which
        means we can't forget about them.
 
-       So, `time` isn't meaningful if `all_day = true` from the perspective of
+       So, `time` isn't meaningful if `allDay = True` from the perspective of
        the specified event, but we track it anyway for UI purposes.
     -}
     , time : Range String
