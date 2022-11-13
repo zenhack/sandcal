@@ -134,7 +134,7 @@ valid m =
     in
     mem m.summary
         && mem m.date
-        && (m.allDay || (mem m.time.start && mem m.time.stop))
+        && (m.allDay || (mem m.time.start && mem m.time.stop && m.time.start < m.time.stop))
 
 
 makeProtocolNewEvent fv =
