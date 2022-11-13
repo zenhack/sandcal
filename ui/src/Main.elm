@@ -110,7 +110,7 @@ view model =
                     else
                         [ trackedInput "time" [] "Start Time" (GA.time << GA.start) []
                         , trackedInput "time" [] "End Time" (GA.time << GA.stop) []
-                        , labeledTzSelect "Time Zone" (Just model.formValues.timeZone)
+                        , trackedTzSelect "Time Zone" [] GA.timeZone (Just model.formValues.timeZone)
                         ]
                    )
                 ++ [ trackedInput "text" [] "Location" GA.location []
@@ -196,8 +196,17 @@ formBlock =
     div [ class "formBlock" ]
 
 
-labeledTzSelect selectName userTz =
+trackedTzSelect selectName attrs accessor userTz =
+    labeledTzSelect selectName
+        (onChange (D.map (FormValues.InputChanged accessor) D.string)
+            :: attrs
+        )
+        userTz
+
+
+labeledTzSelect selectName attrs userTz =
     labeledSelect selectName
+        attrs
         (List.map
             (\tzName ->
                 ( tzName
@@ -210,10 +219,10 @@ labeledTzSelect selectName userTz =
         )
 
 
-labeledSelect selectName options =
+labeledSelect selectName attrs options =
     labeledElem select
         selectName
-        []
+        attrs
         (List.map
             (\( name, selected ) ->
                 option
