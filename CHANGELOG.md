@@ -1,3 +1,10 @@
+# 0.9.3
+
+* Fix a bug where the time zone input on the edit form was being
+  ignored.
+* Disable submit button when the event's start time is after its end
+  time.
+
 # 0.9.2
 
 * Fix regressions introduced in 0.9.1
